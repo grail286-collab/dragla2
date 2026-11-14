@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 // политика конфиденциальности: https://<сервер>/privacy
 let PRIVACY = '';
 try { PRIVACY = fs.readFileSync(path.join(__dirname, 'privacy.html'), 'utf8'); } catch (e) { PRIVACY = '<p>privacy.html не найден</p>'; }
@@ -216,6 +217,56 @@ function handle(cl, m) {
   }
 }
 
+// ---------- веб-версия игры: файлы из папки www/ ----------
+// https://<сервер>/ — сама игра; ходы по сети идут через этот же сервер (/ws).
+const WWW = path.join(__dirname, 'www');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg', '.m4a': 'audio/mp4', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8' };
+const ZIPPABLE = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg', '.txt']);
+const gzCache = new Map();   // путь -> { key, buf }
+function serveStatic(req, res) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+  let p;
+  try { p = decodeURIComponent(req.url.split('?')[0]); } catch (e) { return false; }
+  if (p === '/' || p === '') p = '/index.html';
+  const file = path.normalize(path.join(WWW, p));
+  if (!file.startsWith(WWW + path.sep)) return false;   // не выпускать за пределы www/
+  let st;
+  try { st = fs.statSync(file); } catch (e) { return false; }
+  if (!st.isFile()) return false;
+  const ext = path.extname(file).toLowerCase();
+  const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
+  // страницу перепроверяем всегда (новая версия видна сразу), остальное кэшируем на час
+  const head = { 'content-type': TYPES[ext] || 'application/octet-stream', etag, 'accept-ranges': 'bytes',
+    'cache-control': ext === '.html' || ext === '.webmanifest' ? 'no-cache' : 'public, max-age=3600' };
+  if (req.headers['if-none-match'] === etag) { res.writeHead(304, head); res.end(); return true; }
+  // сжатие текстовых файлов (страница игры ~0,5 МБ -> ~0,1 МБ)
+  if (ZIPPABLE.has(ext) && /\bgzip\b/.test(req.headers['accept-encoding'] || '')) {
+    let c = gzCache.get(file);
+    if (!c || c.key !== etag) { c = { key: etag, buf: zlib.gzipSync(fs.readFileSync(file), { level: 9 }) }; gzCache.set(file, c); }
+    res.writeHead(200, { ...head, 'content-encoding': 'gzip', 'content-length': c.buf.length, vary: 'accept-encoding' });
+    res.end(req.method === 'HEAD' ? undefined : c.buf); return true;
+  }
+  // запросы части файла (Safari на iPhone так грузит звуки)
+  const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+  if (m && (m[1] || m[2])) {
+    let a = m[1] ? +m[1] : st.size - +m[2], b = m[1] && m[2] ? +m[2] : st.size - 1;
+    if (a < 0) a = 0;
+    if (a >= st.size || b < a) { res.writeHead(416, { 'content-range': `bytes */${st.size}` }); res.end(); return true; }
+    b = Math.min(b, st.size - 1);
+    res.writeHead(206, { ...head, 'content-range': `bytes ${a}-${b}/${st.size}`, 'content-length': b - a + 1 });
+    if (req.method === 'HEAD') { res.end(); return true; }
+    fs.createReadStream(file, { start: a, end: b }).on('error', () => res.destroy()).pipe(res); return true;
+  }
+  res.writeHead(200, { ...head, 'content-length': st.size });
+  if (req.method === 'HEAD') { res.end(); return true; }
+  fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
+  return true;
+}
+const statusText = () => `Логово дракона: сервер работает (версия 2, список комнат). Копия сервера: ${INSTANCE}. Комнат: ${rooms.size}, игроков онлайн: ${[...clients.values()].filter(c => c.ws).length}`;
+
 // ---------- соединения ----------
 const server = http.createServer((req, res) => {
   if (req.url === '/privacy' || req.url === '/privacy/' || req.url === '/privacy.html') {
@@ -223,12 +274,16 @@ const server = http.createServer((req, res) => {
     res.end(PRIVACY);
     return;
   }
-  if (req.url === '/' || req.url === '/health') {
-    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*' });
-    res.end(`Логово дракона: сервер работает (версия 2, список комнат). Копия сервера: ${INSTANCE}. Комнат: ${rooms.size}, игроков онлайн: ${[...clients.values()].filter(c => c.ws).length}`);
-    return;
+  if (req.url === '/health') {
+    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'no-store' });
+    res.end(statusText()); return;
   }
-  res.writeHead(404); res.end();
+  if (serveStatic(req, res)) return;
+  if (req.url === '/') {   // папки www/ нет — показать, что сервер жив
+    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*' });
+    res.end(statusText()); return;
+  }
+  res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }); res.end('Не найдено');
 });
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 wss.on('error', e => console.warn('wss error:', e && e.message));
