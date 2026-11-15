@@ -2947,7 +2947,11 @@ function sfx(name){
   try{let a=sfxCache[name];if(!a){a=sfxCache[name]=new Audio(SFX[name]);a.preload='auto';}
     a.volume=sfxVol/100;a.currentTime=0;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(e){}
 }
-Object.keys(SFX).forEach(k=>{try{sfxCache[k]=new Audio(SFX[k]);sfxCache[k].preload='auto';}catch(e){}});
+// звуки: самые частые — сразу, остальные — фоном по одному, чтобы не забивать сеть на старте
+{const first=['btn','dice','step','monster','trap','coins','success','fail','kill','chest'];
+ const pre=k=>{if(sfxCache[k]||!SFX[k])return;try{sfxCache[k]=new Audio(SFX[k]);sfxCache[k].preload='auto';}catch(e){}};
+ first.forEach(pre);const rest=Object.keys(SFX).filter(k=>!first.includes(k));
+ const next=()=>{const k=rest.shift();if(!k)return;pre(k);setTimeout(next,350);};setTimeout(next,4000);}
 // щелчок на любую кнопку интерфейса; броски кубиков звучат своим звуком, поэтому их пропускаем
 document.addEventListener('click',e=>{
   const b=e.target.closest&&e.target.closest('button,[role="button"],.cm');
