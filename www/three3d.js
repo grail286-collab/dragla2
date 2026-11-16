@@ -266,7 +266,50 @@ function glyphSprite(ch,col){const key=ch+col;if(!glyphTex[key]){const k=96,c=do
     glyphTex[key]=new THREE.CanvasTexture(c);}
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glyphTex[key],depthWrite:false}));sp.scale.setScalar(.34);return sp;}
 const KOB_TEX=tex('img/kobold-map.png'),DEAD_TEX=tex('img/dead_hero_on_map.jpg');
-function decoSig(k){const st=k.stash;return (k.visited&&k.ev?k.ev:'')+'|'+(st?st.kind+(st.zombie?'z':'')+(st.left!=null?st.left:''):'')+'|'+(k.scar||'');}
+// --- что видно на ещё не посещённой открытой плитке: монстры и вещи (ловушки, торговцы, демон, двери — сюрприз)
+// модель: [ключ, высота на поле]; монстры стоят лицом к игроку, вещи парят и медленно вращаются
+const EV3={chest:['mon_mimic',.5],potion:['it_potion',.36],haste:['it_haste',.36],amulet:['it_amulet',.34],sword:['it_sword',.5],silver:['it_silver',.5],
+  map:['it_map',.36],bomb:['it_bomb',.36],rope:['it_rope',.3],stone:['it_stone',.34],key:['it_key',.4],pick:['it_pick',.5],gold:['it_gold',.4],cache:['it_gold',.46],shield:['it_shield',.42],scroll:['it_scroll',.4],kobold:['kobold',.6]};
+const EVIMG={cultist:'',whelp:'',ghost:'img/item-ghost.jpg',mantle:'img/item-mantle.jpg',cultist:'img/mon-cultist.jpg',whelp:'img/mon-whelp.jpg'};
+// модели монстров по порядку MONSTERS: крыса, слизень, гоблин, скелет, паук, шаман, призрак, мимик (= сундук), бес, вампир, тролль, зомби, ведьма, минотавр
+const MON3={'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85]};
+const ITEM_EV=new Set(Object.keys(EV3).concat(['shield','scroll','ghost','mantle','gold','cache']).filter(k=>k!=='kobold'));
+const st0=k=>!!k.stash;
+const decoReset=()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});};
+const ensureFig=key=>FIG[key]||(FIG[key]={url:'models/'+key,mesh:null,wait:[decoReset]});
+const evTexC={};
+function evIcon(src,ring){const key=src+ring;if(!evTexC[key]){const k=128,c=document.createElement('canvas');c.width=c.height=k;const g=c.getContext('2d'),im=new Image();
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;evTexC[key]=t;
+    im.onload=()=>{g.save();g.beginPath();g.arc(k/2,k/2,k*.44,0,7);g.clip();g.drawImage(im,0,0,k,k);g.restore();g.strokeStyle=ring;g.lineWidth=k*.06;g.beginPath();g.arc(k/2,k/2,k*.44,0,7);g.stroke();t.needsUpdate=true;};im.src=src;}
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:evTexC[key]}));sp.scale.setScalar(.42);return sp;}
+const monBaseGeo=new THREE.CylinderGeometry(.27,.31,.08,24);monBaseGeo._shared=true;
+const monBaseMat=new THREE.MeshStandardMaterial({color:0x140a12,metalness:.5,roughness:.5});
+const monRimGeo=new THREE.TorusGeometry(.275,.014,6,32);monRimGeo._shared=true;
+const monRimMat=new THREE.MeshBasicMaterial({color:0xe0523a,toneMapped:false});
+const coinGeo=new THREE.CylinderGeometry(.045,.045,.012,10);coinGeo._shared=true;
+const coinMat=new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:.75,roughness:.3,emissive:0x3a2600});
+const itemGlow=(()=>{const k=64,c=document.createElement('canvas');c.width=c.height=k;const g=c.getContext('2d'),gr=g.createRadialGradient(k/2,k/2,0,k/2,k/2,k/2);
+  gr.addColorStop(0,'rgba(255,214,120,.55)');gr.addColorStop(1,'rgba(255,214,120,0)');g.fillStyle=gr;g.fillRect(0,0,k,k);
+  return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});})();
+const glowDisc=new THREE.PlaneGeometry(.7,.7);glowDisc.rotateX(-Math.PI/2);glowDisc._shared=true;
+function addEvent(g,k,r,c){
+  const ev=k.ev;let spec=ev==='monster'?MON3[k.mon]:MON3[ev]||EV3[ev];
+  const spinner=ITEM_EV.has(ev)||(ev==='monster'&&k.mon===7);   // сундук и мимик выглядят одинаково — оба вращаются, как вещи
+  const item=spinner,mon=!spinner&&(ev==='monster'||BAD[ev]);
+  if(item){const d=new THREE.Mesh(glowDisc,itemGlow);d.position.y=.015;g.add(d);}
+  let lift=0;
+  if(mon&&spec){const b=new THREE.Mesh(monBaseGeo,monBaseMat),rim=new THREE.Mesh(monRimGeo,monRimMat);b.position.y=.04;rim.rotation.x=Math.PI/2;rim.position.y=.08;b.castShadow=b.receiveShadow=true;g.add(b,rim);lift=.08;}
+  if(spec){const f=ensureFig(spec[0]);if(!f.mesh){loadFig(spec[0]);return;}
+    const m=f.mesh.clone(),h=spec[1];m.scale.setScalar(h);m.position.y=-(f.minY??-.5)*h+lift;
+    const w=new THREE.Group();w.add(m);
+    if(item){w.position.y=.08;g.userData.spin=w;w.rotation.y=hsh(r,c,63)*6;}else w.rotation.y=hsh(r,c,64)*Math.PI*2;   // монстр стоит, как стоял
+    g.add(w);return;}
+  if(ev==='gold'||ev==='cache'){const n=ev==='cache'?14:9;for(let q=0;q<n;q++){const cm=new THREE.Mesh(coinGeo,coinMat);const a=hsh(r,c,300+q)*6.28,rr=hsh(r,c,320+q)*.16;
+      cm.position.set(Math.cos(a)*rr,.008+q*.006*(rr<.08?1:.2),Math.sin(a)*rr);cm.rotation.set((hsh(r,c,340+q)-.5)*.5,0,(hsh(r,c,360+q)-.5)*.5);cm.castShadow=true;g.add(cm);}return;}
+  const src=ev==='monster'?MONSTERS[k.mon]&&MONSTERS[k.mon].img:EVIMG[ev];
+  if(src){const sp=evIcon(src,ev==='monster'||BAD[ev]?'#e0523a':'#ecc66a');sp.position.y=.42;g.add(sp);}
+}
+function decoSig(k){const st=k.stash;return (S.rules==='trophy'?'T':'')+(k.ev?(k.visited?'v':'u')+k.ev+(k.mon??''):'')+'|'+(st?st.kind+(st.zombie?'z':'')+(st.left!=null?st.left:''):'')+'|'+(k.scar||'');}
 // --- мусор на полу: камни, бочки, доски (место и набор постоянны для клетки, как декор в 2D)
 const woodMat=new THREE.MeshStandardMaterial({color:0x6b4a2a,roughness:.85});
 const woodDark=new THREE.MeshStandardMaterial({color:0x4a3220,roughness:.9});
@@ -297,6 +340,7 @@ function syncDeco(r,c){
   if(B.deco[i])B.g.remove(B.deco[i].g);
   const g=new THREE.Group(),[x,z]=cellXZ(r,c);g.position.set(x,0,z);
   addJunk(g,r,c);
+  if(S.rules==='trophy'&&k.ev&&!k.visited&&!st0(k))addEvent(g,k,r,c);
   if(k.visited&&k.ev){const sp=glyphSprite(GLYPH[k.ev]||'•',BAD[k.ev]?'#ff7a3d':k.ev==='bomb'?'#8fc4ff':'#ecc66a');sp.position.set(-.27,.32,-.27);g.add(sp);}
   const st=k.stash;
   if(st&&!FIG[st.kind==='kobold'?'kobold':'dead'].mesh)loadFig(st.kind==='kobold'?'kobold':'dead');
@@ -318,7 +362,7 @@ function syncDeco(r,c){
   if(k.scar==='lava'){const l=new THREE.Mesh(new THREE.CircleGeometry(.24,24),new THREE.MeshBasicMaterial({color:0xff7a20,toneMapped:false}));l.rotation.x=-Math.PI/2;l.position.set(.2,.012,.2);g.add(l);}
   else if(k.scar==='hole'){const h=new THREE.Mesh(new THREE.CircleGeometry(.2,24),new THREE.MeshBasicMaterial({color:0x000000}));h.rotation.x=-Math.PI/2;h.scale.y=.6;h.position.set(.2,.012,.22);g.add(h);}
   else if(k.scar){const sm=new THREE.MeshStandardMaterial({color:0x8d97a8,roughness:.9});[[.16,.22,.09],[.32,.16,.07],[.28,.34,.06]].forEach(([a,b,rr])=>{const s2=new THREE.Mesh(new THREE.DodecahedronGeometry(rr),sm);s2.position.set(a,rr,b);s2.castShadow=true;g.add(s2);});}
-  if(!g.userData.kob)freeze(g);B.g.add(g);B.deco[i]={g,sig};shadowDirty=true;
+  if(!g.userData.kob&&!g.userData.face&&!g.userData.spin)freeze(g);B.g.add(g);B.deco[i]={g,sig};shadowDirty=true;
 }
 // --- белые стрелки «>» у края открытой плитки: выход ведёт в ещё не открытую клетку (как в 2D)
 const arrGeo=(()=>{const w=.14,sh=new THREE.Shape();sh.moveTo(w,0);sh.lineTo(-.6*w,.95*w);sh.lineTo(-.15*w,0);sh.lineTo(-.6*w,-.95*w);sh.closePath();
@@ -376,6 +420,8 @@ function syncFire(){
 // --- 3D-фигурки героев (glTF). Пока загружаются — стоит обычный портрет
 const FIG={male:{url:'models/hero_man',torch:[.378,.31,.052],mesh:null,wait:[]},
            orc:{url:'models/hero_orc',torch:[.33,.42,.17],mesh:null,wait:[]},
+           sedoi:{url:'models/hero_sedoi',torch:[.208,.29,.275],mesh:null,wait:[]},
+           siniy:{url:'models/hero_siniy',torch:[.289,.42,.193],mesh:null,wait:[]},
            female:{url:'models/hero_woman',torch:[.161,.32,.275],mesh:null,wait:[]},
            dragon:{url:'models/sleepy_dragon',mesh:null,wait:[]},
            wake:{url:'models/wakeup_dragon',mesh:null,wait:[]},
@@ -384,7 +430,7 @@ const FIG={male:{url:'models/hero_man',torch:[.378,.31,.052],mesh:null,wait:[]},
            eye:{url:'models/hunter_eye',mesh:null,wait:[]},hound:{url:'models/hunter_hound',mesh:null,wait:[]},reaper:{url:'models/hunter_reaper',mesh:null,wait:[]}};
 // размеры моделей охотников: масштаб, высота центра над подставкой, парит ли
 const HFIG={reaper:{k:.9,y:.477},eye:{k:.62,y:.477+.35,fly:1},hound:{k:.95,y:.236}};
-const FIG_S=.95;   // масштаб; torch — пламя факела в руке (в координатах модели)   // масштаб и пламя факела в руке (в координатах модели)
+const FIG_S=.73;   // масштаб; torch — пламя факела в руке (в координатах модели)   // масштаб и пламя факела в руке (в координатах модели)
 // модель — простой JSON с массивами вершин (base64) и отдельная JPG-текстура:
 // так она грузится и в артефакте, где запросы к data:/blob: адресам запрещены
 const b64=t=>{const s=atob(t),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer;};
@@ -396,12 +442,13 @@ function loadFig(key){const f=FIG[key];if(!f)return Promise.resolve();if(f.p)ret
   g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(b64(d.nrm)),3));
   g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(b64(d.uv)),2));
   const ib=b64(d.idx);g.setIndex(new THREE.BufferAttribute(d.idxType==='u16'?new Uint16Array(ib):d.idxType==='u8'?new Uint8Array(ib):new Uint32Array(ib),1));
+  g.computeBoundingBox();f.minY=g.boundingBox.min.y;
   const done=()=>{const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:t,roughness:.85,metalness:0}));m.castShadow=m.receiveShadow=true;
     f.mesh=new THREE.Group();f.mesh.add(m);f.wait.splice(0).forEach(cb=>cb());res();};
   const t=TL.load(f.url+'.jpg',done,undefined,done);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.flipY=false;   // готова, когда пришла и текстура
   })).catch(e=>{console.warn('3D-фигурка не загрузилась',f.url,e);});
   return f.p;}
-const heroKind=p=>(p.portrait??0)===7?'orc':isFemale(p.portrait??0)?'female':'male';
+const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
 // после старта партии — фоном, по одной: павший, проснувшийся дракон, охотники (только в режиме охоты), кобольд
 function bgLoad(){const q=['dead','wake',...(S&&S.rules==='hunt'?['hound','eye','reaper']:[]),'kobold'];
   const next=()=>{const k=q.shift();if(!k)return;loadFig(k).then(()=>setTimeout(next,300));};setTimeout(next,1500);}
@@ -412,7 +459,7 @@ function attachFigure(T,kind){const f=FIG[kind];if(!f)return;loadFig(kind);
     const tp=new THREE.Vector3(...f.torch).multiplyScalar(FIG_S);tp.y+=m.position.y;
     const gl=new THREE.Sprite(glowMat);gl.scale.setScalar(.45);gl.position.copy(tp);fig.add(gl);T.fo=gl;T.foBase=.45;
     T.lt.position.copy(tp);T.lt.position.y+=.08;fig.add(T.lt);
-    T.stand.scale.setScalar(.55);T.stand.position.y=1.45;   // портрет — маленький, над головой, выше фигурки
+    T.stand.scale.setScalar(.5);T.stand.position.y=1.16;   // портрет — маленький, над головой, выше фигурки
     const sh=new THREE.Shape();sh.moveTo(-.13,-.33);sh.lineTo(.13,-.33);sh.lineTo(0,-.55);sh.closePath();   // треугольник вниз — указывает на героя
     const ar=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:T.colr,toneMapped:false}));ar.position.z=.004;T.stand.add(ar);T.ptr=ar;};
   if(f.mesh)go();else f.wait.push(go);}
@@ -453,8 +500,8 @@ const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},cur=null,host=null,st={mode:'
   function settle(kind,val){const d=dice[kind];if(!(val>=1&&val<=d.faces.length))return;st.qT.copy(tilt).multiply(d.faces[val-1]);st.q0.copy(d.grp.quaternion);st.mode='settle';st.t0=performance.now();}
   // какое поле с кубиком сейчас на экране
   function findHost(){const pop=document.getElementById('rollpop');
-    if(pop&&!pop.hidden){const el=document.getElementById('rpDie');if(el&&el.offsetParent)return {el,kind:'d4',size:118};}
-    for(const el of document.querySelectorAll('.die'))if(el.offsetParent&&el.getBoundingClientRect().width>0)return {el,kind:'d20',size:92};
+    if(pop&&!pop.hidden){const el=document.getElementById('rpDie');if(el&&el.offsetParent)return {el,kind:'d4',size:90,dist:4.5};}
+    for(const el of document.querySelectorAll('.die'))if(el.offsetParent&&el.getBoundingClientRect().width>0)return {el,kind:'d20',size:80,dist:4.9};
     return null;}
   let lastD4='?',d4Rolling=false;
   function tick(){requestAnimationFrame(tick);if(!R3)return;
@@ -462,7 +509,7 @@ const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},cur=null,host=null,st={mode:'
     if(!h){if(host){cvs.remove();host=null;}return;}
     if(host&&host.el===h.el&&cvs.parentNode!==h.el)h.el.appendChild(cvs);   // игра переписала текст кубика — холст вернуть
     if(!host||host.el!==h.el){h.el.appendChild(cvs);host=h;cur=h.kind;Object.keys(dice).forEach(k=>dice[k].grp.visible=k===cur);
-      cvs.style.width=cvs.style.height=h.size+'px';R3.setSize(h.size,h.size,false);st.mode='idle';
+      cvs.style.width=cvs.style.height=h.size+'px';R3.setSize(h.size,h.size,false);cam3.position.set(0,h.dist*.12,h.dist);cam3.lookAt(0,0,0);st.mode='idle';
       if(cur==='d20'){const v=parseInt(h.el.textContent);if(v>=1)settle('d20',v);}else{lastD4='?';d4Rolling=false;}}
     const d=dice[cur].grp,now=performance.now(),t=now/1000;
     // d4: крутится, пока в игре идёт бросок; останавливается на выпавшем числе
@@ -697,7 +744,8 @@ function frame(){
     {const top=walkable(h.r,h.c)&&!cell(h.r,h.c).rev?blockTopY(h.r,h.c):.02;T.y=T.y==null?top:T.y+(top-T.y)*Math.min(1,dt*6);}   // по скале — поверху
     T.g.position.set(T.x,T.y,T.z);T.stand.quaternion.copy(cam.quaternion);
     if(T.fig){T.fig.rotation.y=T.hd||0;if(T.fly)T.fig.position.y=Math.sin(t*2+h.id)*.06;}else T.g.position.y=T.y+Math.sin(t*2+h.id)*.04;});
-  B.deco.forEach(d=>{const w=d&&d.g.userData.kob;if(w)w.rotation.y=Math.atan2(cam.position.x-d.g.position.x,cam.position.z-d.g.position.z)-.35;});
+  B.deco.forEach(d=>{if(!d)return;const u=d.g.userData,w=u.kob||u.face;if(w)w.rotation.y=Math.atan2(cam.position.x-d.g.position.x,cam.position.z-d.g.position.z)-.35;
+    if(u.spin){u.spin.rotation.y+=dt*.9;u.spin.position.y=.08+Math.sin(t*2+d.g.position.x)*.03;}});
   // метки ходов
   const tg=targets();marks.forEach((m,i)=>{const q=tg[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?.03:blockTopY(q[0],q[1])+.025,z);m.scale.setScalar(1+Math.sin(t*5)*.08);}});
   markMat.opacity=.6+Math.sin(t*5)*.25;

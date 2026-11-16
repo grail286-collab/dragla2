@@ -82,6 +82,7 @@ body{height:100%;overflow:hidden;color:var(--ink);font-family:var(--body);font-s
 .hp .hplock{color:#5b4a6e;text-shadow:none}
 .pl2{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0;white-space:nowrap}
 .coin{display:inline-flex;align-items:center;gap:4px}
+.tro{display:inline-flex;align-items:center;gap:3px;color:#e88a6a}.tro b{color:#ffb08f!important;font-size:14px!important}
 .coin::before{content:"";width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3c2,var(--gold) 45%,var(--gold-lo));box-shadow:0 0 0 1px #5e4618}
 .pl2 b{color:var(--gold);font-size:15px;font-weight:800}
 .inv{display:flex;gap:5px;margin-left:auto;min-width:0;overflow:hidden;flex-wrap:nowrap}
@@ -631,7 +632,7 @@ function reveal(r,c,mode,from){
   const x=cell(r,c);
   if(x.rev)return;
   x.rev=true;
-  if(!onEdge(r,c)&&RNG()<0.33)x.ev=pickW(S.evW||EVENTS);
+  if(!onEdge(r,c)&&RNG()<0.33){x.ev=pickW(S.evW||EVENTS);if(x.ev==='monster'&&SEE())x.mon=Math.floor(RNG()*MONSTERS.length);}
   const all=Object.keys(D).filter(k=>walkable(r+D[k][0],c+D[k][1]));
   const jump=jumpDir(r,c);
   const open=k=>{const t=cell(r+D[k][0],c+D[k][1]);return !t.rev||t.arrows.includes(OPP[k]);};
@@ -650,6 +651,10 @@ function reveal(r,c,mode,from){
   for(const k of shuffle(all)){if(ex.size>=Math.min(n,2))break;ex.add(k);}
   x.arrows=['U','R','D','L'].filter(k=>ex.has(k));
 }
+// 3D-версия: встав на клетку, герой видит, что за её выходами — соседние плитки открываются сразу
+// (с выходом назад), и на них заранее видно монстров и вещи
+function revealAhead(r,c,mode){if(!SEE())return;const x=cell(r,c);if(!x.rev)return;
+  for(const d of x.arrows){const nr=r+D[d][0],nc=c+D[d][1];if(walkable(nr,nc)&&!cell(nr,nc).rev)reveal(nr,nc,mode,OPP[d]);}}
 function dirTo(p,r,c){for(const k in D)if(p.r+D[k][0]===r&&p.c+D[k][1]===c)return k;return null;}
 function newLeg(p){p.stack=[];p.seen=new Map();}
 // Ходы: в любой выход текущей плитки. Неизведанная плитка открывается с выходом назад;
@@ -795,7 +800,11 @@ const isFemale=k=>k>=0&&k<=3;   // портреты 1–4 — героини, 5�
 // имя компьютера под его портрет, без повторов в партии
 function cpuNames(ports){const used=new Set();return ports.map(k=>{const list=isFemale(k)?CPU_FEMALE:CPU_MALE;const n=list.find(x=>!used.has(x))||list[0];used.add(n);return n;});}
 // Правила партии: свободное исследование — без спешки; пробуждение дракона — гонка со временем
-const RULES_SET={free:{t:'Свободное исследование',d:'без спешки'},wake:{t:'Пробуждение дракона',d:'гонка со временем'},hunt:{t:'Охотники',d:'твари идут по следу'}};
+const RULES_SET={free:{t:'Свободное исследование',d:'без спешки'},wake:{t:'Пробуждение дракона',d:'гонка со временем'},hunt:{t:'Охотники',d:'твари идут по следу'},trophy:{t:'Охота на монстров',d:'трофеи за победы'}};
+// «Охота на монстров»: плитки за выходами открываются заранее, монстры и вещи видны издалека, за победы — трофеи
+const SEE=()=>!!(S&&S.rules==='trophy');
+const TROPHY_GOLD=20;   // столько золотых гильдия платит за очко трофея, когда герой выберется
+function trophy(p,v){if(!SEE()||!(v>0))return '';p.tro=(p.tro||0)+v;addLog(`${p.name} добыл трофей: +${v} (всего ${p.tro}).`);return `\n\nТрофей: +${v} ${plural(v,'очко','очка','очков')} охотника (всего ${p.tro}).`;}
 const MODES=[['cpu','Против ИИ','1 игрок'],['hot','На одном','устройстве'],['net','По сети','лобби']];
 // Запуск и «Новая игра»: главное меню → настройка выбранного режима. «Назад» в настройке возвращает в меню.
 async function askNames(){
@@ -1322,12 +1331,15 @@ function startGame(names,map,opt={}){
     cur:-1,phase:'move',log:[],msg:'',over:false,first:true,turnNo:0};
   S.online=!!opt.online;
   S.rules=RULES_SET[opt.rules]?opt.rules:'free';
+  if(S.rules==='trophy')S.evW=EVENTS.map(([k,w])=>[k,k==='monster'?w*2.2:k==='trap'?w*.6:w]);
   if(S.rules==='hunt'){S.evW=[...EVENTS,['cloak',0.7]];S.hunters=[];S.huntNews=[];S.huntNext=HUNT_FIRST;}S.timer=S.online?(+opt.timer||0):0;
   S.round=0;S.fire=0;S.awake=false;S.bombsUsed=0;S.homeN=0;S.calm=0;S.gong=0;S.rage=0;
   S.vsCpu=!S.online&&S.players.some(q=>q.cpu);boardFull=true;
   S.players.forEach(q=>q.scrolls.push(randomScroll()));   // каждый начинает с одним случайным свитком
   S.players.forEach(p=>{reveal(p.r,p.c);{const x=cell(p.r,p.c),inD=p.r===0?'D':p.r===N-1?'U':p.c===0?'R':'L';if(!x.arrows.includes(inD))x.arrows=['U','R','D','L'].filter(k=>k===inD||x.arrows.includes(k));}cell(p.r,p.c).visited=true;p.trail.push([p.r,p.c]);});
-  addLog(S.rules==='hunt'?`Дракон спит, но во тьме ждут охотники: первый выйдет на охоту на ${HUNT_FIRST}-м раунде.`:S.rules==='wake'?`Дракон спит. Экспедиция началась: он проснётся через ${wakeLen()} раундов.`:'Дракон спит. Экспедиция началась.');
+  S.players.forEach(p=>revealAhead(p.r,p.c,'out'));
+  if(S.rules==='trophy')addLog(`Охота на монстров: за выходами видно монстров и вещи. Побеждай — гильдия купит трофеи по ${TROPHY_GOLD} золотых за очко, когда выберешься.`);
+  else addLog(S.rules==='hunt'?`Дракон спит, но во тьме ждут охотники: первый выйдет на охоту на ${HUNT_FIRST}-м раунде.`:S.rules==='wake'?`Дракон спит. Экспедиция началась: он проснётся через ${wakeLen()} раундов.`:'Дракон спит. Экспедиция началась.');
   buildPills();zoom=2;size();   // партия начинается с самого крупного вида
   // на время облёта «текущим» считается последний герой: очередь начнётся с первого, а поле рисуется как обычно
   busy=true;S.cur=S.players.length-1;S.phase='intro';const g=S;
@@ -2079,7 +2091,7 @@ async function move(o){
       text:`Ты у цели! Среди костей и монет спит дракон. В мешок — 100 золотых.\n\n${hadRope?'Твоя верёвка с крюком цела — уйти из логова через пропасть можно без риска.':'У стены логова лежит верёвка с крюком: с ней ты уйдёшь через пропасть без риска.'}\n\nЗа спиной с грохотом рассыпал${n%10===1&&n%100!==11?'ась':'ись'} ${n} ${plural(n,'плита','плиты','плит')}: обратный путь придётся искать заново.`});
     busy=false;nextTurn();return;
   }
-  reveal(p.r,p.c,p.mode,OPP[o.d]);
+  reveal(p.r,p.c,p.mode,OPP[o.d]);revealAhead(p.r,p.c,p.mode);
   if(p.mode==='out')p.trail.push([p.r,p.c]);
   if(canEscape(p)){
     await escapeHero(p,'Герой выбрался из подземелья живым');
@@ -2106,6 +2118,7 @@ async function escapeHero(p,lead){
   p.mode='home';let bonusT='';
   if(S.rules==='wake'){const k=[0.25,0.10][S.homeN||0]||0;S.homeN=(S.homeN||0)+1;
     if(k&&p.gold>0){const g=Math.round(p.gold*k);p.gold+=g;bonusT=`\n\nТы выбрался ${S.homeN===1?'первым':'вторым'}: бонус за скорость +${Math.round(k*100)}% — ещё ${g} золотых.`;addLog(`${p.name}: бонус за скорость +${g} золотых.`);}}
+  if(SEE()&&p.tro>0){const g=p.tro*TROPHY_GOLD;p.gold+=g;bonusT+=`\n\nГильдия охотников покупает трофеи (${p.tro} ${plural(p.tro,'очко','очка','очков')}): +${g} золотых.`;addLog(`${p.name}: трофеи проданы за ${g} золотых.`);}
   addLog(`${p.name} выбрался живым: ${p.gold} золотых.`);render();
   sfx('escape');
   await modal({icon:'☀',tone:'good',title:'Свобода!',sub:p.name,text:`${lead} и вынес ${p.gold} золотых.${bonusT}`});
@@ -2338,7 +2351,7 @@ async function resolve(ev,p){
         await modal({icon:'⛧',tone:'line',title:'Ты отказался',sub:'Демон исчезает',text:'«Мы ещё встретимся», — шипит демон и растворяется в дыму.'});}
       break;}
     case'monster':{
-      const m=MONSTERS[rnd(MONSTERS.length)];sfx('monster');
+      const mk=cell(p.r,p.c),m=mk.mon!=null?MONSTERS[mk.mon]:MONSTERS[rnd(MONSTERS.length)];sfx('monster');
       const dc=m.dc+Math.round(2*(1-dist(p.r,p.c)/(N-1)));
       const wb=weaponB(p,m),b=wb.b+luckB()+cuB;
       const bt=[wb.t,luckB()?'амулет':'',cuB?penLabel(p):''].filter(Boolean).join(', ');
@@ -2348,7 +2361,7 @@ async function resolve(ev,p){
         roll:{dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{
           if(p.luck>0)p.luck--;
           let t;
-          if(win){sfx('kill');const g=between(m.loot);p.gold+=g;t=`Победа! Трофей: +${g} золотых.`;
+          if(win){sfx('kill');const g=between(m.loot);p.gold+=g;t=`Победа! Трофей: +${g} золотых.`+trophy(p,m.dc-8);
             if(m.brew){p.potions++;t+=' В котле ведьмы нашлось зелье здоровья ✚.';}}
           else t=shieldSave(p)?`${m.n} бьёт изо всех сил — щит принял удар и раскололся. Ты цел!`:`${m.n} ${m.how||'ранил героя'}: ${harm(p,m)}.`;
           addLog(`${m.n}: ${t}`);return t;}}});
@@ -2502,7 +2515,7 @@ async function koboldFight(p){
     text:'Зелёный пройдоха волочёт мешок больше себя и уже приглядывается к твоему снаряжению.\n\nПри поражении он не ранит, а утащит предмет и удерёт на соседнюю клетку. Догонишь — вернёшь.',
     roll:rollOpts(p,12,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;
-      if(win){sfx('kill');const g=between([15,30]);p.gold+=g;t=`Кобольд повержен! В его мешке ${g} золотых.`;}
+      if(win){sfx('kill');const g=between([15,30]);p.gold+=g;t=`Кобольд повержен! В его мешке ${g} золотых.`+trophy(p,3);}
       else{stolen=koboldSteal(p);t=`Кобольд выхватил ${stolen.text} и удрал!`;}
       addLog(`Кобольд-вор (${p.name}): ${t}`);return t;})});
   if(stolen){const sp=koboldSpot(p);
@@ -2540,7 +2553,7 @@ async function cultistFight(p){
     text:`Фанатик в лохмотьях с драконьей меткой поднимает светящийся посох. Он хочет, чтобы хозяин проснулся.\n\nПри поражении: ${pen}.`,
     roll:rollOpts(p,13,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;
-      if(win){sfx('kill');const g=between([40,60]);p.gold+=g;t=`Культист повержен! В его сумке ${g} золотых.`;
+      if(win){sfx('kill');const g=between([40,60]);p.gold+=g;t=`Культист повержен! В его сумке ${g} золотых.`+trophy(p,4);
         if(RNG()<0.3){const id=randomScroll();p.scrolls=p.scrolls||[];p.scrolls.push(id);t+=` И свиток «${SCROLLS[id].n}».`;}}
       else if(aw)t=shieldSave(p)?'Проклятие ударило в щит — он раскололся, но ты цел.':`Культист проклинает тебя: ${harm(p,{dmg:1})}.`;
       else{sfx('trap');quakeShake(1);t=gong();}
@@ -2561,7 +2574,7 @@ async function whelpMeet(p){
     text:fight?'Дракончик мал, но зубаст.':'Топнуть, крикнуть, замахнуться — авось убежит.',
     roll:rollOpts(p,fight?12:10,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;won=win;
-      if(win&&fight){sfx('kill');p.gold+=60;t='Дракончик повержен: +60 золотых. Но из глубины подземелья уже доносится страшный рёв…';}
+      if(win&&fight){sfx('kill');p.gold+=60;t='Дракончик повержен: +60 золотых. Но из глубины подземелья уже доносится страшный рёв…'+trophy(p,6);}
       else if(win)t='Дракончик фыркнул и убежал.';
       else t=shieldSave(p)?'Дракончик вцепился в щит — щит раскололся, но ты цел.':`Дракончик кусается и удирает: ${harm(p,{dmg:1})}.`;
       addLog(`Детёныш дракона (${p.name}): ${t}`);return t;})});
@@ -3207,7 +3220,7 @@ function pickTile(p,spots){
 }
 async function teleportTo(p,[r,c],show){
   if(S.phase==='tp'){S.phase=S.tpPrev||'move';S.tp=null;}
-  reveal(r,c,p.mode);const x=cell(r,c);
+  reveal(r,c,p.mode);revealAhead(r,c,p.mode);const x=cell(r,c);
   p.r=r;p.c=c;newLeg(p);if(p.mode==='out')p.trail.push([r,c]);boardFull=true;
   addLog(`${p.name} телепортировался.`);render();follow();
   await show({img:'img/portal.jpg',text:'Портал вспыхивает лиловым светом — и герой выходит из него на новом месте.'})
@@ -3331,7 +3344,7 @@ async function doExit(r,c){
   const p=P();
   const ok=await crossChasm(p,'out');
   if(!ok){busy=false;nextTurn();return;}
-  sfx('step');reveal(r,c,'back');p.r=r;p.c=c;p.mode='back';newLeg(p);
+  sfx('step');reveal(r,c,'back');revealAhead(r,c,'back');p.r=r;p.c=c;p.mode='back';newLeg(p);
   addLog(`${p.name} уходит с ${p.gold} золотыми.`);
   S.phase='move';render();follow();
   const x=cell(r,c);if(x.stash&&alive(p))await stashAt(p);
@@ -4078,7 +4091,7 @@ function pill(i){
   {const c=S.players[S.cur];S.met=S.met||{};if(c&&c!==p&&alive(p)&&alive(c)&&p.gold>0&&!S.met[pairKey(c,p)]&&!S.over)inv.push(`<span class="y" title="цель">⚔</span>`);}
   const html=`<div class="crest">${p.portrait!=null?`<img alt="" src="${PORTRAITS[p.portrait]}">`:esc((p.name||'?').slice(0,1).toUpperCase())}</div>
     <div class="pl1"><span class="pname">${esc(p.short)}</span>${p.cpu?'<span class="ai">ИИ</span>':''}<span class="hp">${'♥'.repeat(Math.max(0,p.hp))}${'♡'.repeat(Math.max(0,maxHP(p)-p.hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона: ещё ${p.lock} ${plural(p.lock,'ход','хода','ходов')}">♥</span>`:''}</span></div>
-    <div class="pl2"><span class="coin"><b>${p.gold}</b></span><span class="st">${st}</span>${p.mode!=='dead'&&inv.length?`<span class="inv">${inv.join('')}</span>`:''}</div>`;
+    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${SEE()?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span>${p.mode!=='dead'&&inv.length?`<span class="inv">${inv.join('')}</span>`:''}</div>`;
   if(el.__h!==html){el.__h=html;el.innerHTML=html;}   // плашка не пересобирается, если ничего не поменялось (портрет не мигает, нет лишней вёрстки)
 }
 function renderWake(){
