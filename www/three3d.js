@@ -64,13 +64,14 @@ const TINT_G=new THREE.Color(0x3c6e32),TINT_B=new THREE.Color(0x32508c);
 const plateColor=(r,c,dead,burn)=>{const col=new THREE.Color(1,1,1);
   const dk=hsh(r,c,13);if(dk>.3)col.multiplyScalar(1-(dk-.3)/.7*.42);
   const tn=hsh(r,c,14);if(tn<.14)col.lerp(TINT_G,Math.min(.6,(.1+tn*.9)*1.6));else if(tn>.86)col.lerp(TINT_B,Math.min(.6,(.1+(1-tn)*.9)*1.6));
+  if(S&&S.rules==='descent'&&S.depth>1)col.lerp(new THREE.Color(0xc0503a),Math.min(.55,(S.depth-1)*.11));   // глубже — пол краснее
   col.convertSRGBToLinear();if(dead)col.multiplyScalar(.4);if(burn)col.lerp(new THREE.Color(0xff5a20),.45);return col;};
 
 // --- поле: строится заново для каждой партии
 let B=null;   // {g, n, rock, walls, floors[6], cache[], torches[], flames, lair...}
 const WALL_H=.22,TILE_Y=0,ROCK_H=.3,ROCK_W=.94;
-function rockAt(i,r,c,sink){const [x,z]=cellXZ(r,c),k=sink||0,h=ROCK_H*(.7+hsh(r,c,21)*.75);
-  dm.position.set(x,h/2-.04-k*h*1.1,z);dm.rotation.set(0,Math.floor(hsh(r,c,22)*4)*Math.PI/2,0);dm.scale.set(1-k*.15,h/ROCK_H,1-k*.15);dm.updateMatrix();B.rock.setMatrixAt(i,dm.matrix);B.rock.instanceMatrix.needsUpdate=true;}
+function rockAt(i,r,c,sink,tall){const [x,z]=cellXZ(r,c),k=sink||0,h=tall?WALL_H*2.25*(1+hsh(r,c,21)*.12):ROCK_H*(.7+hsh(r,c,21)*.75),wd=tall?1/ROCK_W:1;
+  dm.position.set(x,h/2-.04-k*h*1.1,z);dm.rotation.set(0,Math.floor(hsh(r,c,22)*4)*Math.PI/2,0);dm.scale.set((1-k*.15)*wd,h/ROCK_H,(1-k*.15)*wd);dm.updateMatrix();B.rock.setMatrixAt(i,dm.matrix);B.rock.instanceMatrix.needsUpdate=true;}
 const dm=new THREE.Object3D();
 function cellXZ(r,c){return [c-C,r-C];}
 function build(){
@@ -82,7 +83,8 @@ function build(){
   rock.castShadow=rock.receiveShadow=true;g.add(rock);
   const walls=new THREE.InstancedMesh(new THREE.BoxGeometry(1,WALL_H,1),[rockMat,rockMat,rockTopMat,rockMat,rockMat,rockMat],n*16);
   walls.castShadow=walls.receiveShadow=true;g.add(walls);
-  const fgeo=new THREE.PlaneGeometry(1,1);fgeo.rotateX(-Math.PI/2);
+  // в «Спуске» плиты пола — толстые и чуть разной высоты, со щелями между ними; в остальных режимах — ровная плоскость
+  const fgeo=S.rules==='descent'?new THREE.BoxGeometry(.965,.09,.965).translate(0,-.045,0):new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
   const floors=floorMats.map(m=>{const im=new THREE.InstancedMesh(fgeo,m,n);im.receiveShadow=true;im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);g.add(im);return im;});
   const zero=new THREE.Matrix4().makeScale(0,0,0);
   for(let i=0;i<n;i++){floors.forEach(f=>f.setMatrixAt(i,zero));}
@@ -115,7 +117,8 @@ function build(){
   const flames=[new THREE.InstancedMesh(fgeo1,flameMat,n),new THREE.InstancedMesh(fgeo2,flameMat2,n)];
   flames.forEach(f=>{f.frustumCulled=false;for(let i=0;i<n;i++)f.setMatrixAt(i,zero);g.add(f);});
   const sh=N/2+1;Object.assign(moon.shadow.camera,{left:-sh,right:sh,top:sh,bottom:-sh,near:1,far:40});moon.shadow.camera.updateProjectionMatrix();
-  B={g,n,N,rock,walls,floors,zero,rim,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S};
+  B={g,n,N,rock,walls,floors,zero,rim,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S,cells:S.cells,monYaw:new Map()};
+  if(S.rules==='descent'){lair.g.visible=false;}   // в «Спуске» логова нет — в центре просто провал
   {const need=['dragon',...new Set(S.players.map(heroKind))];if(S.awake)need.push('wake');if(S.rules==='hunt'&&(S.hunters||[]).length)need.push(...S.hunters.map(h=>h.k));
    const todo=need.filter(k=>!FIG[k].mesh);
    if(todo.length){let got=0;loader.show(todo.length);
@@ -176,22 +179,27 @@ function syncCell(r,c,now){
   const i=r*N+c,k=cell(r,c);
   if(inRoom(r,c)||inChasm(r,c))return;
   const burn=burning(r,c),isDead=k.rev&&dead(r,c);
-  const sig=k.rev?('o'+exitsOf(r,c,k).join('')+(isDead?'d':'')+(burn?'b':'')):'';
+  const sig=k.block?'B':k.rev?('o'+exitsOf(r,c,k).join('')+(isDead?'d':'')+(burn?'b':'')):'';
   if(sig===B.cache[i])return;
   const was=B.cache[i];B.cache[i]=sig;shadowDirty=true;
   const [x,z]=cellXZ(r,c);
   if(!k.rev){rockAt(i,r,c,0);return;}
+  if(k.block){rockAt(i,r,c,0,true);return;}   // в зале — глухая плита из камня
   // плита пола
   const plate=Math.floor(hsh(r,c,11)*6)%6,rot=Math.floor(hsh(r,c,12)*4)%4;
   B.floors.forEach((f,j)=>{if(j!==plate){f.setMatrixAt(i,B.zero);f.instanceMatrix.needsUpdate=true;}});
-  dm.position.set(x,TILE_Y+.001,z);dm.rotation.set(0,rot*Math.PI/2,0);dm.scale.set(1,1,1);dm.updateMatrix();
+  if(S.rules==='descent'){const lift=hsh(r,c,31)*.045;dm.position.set(x,TILE_Y+.001+lift,z);dm.rotation.set((hsh(r,c,32)-.5)*.05,rot*Math.PI/2,(hsh(r,c,33)-.5)*.05);}   // неровный пол
+  else{dm.position.set(x,TILE_Y+.001,z);dm.rotation.set(0,rot*Math.PI/2,0);}
+  dm.scale.set(1,1,1);dm.updateMatrix();
   const F=B.floors[plate];F.setMatrixAt(i,dm.matrix);F.setColorAt(i,plateColor(r,c,isDead,burn));F.instanceMatrix.needsUpdate=true;F.instanceColor.needsUpdate=true;
   // стены: углы всегда, стороны — где нет выхода
   const ex=new Set(exitsOf(r,c,k)),a=.17,o=.5-a/2,mid=1-a*2;
   // верх стены неровный: угловые столбы выше, стороны собраны из 3 блоков разной высоты и толщины
-  const put=(wi,px,pz,w,dd,f)=>{dm.position.set(px,TILE_Y+WALL_H*f/2,pz);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();B.walls.setMatrixAt(wi,dm.matrix);};
+  const put=(wi,px,pz,w,dd,f)=>{if(S.rules==='descent')f*=2.25;   // в «Спуске» стены залов выше
+    dm.position.set(px,TILE_Y+WALL_H*f/2,pz);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();B.walls.setMatrixAt(wi,dm.matrix);};
   SLOTS.forEach(([sx,sz,d],j)=>{
-    if(d==='c'){put(i*16+j,x+sx*o,z+sz*o,a*(1+hsh(r,c,110+j)*.12),a*(1+hsh(r,c,114+j)*.12),1.15+hsh(r,c,118+j)*.45);return;}
+    if(d==='c'){if(S.rules==='descent'&&ex.has(sz<0?'U':'D')&&ex.has(sx<0?'L':'R')){B.walls.setMatrixAt(i*16+j,B.zero);return;}   // в зале 3×3 внутри нет колонн
+      put(i*16+j,x+sx*o,z+sz*o,a*(1+hsh(r,c,110+j)*.12),a*(1+hsh(r,c,114+j)*.12),1.15+hsh(r,c,118+j)*.45);return;}
     const base=i*16+4+(j-4)*3;
     if(ex.has(d)){for(let q=0;q<3;q++)B.walls.setMatrixAt(base+q,B.zero);return;}
     const ps=[0,1,2].map(q=>.6+hsh(r,c,130+j*3+q)),sum=ps[0]+ps[1]+ps[2],along=d==='U'||d==='D';let t=-mid/2;
@@ -231,8 +239,16 @@ function archVis(r,c){[[r,c,'D'],[r,c,'R'],[r-1,c,'D'],[r,c-1,'R']].forEach(([a,
   const v=edgeOpen(a,b,d==='D'?a+1:a,d==='R'?b+1:b);if(A.visible!==v){A.visible=v;shadowDirty=true;}});}
 function addArch(r,c,d){   // d — 'D' или 'R': арка на границе с соседом снизу/справа
   const key=r+','+c+d;if(B.arches.has(key))return;
-  const v=hsh(r,c,d==='D'?90:91);if(v>=.13)return;B.arches.add(key);let G=null;
-  const [x,z]=cellXZ(r,c),g=new THREE.Group(),ruin=v>=.06;
+  const desc=S.rules==='descent';
+  const v=desc?0:hsh(r,c,d==='D'?90:91);if(v>=.13)return;B.arches.add(key);   // в «Спуске» — целая арка над каждым выходом из залаlet G=null;
+  const [x,z]=cellXZ(r,c),g=new THREE.Group();
+  // модели арок: целая, полуразрушенная, низкая развалина; в «Спуске» над проходами чаще целые
+  const pick=desc?hsh(r,c,95):(v<.06?0:.6+hsh(r,c,95)*.4),am=FIG[pick<.6?'arch_whole':pick<.85?'arch_half':'arch_low'];
+  if(am&&am.mesh){const m=am.mesh.clone(),w=am.key==='arch_low'?.96:.86,k=(desc?1.05:.95)/w;m.scale.setScalar(k);m.position.y=-(am.minY??-.48)*k-.02;
+    if(hsh(r,c,96)<.5)m.rotation.y=Math.PI;m.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});g.add(m);
+    if(d==='D')g.position.set(x,0,z+.5);else{g.position.set(x+.5,0,z);g.rotation.y=Math.PI/2;}
+    freeze(g);B.g.add(g);B.archG.set(key,g);return;}
+  const ruin=v>=.06;
   const m=new THREE.Mesh(ruin?archGeo.ruin:archGeo.whole,archMat);m.castShadow=m.receiveShadow=true;
   if(ruin&&hsh(r,c,92)<.5)m.scale.x=-1;   // обломок то слева, то справа
   g.add(m);
@@ -244,7 +260,8 @@ function addArch(r,c,d){   // d — 'D' или 'R': арка на границе
   B.g.add(g);B.archG.set(key,g);
 }
 function archesFor(r,c,ex){   // проход есть у этой клетки, сосед — обычная клетка подземелья
-  const ok=(r2,c2)=>inB(r2,c2)&&walkable(r2,c2)&&!inRoom(r2,c2)&&!inChasm(r2,c2);
+  const gate=(r2,c2)=>S.rules!=='descent'||Math.floor(r/RS)!==Math.floor(r2/RS)||Math.floor(c/RS)!==Math.floor(c2/RS);   // в «Спуске» арки только между залами
+  const ok=(r2,c2)=>inB(r2,c2)&&walkable(r2,c2)&&!inRoom(r2,c2)&&!inChasm(r2,c2)&&gate(r2,c2);
   if(ex.has('D')&&ok(r+1,c))addArch(r,c,'D');if(ex.has('R')&&ok(r,c+1))addArch(r,c,'R');
   if(ex.has('U')&&ok(r-1,c))addArch(r-1,c,'D');if(ex.has('L')&&ok(r,c-1))addArch(r,c-1,'R');
 }
@@ -272,7 +289,7 @@ const EV3={chest:['mon_mimic',.5],potion:['it_potion',.36],haste:['it_haste',.36
   map:['it_map',.36],bomb:['it_bomb',.36],rope:['it_rope',.3],stone:['it_stone',.34],key:['it_key',.4],pick:['it_pick',.5],gold:['it_gold',.4],cache:['it_gold',.46],shield:['it_shield',.42],scroll:['it_scroll',.4],kobold:['kobold',.6]};
 const EVIMG={cultist:'',whelp:'',ghost:'img/item-ghost.jpg',mantle:'img/item-mantle.jpg',cultist:'img/mon-cultist.jpg',whelp:'img/mon-whelp.jpg'};
 // модели монстров по порядку MONSTERS: крыса, слизень, гоблин, скелет, паук, шаман, призрак, мимик (= сундук), бес, вампир, тролль, зомби, ведьма, минотавр
-const MON3={'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85]};
+const MON3={11:['mon_zombie',.72],12:['mon_witch',.72],'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85]};
 const ITEM_EV=new Set(Object.keys(EV3).concat(['shield','scroll','ghost','mantle','gold','cache']).filter(k=>k!=='kobold'));
 const st0=k=>!!k.stash;
 const decoReset=()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});};
@@ -285,6 +302,9 @@ function evIcon(src,ring){const key=src+ring;if(!evTexC[key]){const k=128,c=docu
 const monBaseGeo=new THREE.CylinderGeometry(.27,.31,.08,24);monBaseGeo._shared=true;
 const monBaseMat=new THREE.MeshStandardMaterial({color:0x140a12,metalness:.5,roughness:.5});
 const monRimGeo=new THREE.TorusGeometry(.275,.014,6,32);monRimGeo._shared=true;
+const bossRimMat=new THREE.MeshBasicMaterial({color:0xffc94a,toneMapped:false});
+// модели боссов: пока — увеличенные модели обычных монстров; когда будут свои, достаточно поменять ключ (models/<ключ>.json/.jpg)
+const BOSS3=[['mon_rat',.95],['mon_skeleton',1.05],['mon_spider',1.05],['mon_imp',1.0],['mon_minotaur',1.15]];
 const monRimMat=new THREE.MeshBasicMaterial({color:0xe0523a,toneMapped:false});
 const coinGeo=new THREE.CylinderGeometry(.045,.045,.012,10);coinGeo._shared=true;
 const coinMat=new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:.75,roughness:.3,emissive:0x3a2600});
@@ -292,24 +312,50 @@ const itemGlow=(()=>{const k=64,c=document.createElement('canvas');c.width=c.hei
   gr.addColorStop(0,'rgba(255,214,120,.55)');gr.addColorStop(1,'rgba(255,214,120,0)');g.fillStyle=gr;g.fillRect(0,0,k,k);
   return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});})();
 const glowDisc=new THREE.PlaneGeometry(.7,.7);glowDisc.rotateX(-Math.PI/2);glowDisc._shared=true;
+const stairMat=new THREE.MeshStandardMaterial({map:texRock,color:0x9a9088,roughness:.9});
+const stairHole=new THREE.MeshBasicMaterial({color:0x000000});
+const stairGlowMat=new THREE.MeshBasicMaterial({color:0x7fc8ff,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+function addStairs(g,guarded){
+  const hole=new THREE.Mesh(new THREE.PlaneGeometry(.62,.62),stairHole);hole.rotation.x=-Math.PI/2;hole.position.y=.012;g.add(hole);
+  for(let i=0;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.6,.05,.12),stairMat);st.position.set(0,.006-i*.05,-.24+i*.12);st.receiveShadow=true;g.add(st);}
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.4,.025,6,4),new THREE.MeshStandardMaterial({color:0x6b6560,roughness:.9}));rim.rotation.set(Math.PI/2,0,Math.PI/4);rim.scale.set(1.08,1.08,1);rim.position.y=.03;g.add(rim);
+  if(!guarded){const glow=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,1.4,20,1,true),stairGlowMat);glow.position.y=.6;g.add(glow);}   // пока жив босс — сияния нет
+  const lt=new THREE.PointLight(0x8fd0ff,1.2,2.4,2);lt.position.y=.4;g.add(lt);
+  const sign=glyphSprite('⇣','#8fd0ff');sign.position.y=guarded?1.75:1.0;sign.scale.setScalar(.4);g.add(sign);
+}
+// полоска здоровья над монстром: красные деления, потерянные — тёмные
+const hpTexC={};
+function hpBar(hp,max){const key=hp+'/'+max;if(!hpTexC[key]){const W=128,H=20,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+    g.fillStyle='rgba(8,6,10,.85)';g.fillRect(0,0,W,H);const pad=3,w=(W-pad*2-(max-1)*2)/max;
+    for(let i=0;i<max;i++){g.fillStyle=i<hp?(hp/max>.5?'#e0523a':'#ff8a3a'):'#3a2226';g.fillRect(pad+i*(w+2),pad,w,H-pad*2);}
+    g.strokeStyle='#e0523a';g.lineWidth=2;g.strokeRect(1,1,W-2,H-2);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;hpTexC[key]=t;}
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:hpTexC[key],depthTest:false,toneMapped:false}));sp.scale.set(.46,.072,1);sp.renderOrder=5;return sp;}
 function addEvent(g,k,r,c){
-  const ev=k.ev;let spec=ev==='monster'?MON3[k.mon]:MON3[ev]||EV3[ev];
+  const ev=k.ev;let spec=ev==='boss'?BOSS3[k.boss||0]:ev==='monster'?MON3[k.mon]:MON3[ev]||EV3[ev];
   const spinner=ITEM_EV.has(ev)||(ev==='monster'&&k.mon===7);   // сундук и мимик выглядят одинаково — оба вращаются, как вещи
-  const item=spinner,mon=!spinner&&(ev==='monster'||BAD[ev]);
+  const item=spinner,mon=!spinner&&(ev==='monster'||ev==='boss'||BAD[ev]),boss=ev==='boss';
   if(item){const d=new THREE.Mesh(glowDisc,itemGlow);d.position.y=.015;g.add(d);}
-  let lift=0;
-  if(mon&&spec){const b=new THREE.Mesh(monBaseGeo,monBaseMat),rim=new THREE.Mesh(monRimGeo,monRimMat);b.position.y=.04;rim.rotation.x=Math.PI/2;rim.position.y=.08;b.castShadow=b.receiveShadow=true;g.add(b,rim);lift=.08;}
+  let lift=0,host=g;
+  if(mon&&spec){host=new THREE.Group();g.add(host);   // монстр с подставкой — отдельной группой: её можно сдвинуть, когда монстр идёт
+    const b=new THREE.Mesh(monBaseGeo,monBaseMat),rim=new THREE.Mesh(monRimGeo,boss?bossRimMat:monRimMat);if(boss){b.scale.set(1.45,1,1.45);rim.scale.set(1.45,1.45,1);}b.position.y=.04;rim.rotation.x=Math.PI/2;rim.position.y=.08;b.castShadow=b.receiveShadow=true;host.add(b,rim);lift=.08;
+    if(k.from){const [fx,fz]=cellXZ(k.from[0],k.from[1]),[tx,tz]=cellXZ(r,c);host.position.set(fx-tx,0,fz-tz);g.userData.slide={o:host,t0:performance.now()};
+      B.monYaw.set(r*N+c,Math.atan2(tx-fx,tz-fz));k.from=null;}}
   if(spec){const f=ensureFig(spec[0]);if(!f.mesh){loadFig(spec[0]);return;}
     const m=f.mesh.clone(),h=spec[1];m.scale.setScalar(h);m.position.y=-(f.minY??-.5)*h+lift;
     const w=new THREE.Group();w.add(m);
-    if(item){w.position.y=.08;g.userData.spin=w;w.rotation.y=hsh(r,c,63)*6;}else w.rotation.y=hsh(r,c,64)*Math.PI*2;   // монстр стоит, как стоял
-    g.add(w);return;}
+    if(item){w.position.y=.08;g.userData.spin=w;w.rotation.y=hsh(r,c,63)*6;}
+    else{const i=r*N+c;let y=B.monYaw.get(i);
+      if(y==null){const q=P&&P();if(q&&q.r!=null){const [hx,hz]=cellXZ(q.r,q.c),[mx,mz]=cellXZ(r,c);y=Math.atan2(hx-mx,hz-mz);}else y=hsh(r,c,64)*Math.PI*2;B.monYaw.set(i,y);}
+      w.rotation.y=y;}   // смотрит на героя, открывшего плитку, и больше не крутится
+    host.add(w);
+    if(mon&&k.hpMax){const bar=hpBar(k.hp,k.hpMax);bar.position.y=lift-(f.minY??-.5)*h*2+.2;host.add(bar);}
+    return;}
   if(ev==='gold'||ev==='cache'){const n=ev==='cache'?14:9;for(let q=0;q<n;q++){const cm=new THREE.Mesh(coinGeo,coinMat);const a=hsh(r,c,300+q)*6.28,rr=hsh(r,c,320+q)*.16;
       cm.position.set(Math.cos(a)*rr,.008+q*.006*(rr<.08?1:.2),Math.sin(a)*rr);cm.rotation.set((hsh(r,c,340+q)-.5)*.5,0,(hsh(r,c,360+q)-.5)*.5);cm.castShadow=true;g.add(cm);}return;}
   const src=ev==='monster'?MONSTERS[k.mon]&&MONSTERS[k.mon].img:EVIMG[ev];
   if(src){const sp=evIcon(src,ev==='monster'||BAD[ev]?'#e0523a':'#ecc66a');sp.position.y=.42;g.add(sp);}
 }
-function decoSig(k){const st=k.stash;return (S.rules==='trophy'?'T':'')+(k.ev?(k.visited?'v':'u')+k.ev+(k.mon??''):'')+'|'+(st?st.kind+(st.zombie?'z':'')+(st.left!=null?st.left:''):'')+'|'+(k.scar||'');}
+function decoSig(k){const st=k.stash;return (k.rev?'':'h')+(k.stairs?'S':'')+(S.rules==='trophy'||S.rules==='descent'?'T':'')+(k.ev?(k.visited?'v':'u')+k.ev+(k.mon??'')+(k.hp!=null?'h'+k.hp+'/'+k.hpMax:''):'')+'|'+(st?st.kind+(st.zombie?'z':'')+(st.left!=null?st.left:''):'')+'|'+(k.scar||'');}
 // --- мусор на полу: камни, бочки, доски (место и набор постоянны для клетки, как декор в 2D)
 const woodMat=new THREE.MeshStandardMaterial({color:0x6b4a2a,roughness:.85});
 const woodDark=new THREE.MeshStandardMaterial({color:0x4a3220,roughness:.9});
@@ -335,12 +381,15 @@ function addJunk(g,r,c){
   else if(v<.55)pile(2+Math.floor(hsh(r,c,72)*3),-px,-pz,.2,false);                      // мелкая каменная крошка
 }
 function syncDeco(r,c){
-  const i=r*N+c,k=cell(r,c);if(!k.rev)return;
+  const i=r*N+c,k=cell(r,c);if(k.block)return;
+  const thief=k.stash&&k.stash.kind==='kobold';
+  if(!k.rev&&!thief){if(B.deco[i]){B.g.remove(B.deco[i].g);B.deco[i]=null;shadowDirty=true;}return;}   // вор ушёл с неоткрытой клетки
   const sig=decoSig(k);if((B.deco[i]||{}).sig===sig)return;
   if(B.deco[i])B.g.remove(B.deco[i].g);
   const g=new THREE.Group(),[x,z]=cellXZ(r,c);g.position.set(x,0,z);
-  addJunk(g,r,c);
-  if(S.rules==='trophy'&&k.ev&&!k.visited&&!st0(k))addEvent(g,k,r,c);
+  if(!k.rev)g.position.y=blockTopY(r,c);else addJunk(g,r,c);
+  if((S.rules==='trophy'||S.rules==='descent')&&k.ev&&!k.visited&&!st0(k))addEvent(g,k,r,c);
+  if(k.stairs)addStairs(g,k.ev==='boss');
   if(k.visited&&k.ev){const sp=glyphSprite(GLYPH[k.ev]||'•',BAD[k.ev]?'#ff7a3d':k.ev==='bomb'?'#8fc4ff':'#ecc66a');sp.position.set(-.27,.32,-.27);g.add(sp);}
   const st=k.stash;
   if(st&&!FIG[st.kind==='kobold'?'kobold':'dead'].mesh)loadFig(st.kind==='kobold'?'kobold':'dead');
@@ -362,7 +411,7 @@ function syncDeco(r,c){
   if(k.scar==='lava'){const l=new THREE.Mesh(new THREE.CircleGeometry(.24,24),new THREE.MeshBasicMaterial({color:0xff7a20,toneMapped:false}));l.rotation.x=-Math.PI/2;l.position.set(.2,.012,.2);g.add(l);}
   else if(k.scar==='hole'){const h=new THREE.Mesh(new THREE.CircleGeometry(.2,24),new THREE.MeshBasicMaterial({color:0x000000}));h.rotation.x=-Math.PI/2;h.scale.y=.6;h.position.set(.2,.012,.22);g.add(h);}
   else if(k.scar){const sm=new THREE.MeshStandardMaterial({color:0x8d97a8,roughness:.9});[[.16,.22,.09],[.32,.16,.07],[.28,.34,.06]].forEach(([a,b,rr])=>{const s2=new THREE.Mesh(new THREE.DodecahedronGeometry(rr),sm);s2.position.set(a,rr,b);s2.castShadow=true;g.add(s2);});}
-  if(!g.userData.kob&&!g.userData.face&&!g.userData.spin)freeze(g);B.g.add(g);B.deco[i]={g,sig};shadowDirty=true;
+  if(!g.userData.kob&&!g.userData.face&&!g.userData.spin&&!g.userData.slide)freeze(g);B.g.add(g);B.deco[i]={g,sig};shadowDirty=true;
 }
 // --- белые стрелки «>» у края открытой плитки: выход ведёт в ещё не открытую клетку (как в 2D)
 const arrGeo=(()=>{const w=.14,sh=new THREE.Shape();sh.moveTo(w,0);sh.lineTo(-.6*w,.95*w);sh.lineTo(-.15*w,0);sh.lineTo(-.6*w,-.95*w);sh.closePath();
@@ -422,9 +471,12 @@ const FIG={male:{url:'models/hero_man',torch:[.378,.31,.052],mesh:null,wait:[]},
            orc:{url:'models/hero_orc',torch:[.33,.42,.17],mesh:null,wait:[]},
            sedoi:{url:'models/hero_sedoi',torch:[.208,.29,.275],mesh:null,wait:[]},
            siniy:{url:'models/hero_siniy',torch:[.289,.42,.193],mesh:null,wait:[]},
+           female2:{url:'models/hero_w3',torch:[.306,.42,.153],mesh:null,wait:[]},
+           female3:{url:'models/hero_w2',torch:[-.24,.33,.032],mesh:null,wait:[]},
            female:{url:'models/hero_woman',torch:[.161,.32,.275],mesh:null,wait:[]},
            dragon:{url:'models/sleepy_dragon',mesh:null,wait:[]},
            wake:{url:'models/wakeup_dragon',mesh:null,wait:[]},
+           arch_whole:{key:'arch_whole',url:'models/arch_whole',mesh:null,wait:[]},arch_half:{key:'arch_half',url:'models/arch_half',mesh:null,wait:[]},arch_low:{key:'arch_low',url:'models/arch_low',mesh:null,wait:[]},
            dead:{url:'models/dead_hero',mesh:null,wait:[()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});}]},
            kobold:{url:'models/kobold',mesh:null,wait:[()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});}]},
            eye:{url:'models/hunter_eye',mesh:null,wait:[]},hound:{url:'models/hunter_hound',mesh:null,wait:[]},reaper:{url:'models/hunter_reaper',mesh:null,wait:[]}};
@@ -448,7 +500,7 @@ function loadFig(key){const f=FIG[key];if(!f)return Promise.resolve();if(f.p)ret
   const t=TL.load(f.url+'.jpg',done,undefined,done);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.flipY=false;   // готова, когда пришла и текстура
   })).catch(e=>{console.warn('3D-фигурка не загрузилась',f.url,e);});
   return f.p;}
-const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
+const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':i===1?'female2':i===2?'female3':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
 // после старта партии — фоном, по одной: павший, проснувшийся дракон, охотники (только в режиме охоты), кобольд
 function bgLoad(){const q=['dead','wake',...(S&&S.rules==='hunt'?['hound','eye','reaper']:[]),'kobold'];
   const next=()=>{const k=q.shift();if(!k)return;loadFig(k).then(()=>setTimeout(next,300));};setTimeout(next,1500);}
@@ -485,7 +537,7 @@ function makePoly(kind){const look=DICE_LOOK[kind],src=kind==='d4'?new THREE.Tet
 const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},cur=null,host=null,st={mode:'idle',t0:0,q0:new THREE.Quaternion(),qT:new THREE.Quaternion(),w:new THREE.Vector3()};
   const css=`body.three .rp-die::before,body.three .rp-die::after{display:none}body.three .rp-die>b,body.three .rp-die>small{visibility:hidden}
     body.three .rp-die.rolling,body.three .rollcard.ready .rp-die,body.three .rollpop.done .rp-die{animation:none}
-    body.three .die{background:none!important;color:transparent!important;text-shadow:none!important;position:relative;animation:none!important}
+    body.three .die.d3{background:none!important;color:transparent!important;text-shadow:none!important;position:relative;animation:none!important}
     .dice3d{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:2}`;
   function init(){if(R3)return true;try{const s2=document.createElement('style');s2.textContent=css;document.head.appendChild(s2);
       cvs=document.createElement('canvas');cvs.className='dice3d';
@@ -506,9 +558,9 @@ const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},cur=null,host=null,st={mode:'
   let lastD4='?',d4Rolling=false;
   function tick(){requestAnimationFrame(tick);if(!R3)return;
     const h=findHost();
-    if(!h){if(host){cvs.remove();host=null;}return;}
+    if(!h){if(host){if(host.el)host.el.classList.remove('d3');cvs.remove();host=null;}return;}
     if(host&&host.el===h.el&&cvs.parentNode!==h.el)h.el.appendChild(cvs);   // игра переписала текст кубика — холст вернуть
-    if(!host||host.el!==h.el){h.el.appendChild(cvs);host=h;cur=h.kind;Object.keys(dice).forEach(k=>dice[k].grp.visible=k===cur);
+    if(!host||host.el!==h.el){if(host&&host.el)host.el.classList.remove('d3');if(h.kind==='d20')h.el.classList.add('d3');h.el.appendChild(cvs);host=h;cur=h.kind;Object.keys(dice).forEach(k=>dice[k].grp.visible=k===cur);
       cvs.style.width=cvs.style.height=h.size+'px';R3.setSize(h.size,h.size,false);cam3.position.set(0,h.dist*.12,h.dist);cam3.lookAt(0,0,0);st.mode='idle';
       if(cur==='d20'){const v=parseInt(h.el.textContent);if(v>=1)settle('d20',v);}else{lastD4='?';d4Rolling=false;}}
     const d=dice[cur].grp,now=performance.now(),t=now/1000;
@@ -538,9 +590,9 @@ const loader=(()=>{let el=null,r2=null,sc2,cam2,die,raf=0,total=1;
     #ld3d .s{font-size:14px;color:#c9b88f}`;
   const makeDie=()=>makePoly('d20').grp;
   function loop(){raf=requestAnimationFrame(loop);const t=performance.now()/1000;die.rotation.set(t*1.3,t*1.9,t*.7);r2.render(sc2,cam2);}
-  return {show(n){total=n;if(el)return;
+  return {show(n,txt){total=n;if(el){if(txt)el.querySelector('.s').textContent=txt;return;}
       const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
-      el=document.createElement('div');el.id='ld3d';el.innerHTML='<canvas></canvas><div class="t">Логово дракона</div><div class="bar"><i></i></div><div class="s">Расставляем фигурки…</div>';document.body.appendChild(el);
+      el=document.createElement('div');el.id='ld3d';el.innerHTML='<canvas></canvas><div class="t">Логово дракона</div><div class="bar"><i></i></div><div class="s">'+(txt||'Расставляем фигурки…')+'</div>';document.body.appendChild(el);
       try{r2=new THREE.WebGLRenderer({canvas:el.querySelector('canvas'),alpha:true,antialias:true});r2.setPixelRatio(Math.min(devicePixelRatio,2));r2.setSize(170,170,false);r2.outputEncoding=THREE.sRGBEncoding;
         sc2=new THREE.Scene();cam2=new THREE.PerspectiveCamera(35,1,.1,20);cam2.position.z=4.4;
         sc2.add(new THREE.HemisphereLight(0xffe8c0,0x301018,1.1));const dl=new THREE.DirectionalLight(0xffffff,1.1);dl.position.set(2,3,4);sc2.add(dl);
@@ -634,7 +686,7 @@ function hunterToken(h){
 // --- метки возможных ходов
 const markGeo=new THREE.RingGeometry(.22,.32,32);markGeo.rotateX(-Math.PI/2);
 const markMat=new THREE.MeshBasicMaterial({color:0xecc66a,transparent:true,opacity:.85,depthWrite:false,toneMapped:false});
-const marks=[];for(let i=0;i<16;i++){const m=new THREE.Mesh(markGeo,markMat);m.visible=false;SC.add(m);marks.push(m);}
+const marks=[];for(let i=0;i<16;i++){const m=new THREE.Mesh(markGeo,markMat);m.visible=false;m.renderOrder=4;SC.add(m);marks.push(m);}
 function targets(){
   if(!S||S.over||!$('modal').hidden||lockedTurn())return [];
   if(S.phase==='tp'&&S.tp)return S.tp.spots;
@@ -705,7 +757,7 @@ function frame(){
   if(now-lastPlace>400){place();lastPlace=now;}
   cv.style.display=S?'block':'none';
   if(!S)return;
-  if(!B||B.G!==S||B.N!==N)build();
+  if(!B||B.G!==S||B.N!==N||B.cells!==S.cells)build();
   // клетки: проверяем по кусочку поля за кадр, чтобы не тормозить
   if(now-lastCells>120||B.anim.length){lastCells=now;for(let r=0;r<N;r++)for(let c=0;c<N;c++){syncCell(r,c,now);if(!inRoom(r,c)&&!inChasm(r,c))syncDeco(r,c);}}
   syncFire();syncArrows(now);
@@ -745,9 +797,11 @@ function frame(){
     T.g.position.set(T.x,T.y,T.z);T.stand.quaternion.copy(cam.quaternion);
     if(T.fig){T.fig.rotation.y=T.hd||0;if(T.fly)T.fig.position.y=Math.sin(t*2+h.id)*.06;}else T.g.position.y=T.y+Math.sin(t*2+h.id)*.04;});
   B.deco.forEach(d=>{if(!d)return;const u=d.g.userData,w=u.kob||u.face;if(w)w.rotation.y=Math.atan2(cam.position.x-d.g.position.x,cam.position.z-d.g.position.z)-.35;
+    if(u.slide){const k=Math.min(1,(performance.now()-u.slide.t0)/450),e=1-Math.pow(1-k,3),o=u.slide.o;   // монстр делает шаг
+      if(!u.slide.p0)u.slide.p0=o.position.clone();o.position.copy(u.slide.p0).multiplyScalar(1-e);o.position.y=Math.sin(k*Math.PI)*.12;if(k>=1){o.position.set(0,0,0);u.slide=null;}shadowDirty=true;}
     if(u.spin){u.spin.rotation.y+=dt*.9;u.spin.position.y=.08+Math.sin(t*2+d.g.position.x)*.03;}});
   // метки ходов
-  const tg=targets();marks.forEach((m,i)=>{const q=tg[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?.03:blockTopY(q[0],q[1])+.025,z);m.scale.setScalar(1+Math.sin(t*5)*.08);}});
+  const tg=targets();marks.forEach((m,i)=>{const q=tg[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?(S.rules==='descent'?.07:.03):blockTopY(q[0],q[1])+.025,z);m.scale.setScalar(1+Math.sin(t*5)*.08);}});
   markMat.opacity=.6+Math.sin(t*5)*.25;
   glowTopMat.opacity=.7+Math.sin(t*2.4)*.3;glowSideMat.opacity=.05+Math.sin(t*2.4)*.03;
   // дракон: во сне дышит, проснувшись — смотрит и машет крыльями
@@ -764,7 +818,7 @@ function frame(){
   L.eyeMat.emissiveIntensity=aw?3:0;L.eyes.forEach(e=>e.scale.y=aw?1:.25);
   L.wings.forEach((w,i)=>{w.rotation.z=(i?-1:1)*(aw?.9+Math.sin(t*8)*.5:.35)+(i?0:Math.PI);});
   L.light.color.setHex(aw?0xff5a22:0xffb347);L.light.intensity=(aw?3.4:2.4)+Math.sin(t*3)*.15;
-  B.pitLight.intensity=.9+Math.sin(t*1.7)*.3;
+  B.pitLight.intensity=S.rules==='descent'?0:.9+Math.sin(t*1.7)*.3;
   B.flames.forEach((f,j)=>{f.scale.y=1+Math.sin(t*12+j)*.12;});
   // настенные факелы: пламя мерцает, свет — у шести ближайших к центру кадра
   B.torches.forEach(o=>{const f=.85+Math.sin(t*9+o.ph)*.1+Math.sin(t*23+o.ph)*.06;o.f1.scale.set(1,f*1.1,1);o.d=o.pos.distanceToSquared(tgt);});
@@ -793,6 +847,27 @@ function frame(){
 }
 requestAnimationFrame(frame);
 // для автотестов: где на экране метка хода
-window.__3d={R,cam,cv,loader,B:()=>B,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
+window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
   markerScreen(i){const m=marks[i];if(!m||!m.visible)return null;const v=m.position.clone().project(cam),b=cv.getBoundingClientRect();return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height};}};
+
+// --- при запуске всё грузится в память: картинки, звуки и 3D-модели; пока идёт загрузка — вращается d20
+(function preloadAll(){
+  const list=(window.ASSETS||[]).slice();if(!list.length)return;
+  const figKeys=new Set(Object.keys(FIG));Object.values(EV3).concat(Object.values(MON3)).forEach(([k])=>{ensureFig(k);figKeys.add(k);});
+  const total=list.length+figKeys.size;let done=0;
+  loader.show(total,'Загружаем подземелье…');
+  const tick=()=>{loader.step(++done);const s2=document.querySelector('#ld3d .s');if(s2)s2.textContent=`Загружаем подземелье… ${Math.round(done/total*100)}%`;};
+  window.__IMGS=[];
+  const one=async u=>{try{
+      if(/\.(jpe?g|png)$/i.test(u)&&!u.startsWith('models/')){const im=new Image();im.src=u;window.__IMGS.push(im);await (im.decode?im.decode():new Promise(r=>{im.onload=im.onerror=r;})).catch(()=>{});}
+      else{const r=await fetch(u);await r.arrayBuffer();}
+    }catch(e){}tick();};
+  const q=list.slice();
+  const worker=async()=>{while(q.length)await one(q.shift());};
+  Promise.all(Array.from({length:6},worker)).then(()=>{
+    // звуки — сразу готовые объекты Audio (файлы уже в кеше браузера)
+    try{Object.keys(SFX).forEach(k=>{if(!sfxCache[k]){sfxCache[k]=new Audio(SFX[k]);sfxCache[k].preload='auto';}});}catch(e){}
+    return Promise.all([...figKeys].map(k=>loadFig(k).then(tick,tick)));
+  }).then(()=>loader.hide());
+})();
 })();
