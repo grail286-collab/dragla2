@@ -26,14 +26,212 @@ const moon=new THREE.DirectionalLight(0x9aa6c4,.3);moon.position.set(-8,14,6);mo
 const TL=new THREE.TextureLoader();
 const tex=(u,srgb=true)=>{const t=TL.load(u);if(srgb)t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;};
 const texRock=tex('img/rock-black.jpg');texRock.wrapS=texRock.wrapT=THREE.RepeatWrapping;
-const FLOOR_IMG=new Image();FLOOR_IMG.src='img/floor-tiles.jpg';
-const plateTex=[];   // 6 плит атласа — отдельные текстуры
-for(let i=0;i<6;i++){const t=new THREE.Texture();t.encoding=THREE.sRGBEncoding;t.anisotropy=4;plateTex.push(t);}
-FLOOR_IMG.onload=()=>{const ts=FLOOR_IMG.naturalWidth/3;
-  for(let i=0;i<6;i++){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
-    g.drawImage(FLOOR_IMG,(i%3)*ts,Math.floor(i/3)*ts,ts,ts,0,0,256,256);
-    g.fillStyle='rgba(125,82,42,.26)';g.fillRect(0,0,256,256);plateTex[i].image=c;plateTex[i].needsUpdate=true;}};
+/* Атлас пола: положить файл в img/floor_atlas.png
+   Сетка FLOOR_ATLAS_COLS×FLOOR_ATLAS_ROWS (сейчас 4×3 = 12 плиток), порядок row-major (слева направо, сверху вниз).
+   Плитки одинакового размера; тонкие тёмные швы между ними срезаются через FLOOR_ATLAS_INSET. Если файла нет — берётся прежний img/floor-tiles.jpg (6 плит). */
+const FLOOR_ATLAS_URL='img/floor_atlas.png';
+const FLOOR_ATLAS_COLS=4,FLOOR_ATLAS_ROWS=3;
+const FLOOR_ATLAS_INSET=0.035;  // доля стороны плитки, срезаемая с каждого края — убирает тёмные швы атласа и артефакты мипмапов
+const FLOOR_LEGACY_URL='img/floor-tiles.jpg',FLOOR_LEGACY_COUNT=6,FLOOR_LEGACY_COLS=3;
+const FLOOR_TILE_MAX=FLOOR_ATLAS_COLS*FLOOR_ATLAS_ROWS;
+// Веса плиток в порядке row-major (0 — верхний левый, 11 — нижний правый; ряд = 4 плитки).
+// Чем больше вес, тем чаще плитка. Чтобы «особые» (эмблема, череп, решётка) встречались реже,
+// уменьшите их вес. Все 1 — равновероятно.
+const FLOOR_TILE_WEIGHTS=[3,1,1,3, 3,1,1,3, 1,3,3,1]; // 3 — обычный камень, 1 — «особые»: рамка, дракон, ромб, решётка, череп, круг
+let floorTileCount=FLOOR_LEGACY_COUNT;
+const plateTex=[];
+for(let i=0;i<FLOOR_TILE_MAX;i++){const t=new THREE.Texture();t.encoding=THREE.sRGBEncoding;t.anisotropy=4;plateTex.push(t);}
+function pickFloorPlate(r,c){
+  const n=floorTileCount,w=FLOOR_TILE_WEIGHTS;
+  let sum=0;for(let i=0;i<n;i++)sum+=w[i]>0?w[i]:0;
+  if(!(sum>0))return Math.floor(hsh(r,c,11)*n)%n;
+  let t=hsh(r,c,11)*sum;
+  for(let i=0;i<n;i++){const wi=w[i]>0?w[i]:0;if((t-=wi)<0)return i;}
+  return n-1;
+}
+function sliceFloorTile(img,i,cols,rows,insetFrac,outSize){
+  const tw=img.naturalWidth/cols,th=img.naturalHeight/rows,padX=insetFrac*tw,padY=insetFrac*th;
+  const c=document.createElement('canvas');c.width=c.height=outSize;const g=c.getContext('2d');
+  g.drawImage(img,(i%cols)*tw+padX,Math.floor(i/cols)*th+padY,Math.max(1,tw-2*padX),Math.max(1,th-2*padY),0,0,outSize,outSize);
+  return c;
+}
+function stampFloor(r,c,i,x,z,isDead,burn){
+  const plate=pickFloorPlate(r,c),rot=Math.floor(hsh(r,c,12)*4)%4;
+  B.floors.forEach((f,j)=>{if(j!==plate){f.setMatrixAt(i,B.zero);f.instanceMatrix.needsUpdate=true;}});
+  if(S.rules==='descent'){const lift=hsh(r,c,31)*.045;dm.position.set(x,TILE_Y+.001+lift,z);dm.rotation.set((hsh(r,c,32)-.5)*.05,rot*Math.PI/2,(hsh(r,c,33)-.5)*.05);}
+  else{dm.position.set(x,TILE_Y+.001,z);dm.rotation.set(0,rot*Math.PI/2,0);}
+  dm.scale.set(1,1,1);dm.updateMatrix();
+  const F=B.floors[plate];F.setMatrixAt(i,dm.matrix);F.setColorAt(i,plateColor(r,c,isDead,burn));F.instanceMatrix.needsUpdate=true;F.instanceColor.needsUpdate=true;
+}
+function restampFloors(){
+  if(!B||!S)return;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const i=r*N+c,k=cell(r,c);
+    if(!k||!k.rev||k.block||inRoom(r,c)||inChasm(r,c))continue;
+    const [x,z]=cellXZ(r,c);
+    stampFloor(r,c,i,x,z,!!dead(r,c),!!burning(r,c));
+  }
+}
+function applyFloorAtlas(img,mode){
+  if(mode==='atlas'){
+    floorTileCount=FLOOR_ATLAS_COLS*FLOOR_ATLAS_ROWS;
+    for(let i=0;i<FLOOR_TILE_MAX;i++){
+      plateTex[i].image=sliceFloorTile(img,i,FLOOR_ATLAS_COLS,FLOOR_ATLAS_ROWS,FLOOR_ATLAS_INSET,512);
+      plateTex[i].needsUpdate=true;
+    }
+  }else{
+    // прежний атлас 3×2 (6 плит), без врезки и с тёплой тонировкой — поле выглядит как раньше
+    floorTileCount=FLOOR_LEGACY_COUNT;
+    const ts=img.naturalWidth/FLOOR_LEGACY_COLS;
+    for(let i=0;i<FLOOR_LEGACY_COUNT;i++){
+      const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+      g.drawImage(img,(i%FLOOR_LEGACY_COLS)*ts,Math.floor(i/FLOOR_LEGACY_COLS)*ts,ts,ts,0,0,256,256);
+      g.fillStyle='rgba(125,82,42,.26)';g.fillRect(0,0,256,256);
+      plateTex[i].image=c;plateTex[i].needsUpdate=true;
+    }
+  }
+  restampFloors();
+}
+function loadLegacyFloor(){
+  const img=new Image();
+  img.onload=()=>applyFloorAtlas(img,'legacy');
+  img.onerror=()=>console.warn('3D: не загрузился ни атлас пола, ни запасной floor-tiles.jpg');
+  img.src=FLOOR_LEGACY_URL;
+}
+const FLOOR_ATLAS=new Image();
+FLOOR_ATLAS.onload=()=>{if(FLOOR_ATLAS.naturalWidth)applyFloorAtlas(FLOOR_ATLAS,'atlas');else loadLegacyFloor();};
+FLOOR_ATLAS.onerror=loadLegacyFloor;
+FLOOR_ATLAS.src=FLOOR_ATLAS_URL;
 // hsh — общий с игрой (тот же узор плит, оттенков и факелов, что в 2D)
+
+/* Атлас внутренних стен: положить файл в img/wall_atlas.png
+   Сетка WALL_ATLAS_COLS×WALL_ATLAS_ROWS (сейчас 2×2), порядок row-major.
+   Каждая плитка — вертикальная грань кладки с рядом-венцом кирпичей сверху.
+   Тонкие тёмные швы срезаются через WALL_ATLAS_INSET; сверху чуть меньше (WALL_ATLAS_INSET_TOP), чтобы не срезать венец.
+   Если файла нет — стороны стен остаются на прежнем img/rock-black.jpg. */
+const WALL_ATLAS_URL='img/wall_atlas.png';
+const WALL_ATLAS_COLS=2,WALL_ATLAS_ROWS=2;
+const WALL_ATLAS_INSET=0.020;      // ~9px при плитке ~459 — убирает межплиточные швы и тёмную кромку
+const WALL_ATLAS_INSET_TOP=0.014;  // меньше сверху, чтобы сохранился ряд-венец
+const WALL_TILE_MAX=WALL_ATLAS_COLS*WALL_ATLAS_ROWS;
+// Веса 2×2: 0 верх-лево (ровная кладка), 1 верх-право (булыжник/мох), 2 низ-лево, 3 низ-право (кладка).
+// Чуть чаще обычную кладку, «особые» (мох, рваный камень) — реже. Все 1 — равновероятно.
+const WALL_TILE_WEIGHTS=[2,1, 1,2];
+let wallTileCount=1;   // 1, пока атлас не загрузился (запасная текстура скалы)
+const wallTex=[];
+for(let i=0;i<WALL_TILE_MAX;i++){const t=new THREE.Texture();t.encoding=THREE.sRGBEncoding;t.anisotropy=4;wallTex.push(t);}
+
+/* Атлас внешней скалы и закрытых клеток: положить файл в img/big_wall_atlas.png
+   Сетка BIG_WALL_ATLAS_COLS×BIG_WALL_ATLAS_ROWS (сейчас 4×4) грубого тёмного камня.
+   Ряды разной высоты — режем по найденным тёмным швам, не равномерно по высоте/4.
+   Используется для бортика поля (внешние стены) и закрытых/глухих клеток (InstancedMesh скалы).
+   Если файла нет — скала и бортик остаются на прежних текстурах (rock-black.jpg / процедурный камень). */
+const BIG_WALL_ATLAS_URL='img/big_wall_atlas.png';
+const BIG_WALL_ATLAS_COLS=4,BIG_WALL_ATLAS_ROWS=4;
+const BIG_WALL_ATLAS_INSET=0.042;  // ~7–8px при плитке ~189 — срезает швы (~7px) и тёмную кромку атласа
+const BIG_WALL_TILE_MAX=BIG_WALL_ATLAS_COLS*BIG_WALL_ATLAS_ROWS;
+// Веса 16 плиток row-major. Все 1 — равновероятно; уменьшите вес «особых» (мох), если они слишком частые.
+const BIG_WALL_TILE_WEIGHTS=[1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1];
+let bigWallTileCount=1;
+const bigWallTex=[];
+for(let i=0;i<BIG_WALL_TILE_MAX;i++){const t=new THREE.Texture();t.encoding=THREE.sRGBEncoding;t.anisotropy=4;bigWallTex.push(t);}
+
+function pickWeighted(r,c,salt,n,weights){
+  let sum=0;for(let i=0;i<n;i++)sum+=(weights[i]>0?weights[i]:0);
+  if(!(sum>0))return Math.floor(hsh(r,c,salt)*n)%n;
+  let t=hsh(r,c,salt)*sum;
+  for(let i=0;i<n;i++){const wi=weights[i]>0?weights[i]:0;if((t-=wi)<0)return i;}
+  return n-1;
+}
+function pickWallTile(r,c,salt){return pickWeighted(r,c,salt,wallTileCount,WALL_TILE_WEIGHTS);}
+function pickBigWallTile(r,c,salt){return pickWeighted(r,c,salt,bigWallTileCount,BIG_WALL_TILE_WEIGHTS);}
+
+// Ищем тёмные межплиточные швы около ожидаемых равномерных границ (окно ±16% шага),
+// чтобы неровные ряды (у big_wall первый ряд выше) кроились по реальным зазорам.
+function atlasGutters(img,cols,rows){
+  const w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0);
+  const d=g.getImageData(0,0,w,h).data;
+  const colLum=new Float64Array(w),rowLum=new Float64Array(h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=(y*w+x)*4,L=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];
+    colLum[x]+=L;rowLum[y]+=L;
+  }
+  for(let x=0;x<w;x++)colLum[x]/=h;for(let y=0;y<h;y++)rowLum[y]/=w;
+  const splits=(lum,n,size)=>{
+    const xs=[0],step=size/n,win=Math.max(8,Math.round(step*.16));
+    for(let k=1;k<n;k++){
+      const exp=Math.round(k*step);let best=exp,bv=lum[Math.max(0,Math.min(size-1,exp))];
+      for(let p=Math.max(1,exp-win);p<=Math.min(size-2,exp+win);p++)if(lum[p]<bv){bv=lum[p];best=p;}
+      if(best<=xs[xs.length-1]+8)best=xs[xs.length-1]+Math.max(8,Math.round(step*.5));
+      xs.push(Math.min(size-1,best));
+    }
+    xs.push(size);return xs;
+  };
+  const xs=splits(colLum,cols,w),ys=splits(rowLum,rows,h);
+  let ok=true;for(let i=1;i<xs.length;i++)if(!(xs[i]>xs[i-1]+16))ok=false;
+  for(let i=1;i<ys.length;i++)if(!(ys[i]>ys[i-1]+16))ok=false;
+  if(!ok){const ux=[0],uy=[0];for(let i=1;i<cols;i++)ux.push(Math.round(i*w/cols));ux.push(w);
+    for(let i=1;i<rows;i++)uy.push(Math.round(i*h/rows));uy.push(h);return {xs:ux,ys:uy};}
+  return {xs,ys};
+}
+function sliceAtlasTile(img,i,xs,ys,inset,outW,outH,insetTop){
+  const cols=xs.length-1,c=i%cols,r=Math.floor(i/cols);
+  const x0=xs[c],x1=xs[c+1],y0=ys[r],y1=ys[r+1],tw=x1-x0,th=y1-y0;
+  const padX=inset*tw,padT=(insetTop!=null?insetTop:inset)*th,padB=inset*th;
+  const cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
+  cvs.getContext('2d').drawImage(img,x0+padX,y0+padT,Math.max(1,tw-2*padX),Math.max(1,th-padT-padB),0,0,outW,outH);
+  return cvs;
+}
+
+function restampWalls(){
+  if(!B||!S)return;
+  B.cache.fill('');
+  const now=typeof performance!=='undefined'?performance.now():0;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++)syncCell(r,c,now);
+}
+function restampRocks(){
+  if(!B||!S)return;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(inRoom(r,c)||inChasm(r,c))continue;
+    const i=r*N+c,k=cell(r,c);
+    if(!k||!k.rev)rockAt(i,r,c,0);
+    else if(k.block)rockAt(i,r,c,0,true);
+    else hideRock(i);
+  }
+}
+
+function applyWallAtlas(img){
+  const {xs,ys}=atlasGutters(img,WALL_ATLAS_COLS,WALL_ATLAS_ROWS);
+  wallTileCount=WALL_ATLAS_COLS*WALL_ATLAS_ROWS;
+  for(let i=0;i<WALL_TILE_MAX;i++){
+    wallTex[i].image=sliceAtlasTile(img,i,xs,ys,WALL_ATLAS_INSET,512,512,WALL_ATLAS_INSET_TOP);
+    wallTex[i].needsUpdate=true;
+    wallSideMats[i].map=wallTex[i];
+    wallSideMats[i].color.setHex(0xb3aea8);  // лёгкое приглушение, без «кислотности»
+    wallSideMats[i].roughness=.9;
+    wallSideMats[i].needsUpdate=true;
+  }
+  restampWalls();
+}
+function applyBigWallAtlas(img){
+  const {xs,ys}=atlasGutters(img,BIG_WALL_ATLAS_COLS,BIG_WALL_ATLAS_ROWS);
+  bigWallTileCount=BIG_WALL_ATLAS_COLS*BIG_WALL_ATLAS_ROWS;
+  for(let i=0;i<BIG_WALL_TILE_MAX;i++){
+    bigWallTex[i].image=sliceAtlasTile(img,i,xs,ys,BIG_WALL_ATLAS_INSET,512,512);
+    bigWallTex[i].needsUpdate=true;
+    const col=0x8e8a86;
+    rockSideMats[i].map=bigWallTex[i];rockSideMats[i].color.setHex(0xa8a49e);rockSideMats[i].roughness=.95;rockSideMats[i].needsUpdate=true;
+    rockTopMats[i].map=bigWallTex[i];rockTopMats[i].color.setHex(0x9a9692);rockTopMats[i].roughness=.92;rockTopMats[i].needsUpdate=true;
+    rimTileMats[i].map=bigWallTex[i];rimTileMats[i].color.setHex(0x7a7672);rimTileMats[i].roughness=.95;rimTileMats[i].needsUpdate=true;
+  }
+  // верх внутренних стен — одна плитка грубого камня (тонкая кромка, видна сверху)
+  const topI=Math.min(13,BIG_WALL_TILE_MAX-1);
+  wallTopMat.map=bigWallTex[topI];wallTopMat.color.setHex(0x7e7a76);wallTopMat.needsUpdate=true;
+  restampRocks();
+  if(B)stampRim(B.rims,B.rimN,B.rimEdges);
+}
 
 // --- материалы
 const rockMat=new THREE.MeshStandardMaterial({map:texRock,color:0x6d6660,roughness:.95});
@@ -51,6 +249,40 @@ const blockTop=new THREE.MeshStandardMaterial({map:stoneTex(4242,'#24242a','rgba
 const blockMat=[blockSide,blockSide,blockTop,blockSide,blockSide,blockSide];
 const rimMat=new THREE.MeshStandardMaterial({map:stoneTex(99,'#4a464c','rgba(0,0,0,.5)'),roughness:.95});
 const rockTopMat=new THREE.MeshStandardMaterial({map:texRock,color:0x3e3a37,roughness:1});
+// UV-крючок ставится ниже, после WALL_H/ROCK_H: сторона бокса кроится пропорционально W×H экземпляра, верх текстуры остаётся сверху.
+function hookAspectUV(mat,geomH){
+  mat.onBeforeCompile=shader=>{
+    const H=geomH.toFixed(4);
+    shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>',
+`#include <uv_vertex>
+#ifdef USE_UV
+#ifdef USE_INSTANCING
+  vec3 iS=vec3(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz),length(instanceMatrix[2].xyz));
+  vec3 fn=normal;
+  float faceW,faceH;
+  if(abs(fn.y)>0.5){faceW=iS.x;faceH=iS.z;}
+  else{faceW=abs(fn.x)>0.5?iS.z:iS.x;faceH=iS.y*${H};}
+  float aS=max(max(faceW,faceH),0.0001);
+  vec2 u2=abs(fn.y)>0.5?vec2(uv.x*(faceW/aS),uv.y*(faceH/aS)):vec2(uv.x*(faceW/aS),1.0+(uv.y-1.0)*(faceH/aS));
+  vUv=(uvTransform*vec3(u2,1.0)).xy;
+#endif
+#endif
+`);
+  };
+}
+const wallSideMats=[];
+for(let i=0;i<WALL_TILE_MAX;i++){
+  const m=new THREE.MeshStandardMaterial({map:i===0?texRock:wallTex[i],color:0x6d6660,roughness:.95});
+  wallSideMats.push(m);
+}
+const wallTopMat=new THREE.MeshStandardMaterial({map:texRock,color:0x3e3a37,roughness:1});
+const rockSideMats=[],rockTopMats=[],rimTileMats=[];
+for(let i=0;i<BIG_WALL_TILE_MAX;i++){
+  const sm=new THREE.MeshStandardMaterial({map:i===0?texRock:bigWallTex[i],color:0x3a3633,roughness:.95});
+  const tm=new THREE.MeshStandardMaterial({map:i===0?blockTop.map:bigWallTex[i],color:i===0?0x9a9aa0:0x9a9692,roughness:.92});
+  const rm=new THREE.MeshStandardMaterial({map:i===0?rimMat.map:bigWallTex[i],color:0xffffff,roughness:.95});
+  rockSideMats.push(sm);rockTopMats.push(tm);rimTileMats.push(rm);
+}
 const floorMats=plateTex.map(t=>new THREE.MeshStandardMaterial({map:t,roughness:.85,emissive:0xffffff,emissiveMap:t,emissiveIntensity:.1}));
 const flameMat=new THREE.MeshBasicMaterial({color:0xff4a12,transparent:true,opacity:.9,depthWrite:false,toneMapped:false});
 const flameMat2=new THREE.MeshBasicMaterial({color:0xffb22e,transparent:true,opacity:.95,depthWrite:false,toneMapped:false});
@@ -68,41 +300,107 @@ const plateColor=(r,c,dead,burn)=>{const col=new THREE.Color(1,1,1);
   col.convertSRGBToLinear();if(dead)col.multiplyScalar(.4);if(burn)col.lerp(new THREE.Color(0xff5a20),.45);return col;};
 
 // --- поле: строится заново для каждой партии
-let B=null;   // {g, n, rock, walls, floors[6], cache[], torches[], flames, lair...}
+let B=null;   // {g, n, rocks[], walls[], rims[], floors[], cache[], torches[], flames, lair...}
 const WALL_H=.22,TILE_Y=0,ROCK_H=.3,ROCK_W=.94;
+hookAspectUV(rockMat,WALL_H);hookAspectUV(rockTopMat,WALL_H);hookAspectUV(wallTopMat,WALL_H);
+wallSideMats.forEach(m=>hookAspectUV(m,WALL_H));
+// у скалы и бортика UV запечены в геометрию (boxWithSideUV) — шейдерный крючок для них не нужен
+const WALL_ATLAS=new Image();
+WALL_ATLAS.onload=()=>{if(WALL_ATLAS.naturalWidth)applyWallAtlas(WALL_ATLAS);else console.warn('3D: wall_atlas.png пустой — внутренние стены остаются на запасной текстуре');};
+WALL_ATLAS.onerror=()=>console.warn('3D: не загрузился img/wall_atlas.png — внутренние стены остаются на img/rock-black.jpg');
+WALL_ATLAS.src=WALL_ATLAS_URL;
+const BIG_WALL_ATLAS=new Image();
+BIG_WALL_ATLAS.onload=()=>{if(BIG_WALL_ATLAS.naturalWidth)applyBigWallAtlas(BIG_WALL_ATLAS);else console.warn('3D: big_wall_atlas.png пустой — скала и бортик остаются на запасных текстурах');};
+BIG_WALL_ATLAS.onerror=()=>console.warn('3D: не загрузился img/big_wall_atlas.png — скала и бортик остаются на запасных текстурах');
+BIG_WALL_ATLAS.src=BIG_WALL_ATLAS_URL;
+// UV боковых граней бокса: венец/верх текстуры остаётся сверху, по вертикали берётся доля, равная отношению высоты к ширине — без растяжения.
+function boxWithSideUV(sx,sy,sz,v0,v1){
+  const g=new THREE.BoxGeometry(sx,sy,sz),uv=g.attributes.uv,pos=g.attributes.position,n=g.attributes.normal;
+  for(let i=0;i<pos.count;i++){
+    const ny=n.getY(i);if(Math.abs(ny)>0.5)continue;   // верх/низ — как в BoxGeometry
+    const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+    const vv=v0+(y/sy+0.5)*(v1-v0);
+    if(Math.abs(n.getX(i))>0.5)uv.setXY(i,z/sz+0.5,vv);else uv.setXY(i,x/sx+0.5,vv);
+  }
+  uv.needsUpdate=true;g._shared=true;return g;
+}
+function hideRock(i){if(!B||!B.rocks)return;B.rocks.forEach(m=>{m.setMatrixAt(i,B.zero);m.instanceMatrix.needsUpdate=true;});}
+function hideWall(wi){if(!B||!B.walls)return;B.walls.forEach(m=>{m.setMatrixAt(wi,B.zero);m.instanceMatrix.needsUpdate=true;});}
 function rockAt(i,r,c,sink,tall){const [x,z]=cellXZ(r,c),k=sink||0,h=tall?WALL_H*2.25*(1+hsh(r,c,21)*.12):ROCK_H*(.7+hsh(r,c,21)*.75),wd=tall?1/ROCK_W:1;
-  dm.position.set(x,h/2-.04-k*h*1.1,z);dm.rotation.set(0,Math.floor(hsh(r,c,22)*4)*Math.PI/2,0);dm.scale.set((1-k*.15)*wd,h/ROCK_H,(1-k*.15)*wd);dm.updateMatrix();B.rock.setMatrixAt(i,dm.matrix);B.rock.instanceMatrix.needsUpdate=true;}
+  dm.position.set(x,h/2-.04-k*h*1.1,z);dm.rotation.set(0,Math.floor(hsh(r,c,22)*4)*Math.PI/2,0);dm.scale.set((1-k*.15)*wd,h/ROCK_H,(1-k*.15)*wd);dm.updateMatrix();
+  const tile=pickBigWallTile(r,c,71);
+  B.rocks.forEach((m,j)=>{if(j!==tile){m.setMatrixAt(i,B.zero);m.instanceMatrix.needsUpdate=true;}});
+  B.rocks[tile].setMatrixAt(i,dm.matrix);B.rocks[tile].instanceMatrix.needsUpdate=true;}
+function stampWall(wi,r,c,salt,px,pz,w,dd,f){
+  if(S.rules==='descent')f*=2.25;   // в «Спуске» стены залов выше
+  dm.position.set(px,TILE_Y+WALL_H*f/2,pz);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();
+  const tile=pickWallTile(r,c,salt);
+  B.walls.forEach((m,j)=>{if(j!==tile){m.setMatrixAt(wi,B.zero);m.instanceMatrix.needsUpdate=true;}});
+  B.walls[tile].setMatrixAt(wi,dm.matrix);B.walls[tile].instanceMatrix.needsUpdate=true;
+}
+function stampRim(rims,rimN,rimEdges){
+  const zero=B&&B.zero||new THREE.Matrix4().makeScale(0,0,0);
+  rims.forEach(m=>{for(let i=0;i<rimN;i++)m.setMatrixAt(i,zero);});
+  let j=0;
+  for(let q=-1;q<N;q++)for(const [r,c] of [[-1,q],[q+1,-1],[N,q+1],[q,N]]){const [x,z]=cellXZ(r,c),h=(.4+hsh(r,c,41)*.5)*1.5,w=.82+hsh(r,c,42)*.26;
+    dm.position.set(x+(hsh(r,c,43)-.5)*.14,h/2-.3,z+(hsh(r,c,44)-.5)*.14);dm.rotation.set((hsh(r,c,46)-.5)*.08,(hsh(r,c,45)-.5)*.3,(hsh(r,c,47)-.5)*.08);dm.scale.set(w,h,w);dm.updateMatrix();
+    const tile=pickBigWallTile(r,c,81),v=.38+hsh(r,c,48)*.24,col=new THREE.Color(v,v,v*1.04);
+    rims.forEach((m,t)=>{if(t!==tile)m.setMatrixAt(j,zero);else{m.setMatrixAt(j,dm.matrix);m.setColorAt(j,col);}});
+    j++;}
+  rimEdges.forEach(([r,c,dr,dc],e)=>{const [x,z]=cellXZ(r,c),q=e*7+3,h=(.4+hsh(q,r,41)*.5)*1.5,w=.86+hsh(q,c,42)*.3,d=.36+hsh(q,c,49)*.16;
+    dm.position.set(x+dc*.32+(hsh(q,r,43)-.5)*.1,h/2-.3,z+dr*.32+(hsh(q,r,44)-.5)*.1);dm.rotation.set((hsh(q,c,46)-.5)*.1,(hsh(q,c,45)-.5)*.3,(hsh(q,c,47)-.5)*.1);
+    dm.scale.set(dr?w:d,h,dr?d:w);dm.updateMatrix();
+    const tile=pickBigWallTile(q,c,81),v=.38+hsh(q,c,48)*.24,col=new THREE.Color(v,v,v*1.04);
+    rims.forEach((m,t)=>{if(t!==tile)m.setMatrixAt(j,zero);else{m.setMatrixAt(j,dm.matrix);m.setColorAt(j,col);}});
+    j++;});
+  rims.forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
+}
 const dm=new THREE.Object3D();
 function cellXZ(r,c){return [c-C,r-C];}
 function build(){
-  if(B){SC.remove(B.g);B.g.traverse(o=>{if(o.geometry&&!o.geometry._shared)o.geometry.dispose();});}
+  if(B){SC.remove(B.g);B.g.traverse(o=>{if(o.geometry&&!o.geometry._shared)o.geometry.dispose();});
+    if(B.rockGeo)B.rockGeo.dispose();if(B.wallGeo)B.wallGeo.dispose();if(B.rimGeo)B.rimGeo.dispose();}
   const g=new THREE.Group();SC.add(g);
   const n=N*N;
-  const rock=new THREE.InstancedMesh(new THREE.BoxGeometry(ROCK_W,ROCK_H,ROCK_W),blockMat,n);
-  rock.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);
-  rock.castShadow=rock.receiveShadow=true;g.add(rock);
-  const walls=new THREE.InstancedMesh(new THREE.BoxGeometry(1,WALL_H,1),[rockMat,rockMat,rockTopMat,rockMat,rockMat,rockMat],n*16);
-  walls.castShadow=walls.receiveShadow=true;g.add(walls);
+  // скала закрытых клеток: по одной InstancedMesh на плитку атласа (общий материал нельзя развести по экземплярам)
+  const rockSideV=1-Math.min(0.95,ROCK_H/ROCK_W);   // на боках — верхняя полоса текстуры по аспекту ROCK_H:ROCK_W
+  const rockGeo=boxWithSideUV(ROCK_W,ROCK_H,ROCK_W,rockSideV,1);
+  const rocks=[];
+  for(let t=0;t<BIG_WALL_TILE_MAX;t++){
+    const mat=[rockSideMats[t],rockSideMats[t],rockTopMats[t],rockSideMats[t],rockSideMats[t],rockSideMats[t]];
+    const rock=new THREE.InstancedMesh(rockGeo,mat,n);
+    rock.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);
+    rock.castShadow=rock.receiveShadow=true;g.add(rock);rocks.push(rock);
+  }
+  const wallGeo=new THREE.BoxGeometry(1,WALL_H,1);wallGeo._shared=true;
+  const walls=[];
+  for(let t=0;t<WALL_TILE_MAX;t++){
+    const mat=[wallSideMats[t],wallSideMats[t],wallTopMat,wallSideMats[t],wallSideMats[t],wallSideMats[t]];
+    const wmesh=new THREE.InstancedMesh(wallGeo,mat,n*16);
+    wmesh.castShadow=wmesh.receiveShadow=true;g.add(wmesh);walls.push(wmesh);
+  }
   // в «Спуске» плиты пола — толстые и чуть разной высоты, со щелями между ними; в остальных режимах — ровная плоскость
   const fgeo=S.rules==='descent'?new THREE.BoxGeometry(.965,.09,.965).translate(0,-.045,0):new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
   const floors=floorMats.map(m=>{const im=new THREE.InstancedMesh(fgeo,m,n);im.receiveShadow=true;im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);g.add(im);return im;});
   const zero=new THREE.Matrix4().makeScale(0,0,0);
   for(let i=0;i<n;i++){floors.forEach(f=>f.setMatrixAt(i,zero));}
-  for(let i=0;i<n*16;i++)walls.setMatrixAt(i,zero);
+  for(let i=0;i<n*16;i++)walls.forEach(m=>m.setMatrixAt(i,zero));
   // нераскрытая скала
-  for(let r=0;r<N;r++)for(let c=0;c<N;c++){const i=r*N+c,v=.6+hsh(r,c,23)*.45;rock.setColorAt(i,new THREE.Color(v,v*.97,v*.93));rock.setMatrixAt(i,zero);}
-  // бортик подземелья: крупные неровные каменные блоки по внешнему краю
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){const i=r*N+c,v=.6+hsh(r,c,23)*.45,col=new THREE.Color(v,v*.97,v*.93);
+    rocks.forEach(rock=>{rock.setColorAt(i,col);rock.setMatrixAt(i,zero);});}
+  rocks.forEach(rock=>rock.instanceColor.needsUpdate=true);
+  // бортик подземелья: крупные неровные каменные блоки по внешнему краю (плитки big_wall)
   const rimEdges=[];   // кромка пропасти: стороны клеток пропасти, граничащие с подземельем
   for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(inChasm(r,c))for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){const r2=r+dr,c2=c+dc;if(inB(r2,c2)&&!inChasm(r2,c2)&&!inRoom(r2,c2))rimEdges.push([r,c,dr,dc]);}
-  const rimN=4*(N+1)+rimEdges.length,rim=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),rimMat,rimN);rim.castShadow=rim.receiveShadow=true;
-  rim.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rimN*3),3);
-  {let j=0;for(let q=-1;q<N;q++)for(const [r,c] of [[-1,q],[q+1,-1],[N,q+1],[q,N]]){const [x,z]=cellXZ(r,c),h=(.4+hsh(r,c,41)*.5)*1.5,w=.82+hsh(r,c,42)*.26;
-    dm.position.set(x+(hsh(r,c,43)-.5)*.14,h/2-.3,z+(hsh(r,c,44)-.5)*.14);dm.rotation.set((hsh(r,c,46)-.5)*.08,(hsh(r,c,45)-.5)*.3,(hsh(r,c,47)-.5)*.08);dm.scale.set(w,h,w);dm.updateMatrix();
-    rim.setMatrixAt(j,dm.matrix);const v=.38+hsh(r,c,48)*.24;rim.setColorAt(j,new THREE.Color(v,v,v*1.04));j++;}
-   rimEdges.forEach(([r,c,dr,dc],e)=>{const [x,z]=cellXZ(r,c),q=e*7+3,h=(.4+hsh(q,r,41)*.5)*1.5,w=.86+hsh(q,c,42)*.3,d=.36+hsh(q,c,49)*.16;
-    dm.position.set(x+dc*.32+(hsh(q,r,43)-.5)*.1,h/2-.3,z+dr*.32+(hsh(q,r,44)-.5)*.1);dm.rotation.set((hsh(q,c,46)-.5)*.1,(hsh(q,c,45)-.5)*.3,(hsh(q,c,47)-.5)*.1);
-    dm.scale.set(dr?w:d,h,dr?d:w);dm.updateMatrix();rim.setMatrixAt(j,dm.matrix);const v=.38+hsh(q,c,48)*.24;rim.setColorAt(j,new THREE.Color(v,v,v*1.04));j++;});}
-  g.add(rim);
+  const rimN=4*(N+1)+rimEdges.length,rimGeo=new THREE.BoxGeometry(1,1,1);rimGeo._shared=true;  // бортик почти кубический, UV 0–1
+  const rims=[];
+  for(let t=0;t<BIG_WALL_TILE_MAX;t++){
+    const rim=new THREE.InstancedMesh(rimGeo,rimTileMats[t],rimN);rim.castShadow=rim.receiveShadow=true;
+    rim.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rimN*3),3);
+    g.add(rim);rims.push(rim);
+  }
+  // временный B.zero, чтобы stampRim мог прятать чужие плитки до присваивания B
+  const _prevB=B;B={zero};stampRim(rims,rimN,rimEdges);B=_prevB;
   // основание под всем полем
   const base=new THREE.Mesh(new THREE.BoxGeometry(N+2,.6,N+2),new THREE.MeshStandardMaterial({color:0x0b0a0c,roughness:1}));base.position.y=-.3;base.receiveShadow=true;g.add(base);
   // пропасть вокруг логова: чёрная яма с красным отсветом
@@ -117,7 +415,7 @@ function build(){
   const flames=[new THREE.InstancedMesh(fgeo1,flameMat,n),new THREE.InstancedMesh(fgeo2,flameMat2,n)];
   flames.forEach(f=>{f.frustumCulled=false;for(let i=0;i<n;i++)f.setMatrixAt(i,zero);g.add(f);});
   const sh=N/2+1;Object.assign(moon.shadow.camera,{left:-sh,right:sh,top:sh,bottom:-sh,near:1,far:40});moon.shadow.camera.updateProjectionMatrix();
-  B={g,n,N,rock,walls,floors,zero,rim,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S,cells:S.cells,monYaw:new Map()};
+  B={g,n,N,rocks,walls,rims,floors,zero,rim:rims[0],rimN,rimEdges,rockGeo,wallGeo,rimGeo,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S,cells:S.cells,monYaw:new Map()};
   if(S.rules==='descent'){lair.g.visible=false;}   // в «Спуске» логова нет — в центре просто провал
   {const need=['dragon',...new Set(S.players.map(heroKind))];if(S.awake)need.push('wake');if(S.rules==='hunt'&&(S.hunters||[]).length)need.push(...S.hunters.map(h=>h.k));
    const todo=need.filter(k=>!FIG[k].mesh);
@@ -186,28 +484,20 @@ function syncCell(r,c,now){
   if(!k.rev){rockAt(i,r,c,0);return;}
   if(k.block){rockAt(i,r,c,0,true);return;}   // в зале — глухая плита из камня
   // плита пола
-  const plate=Math.floor(hsh(r,c,11)*6)%6,rot=Math.floor(hsh(r,c,12)*4)%4;
-  B.floors.forEach((f,j)=>{if(j!==plate){f.setMatrixAt(i,B.zero);f.instanceMatrix.needsUpdate=true;}});
-  if(S.rules==='descent'){const lift=hsh(r,c,31)*.045;dm.position.set(x,TILE_Y+.001+lift,z);dm.rotation.set((hsh(r,c,32)-.5)*.05,rot*Math.PI/2,(hsh(r,c,33)-.5)*.05);}   // неровный пол
-  else{dm.position.set(x,TILE_Y+.001,z);dm.rotation.set(0,rot*Math.PI/2,0);}
-  dm.scale.set(1,1,1);dm.updateMatrix();
-  const F=B.floors[plate];F.setMatrixAt(i,dm.matrix);F.setColorAt(i,plateColor(r,c,isDead,burn));F.instanceMatrix.needsUpdate=true;F.instanceColor.needsUpdate=true;
+  stampFloor(r,c,i,x,z,isDead,burn);
   // стены: углы всегда, стороны — где нет выхода
   const ex=new Set(exitsOf(r,c,k)),a=.17,o=.5-a/2,mid=1-a*2;
   // верх стены неровный: угловые столбы выше, стороны собраны из 3 блоков разной высоты и толщины
-  const put=(wi,px,pz,w,dd,f)=>{if(S.rules==='descent')f*=2.25;   // в «Спуске» стены залов выше
-    dm.position.set(px,TILE_Y+WALL_H*f/2,pz);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();B.walls.setMatrixAt(wi,dm.matrix);};
   SLOTS.forEach(([sx,sz,d],j)=>{
-    if(d==='c'){if(S.rules==='descent'&&ex.has(sz<0?'U':'D')&&ex.has(sx<0?'L':'R')){B.walls.setMatrixAt(i*16+j,B.zero);return;}   // в зале 3×3 внутри нет колонн
-      put(i*16+j,x+sx*o,z+sz*o,a*(1+hsh(r,c,110+j)*.12),a*(1+hsh(r,c,114+j)*.12),1.15+hsh(r,c,118+j)*.45);return;}
+    if(d==='c'){if(S.rules==='descent'&&ex.has(sz<0?'U':'D')&&ex.has(sx<0?'L':'R')){hideWall(i*16+j);return;}   // в зале 3×3 внутри нет колонн
+      stampWall(i*16+j,r,c,210+j,x+sx*o,z+sz*o,a*(1+hsh(r,c,110+j)*.12),a*(1+hsh(r,c,114+j)*.12),1.15+hsh(r,c,118+j)*.45);return;}
     const base=i*16+4+(j-4)*3;
-    if(ex.has(d)){for(let q=0;q<3;q++)B.walls.setMatrixAt(base+q,B.zero);return;}
+    if(ex.has(d)){for(let q=0;q<3;q++)hideWall(base+q);return;}
     const ps=[0,1,2].map(q=>.6+hsh(r,c,130+j*3+q)),sum=ps[0]+ps[1]+ps[2],along=d==='U'||d==='D';let t=-mid/2;
     ps.forEach((pp,q)=>{const L=mid*pp/sum,cen=t+L/2;t+=L;const f=.8+hsh(r,c,150+j*3+q)*.6,th=a*(.88+hsh(r,c,170+j*3+q)*.3);
-      if(along)put(base+q,x+cen,z+sz*o,L*.97,th,f);else put(base+q,x+sx*o,z+cen,th,L*.97,f);});});
-  B.walls.instanceMatrix.needsUpdate=true;
+      if(along)stampWall(base+q,r,c,230+j*3+q,x+cen,z+sz*o,L*.97,th,f);else stampWall(base+q,r,c,230+j*3+q,x+sx*o,z+cen,th,L*.97,f);});});
   // скала «уходит» анимацией, если клетка открылась только что
-  if(!was&&!reduce)B.anim.push({i,r,c,t0:now});else{B.rock.setMatrixAt(i,B.zero);B.rock.instanceMatrix.needsUpdate=true;}
+  if(!was&&!reduce)B.anim.push({i,r,c,t0:now});else hideRock(i);
   // факел на глухой стене — как в игре (примерно каждая восьмая клетка)
   archesFor(r,c,ex);archVis(r,c);
   if(!was&&isTorch(r,c,k)){const sides=['U','D','L','R'].filter(d=>!ex.has(d));
@@ -289,7 +579,10 @@ const EV3={chest:['mon_mimic',.5],potion:['it_potion',.36],haste:['it_haste',.36
   map:['it_map',.36],bomb:['it_bomb',.36],rope:['it_rope',.3],stone:['it_stone',.34],key:['it_key',.4],pick:['it_pick',.5],gold:['it_gold',.4],cache:['it_gold',.46],shield:['it_shield',.42],scroll:['it_scroll',.4],kobold:['kobold',.6]};
 const EVIMG={cultist:'',whelp:'',ghost:'img/item-ghost.jpg',mantle:'img/item-mantle.jpg',cultist:'img/mon-cultist.jpg',whelp:'img/mon-whelp.jpg'};
 // модели монстров по порядку MONSTERS: крыса, слизень, гоблин, скелет, паук, шаман, призрак, мимик (= сундук), бес, вампир, тролль, зомби, ведьма, минотавр
-const MON3={11:['mon_zombie',.72],12:['mon_witch',.72],'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85]};
+const MON3={11:['mon_zombie',.72],12:['mon_witch',.72],'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85],
+  14:['mon_shaman',.7,0xff8040],15:['mon_ghost',.74,0xa070ff]};   // ЗАГЛУШКИ: Огненный вождь и Пустотное тело — чужие модели с подкраской (3-й элемент — цвет)
+// подкрашенная копия фигурки (готовится один раз на цвет и кешируется в FIG)
+const tintFig=(f,col)=>f['t'+col]||(f['t'+col]=(()=>{const g=f.mesh.clone(true);g.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.color.setHex(col);o.material.emissive.setHex(col);o.material.emissiveIntensity=.18;}});return g;})());
 const ITEM_EV=new Set(Object.keys(EV3).concat(['shield','scroll','ghost','mantle','gold','cache']).filter(k=>k!=='kobold'));
 const st0=k=>!!k.stash;
 const decoReset=()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});};
@@ -341,7 +634,7 @@ function addEvent(g,k,r,c){
     if(k.from){const [fx,fz]=cellXZ(k.from[0],k.from[1]),[tx,tz]=cellXZ(r,c);host.position.set(fx-tx,0,fz-tz);g.userData.slide={o:host,t0:performance.now()};
       B.monYaw.set(r*N+c,Math.atan2(tx-fx,tz-fz));k.from=null;}}
   if(spec){const f=ensureFig(spec[0]);if(!f.mesh){loadFig(spec[0]);return;}
-    const m=f.mesh.clone(),h=spec[1];m.scale.setScalar(h);m.position.y=-(f.minY??-.5)*h+lift;
+    const m=(spec[2]?tintFig(f,spec[2]):f.mesh).clone(),h=spec[1];m.scale.setScalar(h);m.position.y=-(f.minY??-.5)*h+lift;
     const w=new THREE.Group();w.add(m);
     if(item){w.position.y=.08;g.userData.spin=w;w.rotation.y=hsh(r,c,63)*6;}
     else{const i=r*N+c;let y=B.monYaw.get(i);
@@ -764,7 +1057,7 @@ function frame(){
   // анимация раскрытия: скала опускается
   if(B.anim.length)shadowDirty=true;
   B.anim=B.anim.filter(a=>{const k=Math.min(1,(now-a.t0)/450);
-    if(k>=1){B.rock.setMatrixAt(a.i,B.zero);B.rock.instanceMatrix.needsUpdate=true;return false;}
+    if(k>=1){hideRock(a.i);return false;}
     rockAt(a.i,a.r,a.c,k);return true;});
   // герои
   const cur=P();
@@ -848,7 +1141,8 @@ function frame(){
 requestAnimationFrame(frame);
 // для автотестов: где на экране метка хода
 window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
-  markerScreen(i){const m=marks[i];if(!m||!m.visible)return null;const v=m.position.clone().project(cam),b=cv.getBoundingClientRect();return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height};}};
+  markerScreen(i){const m=marks[i];if(!m||!m.visible)return null;const v=m.position.clone().project(cam),b=cv.getBoundingClientRect();return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height};},
+  look(x,z,o={}){tgt.x=x;tgt.z=z;if(o.az!=null)tAz=az=o.az;if(o.el!=null)tEl=el=o.el;if(o.distMul!=null)distMul=o.distMul;if(o.zoom!=null)zoom=o.zoom;userUntil=performance.now()+1e7;focusUntil=0;focusI=-1;}};
 
 // --- при запуске всё грузится в память: картинки, звуки и 3D-модели; пока идёт загрузка — вращается d20
 (function preloadAll(){

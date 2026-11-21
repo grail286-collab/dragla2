@@ -635,7 +635,7 @@ function reveal(r,c,mode,from){
   const x=cell(r,c);
   if(x.rev)return;
   x.rev=true;
-  if(!onEdge(r,c)&&RNG()<0.33){x.ev=pickW(S.evW||EVENTS);if(x.ev==='monster'&&SEE())x.mon=Math.floor(RNG()*MONSTERS.length);}
+  if(!onEdge(r,c)&&RNG()<0.33){x.ev=pickW(S.evW||EVENTS);if(x.ev==='monster'&&SEE())x.mon=pickMon(r,c);}
   if(x.stairs){x.ev=null;x.mon=null;}
   const all=Object.keys(D).filter(k=>walkable(r+D[k][0],c+D[k][1]));
   const jump=jumpDir(r,c);
@@ -772,7 +772,25 @@ const MONSTERS=[
   {n:'Зомби-латник',img:'img/mon-zombie.jpg',dc:13,dmg:1,undead:1,rot:2,loot:[30,50],how:'вцепился гнилыми зубами',d:'Мертвец в ржавых латах прёт напролом, не чувствуя ударов. Его укус несёт трупный яд.'},
   {n:'Болотная ведьма',img:'img/mon-witch.jpg',dc:13,dmg:1,hex:1,brew:1,loot:[20,40],how:'полоснула когтями',d:'Сгорбленная карга с клюкой хихикает и шарит взглядом по твоей сумке. Проиграешь — она утащит что-нибудь из вещей; победишь — заберёшь зелье из её котла.'},
   {n:'Минотавр',img:'img/mon-minotaur.jpg',dc:15,dmg:2,loot:[40,60],d:'Рёв, топот и рога наперевес.'},
+  // 14 — Огненный вождь: проигравший получает «ожог» (3 хода: −3 к d20 в бою, +1 к d4)
+  {n:'Огненный вождь',img:'img/mon-firechief.jpg',dc:16,dmg:1,burn:3,loot:[45,70],how:'ткнул в тебя пылающим факелом',win:'Факел вождя шипит и гаснет, а маска-череп с треском раскалывается надвое.',d:'Из дыма выступает рогатый вождь в маске из черепа. Перья на его плечах тлеют, на поясе гремят костяные трофеи, а факел в руке ревёт, как живой. Он не кричит — он поджигает. Проиграешь — огонь перекинется на тебя.'},
+  // 15 — Пустотное тело: чем ближе к пропасти вокруг логова, тем чаще встречается (voidChance); проигравшего телепортирует на клетку в радиусе 3
+  {n:'Пустотное тело',img:'img/mon-void.jpg',dc:10,dmg:1,voidTp:3,loot:[15,30],how:'втянуло тебя в свою пустоту',win:'Чёрная дыра в груди твари схлопывается с тихим хлопком, и парящие камни градом осыпаются на пол.',d:'Под капюшоном нет лица — только темнота. В груди зияет чёрная дыра, вокруг неё кружат вырванные из пола камни, по краям мерцает лиловый свет. Эти твари выползают из бездны у логова дракона. Проиграешь — пустота проглотит тебя и выплюнет где-то рядом.'},
 ];
+// Пустотное тело приходит из бездны: шанс, что монстр на клетке окажется им, растёт к пропасти вокруг логова.
+// Кольцо 3 (у самой пропасти) — 90%, внешний край подземелья — 0%, между ними — линейно по кольцу (ring = расстояние Чебышёва до центра).
+const MON_VOID=15,VOID_MAX=0.9;
+function voidChance(r,c){
+  if(r==null||coopOn())return 0;            // в «Спуске» пропасти нет — нет и пустотных тел
+  const k=ring(r,c);if(k<3)return 0;
+  return VOID_MAX*Math.max(0,Math.min(1,(C-k)/Math.max(1,C-3)));
+}
+// случайный монстр для клетки (r,c): сначала — шанс пустотного тела, иначе обычный равный выбор из остальных.
+// Вся случайность через RNG() — в сетевой партии выбор одинаков у всех.
+function pickMon(r,c){
+  if(r!=null&&RNG()<voidChance(r,c))return MON_VOID;
+  const i=rnd(MONSTERS.length-1);return i>=MON_VOID?i+1:i;
+}
 const TRAPS=[
   {n:'Сеть под потолком',img:'img/trap-net.jpg',dc:10,dmg:0,skip:1,d:'Над головой что-то щёлкнуло.'},
   {n:'Шипы из стены',img:'img/trap-spikes.jpg',dc:10,dmg:1,d:'Плита под ногой проседает.'},
@@ -822,25 +840,26 @@ const COOP=()=>!!(S&&S.rules==='descent');
 const TROPHY_GOLD=20;   // столько золотых гильдия платит за очко трофея, когда герой выберется
 function trophy(p,v){if(!(S&&S.rules==='trophy')||!(v>0))return '';p.tro=(p.tro||0)+v;addLog(`${p.name} добыл трофей: +${v} (всего ${p.tro}).`);return `\n\nТрофей: +${v} ${plural(v,'очко','очка','очков')} охотника (всего ${p.tro}).`;}
 const MODES=[['cpu','Против ИИ','1 игрок'],['hot','На одном','устройстве'],['net','По сети','лобби']];
-// Запуск и «Новая игра»: главное меню → настройка выбранного режима. «Назад» в настройке возвращает в меню.
+// Запуск и «Новая игра»: главное меню → (арена: правила → тип партии) → настройка. «Назад» в настройке возвращает к типу партии.
 async function askNames(){
   playMusic('intro');
   for(;;){
-    const m=campJump?'camp':await mainMenu(arenaJump?'arena':'');campJump=false;arenaJump=false;
+    const m=campJump?'camp':await mainMenu(arenaPartyJump?'party':arenaJump?'arena':'');campJump=false;arenaJump=false;arenaPartyJump=false;
     if(m==='resume')return{mode:'resume'};
     if(m==='train')return{mode:'train'};
     if(m==='camp'){const id=await campaignMenu();if(id)return{mode:'mission',id};continue;}
-    const cfg=await setupGame(m);
+    const cfg=await setupGame(m,m==='descent'?null:arenaRules);
     if(cfg)return cfg;
-    if(m!=='descent')arenaJump=true;   // «← Назад» из настройки режима — обратно в меню «Арены дракона»
+    if(m!=='descent'){arenaJump=true;arenaPartyJump=true;}   // «← Назад» из настройки — к выбору типа партии (правила уже выбраны)
   }
 }
-async function setupGame(startMode){
+async function setupGame(startMode,presetRules){
   let saved=SEATS.map(x=>''),count=4,mapSize='small',port=DEF_PORTRAIT.slice(),mode='hot',cpuN=1,code='',rules='free';
   try{const v=JSON.parse(localStorage.getItem('dragon-setup')||'null');
     if(v&&Array.isArray(v.names)&&v.names.length===4)saved=v.names;if(v&&[2,3,4].includes(v.count))count=v.count;if(v&&v.count==='cpu')mode='cpu';
     if(v&&MAP_SIZES[v.map])mapSize=v.map;if(v&&Array.isArray(v.portraits)&&v.portraits.length===4&&v.portraits.every(x=>x>=0&&x<PORTRAITS.length))port=v.portraits;
     if(v&&MODES.some(m=>m[0]===v.mode))mode=v.mode;if(v&&[1,2,3].includes(v.cpuN))cpuN=v.cpuN;if(v&&RULES_SET[v.rules])rules=v.rules;}catch(e){}
+  if(presetRules&&RULES_SET[presetRules]&&presetRules!=='descent')rules=presetRules;
   const coop=startMode==='descent';
   if(coop){mode=mode==='net'?'net':'hot';rules='descent';mapSize='small';if(count<1)count=1;}else if(rules==='descent')rules='free';
   if(startMode&&!coop)mode=startMode;
@@ -869,7 +888,7 @@ async function setupGame(startMode){
     document.querySelector('.cnt.hot').hidden=mode!=='hot';
     document.querySelector('.cnt.cpus').hidden=mode!=='cpu';
     document.querySelector('.cnt.maps').hidden=mode==='net'||coop;
-    document.querySelector('.cnt.rules').hidden=mode==='net'||coop;
+    document.querySelector('.cnt.rules').hidden=true;   // правила арены выбираются до этого окна; в «Спуске» их тоже нет
     document.querySelectorAll('.rules button').forEach(b=>b.classList.toggle('on',b.dataset.rules===rules));
     const show=mode==='hot'?SEATS_FOR[count]:[0];
     document.querySelectorAll('.nm[data-seat]').forEach(l=>{l.hidden=!show.includes(+l.dataset.seat);});
@@ -904,7 +923,7 @@ async function setupGame(startMode){
   const all=SEATS.map((x,i)=>($('nm'+i).value||'').trim().replace(/\s+/g,' ').slice(0,14));
   code=$('joincode').value.trim();
   if(!coop)try{localStorage.setItem('dragon-setup',JSON.stringify({names:all,count,map:mapSize,portraits:port,mode,cpuN,rules}));}catch(e){}
-  if(mode==='net')return{mode,rules:coop?'descent':null,action:v==='join'?'join':v==='browse'?'browse':'create',code,name:all[0]||'Герой',portrait:port[0]};
+  if(mode==='net')return{mode,rules:coop?'descent':rules,action:v==='join'?'join':v==='browse'?'browse':'create',code,name:all[0]||'Герой',portrait:port[0]};
   if(mode==='cpu'){
     const seats=SEATS_FOR[1+cpuN],free=shuffle(PORTRAITS.map((x,k)=>k).filter(k=>k!==port[0])),cn=cpuNames(free.slice(0,cpuN));
     return{mode,map:mapSize,rules,players:seats.map((seat,k)=>k===0?{seat,name:CPU_NAMES.includes(all[0])?all[0]+' 2':(all[0]||SEATS[0].def),portrait:port[0]}:{seat,name:cn[k-1],cpu:true,portrait:free[k-1]})};
@@ -914,20 +933,30 @@ async function setupGame(startMode){
     let n=all[i]||SEATS[i].def;let k=2,base=n;while(used.has(n))n=`${base} ${k++}`;used.add(n);return{seat:i,name:n,portrait:port[i]};})};
 }
 // Главное меню: логотип, название, слоган, режимы игры, «Продолжить» (если есть сохранённая партия)
-let arenaJump=false;
+let arenaJump=false,arenaPartyJump=false,arenaRules=null;   // возврат в правила / тип партии; выбранные правила арены
 function mainMenu(startSub){
   return new Promise(res=>{
     const el=$('mainmenu'),st=loadSave();
     const desc={cpu:'Ты против 1–3 компьютеров',hot:'2–4 игрока по очереди',net:'Каждый на своём телефоне'};
     const ico={cpu:'⚔',hot:'⛨',net:'⚑'};
-    let sub=startSub||'';   // '' — главный экран, 'arena' — режимы «Арены дракона»
+    let sub=startSub||'';   // '' — главный экран, 'play' — куда идти, 'arena' — правила арены, 'party' — тип партии
+    if(!arenaRules||!RULES_SET[arenaRules]||arenaRules==='descent'){
+      try{const v=JSON.parse(localStorage.getItem('dragon-setup')||'null');if(v&&RULES_SET[v.rules]&&v.rules!=='descent')arenaRules=v.rules;}catch(e){}
+      if(!arenaRules||!RULES_SET[arenaRules]||arenaRules==='descent')arenaRules='free';
+    }
     const paint=()=>{
       const fresh=!tutDone();   // новичок: обучение — первой и главной кнопкой
       const cs=campStars(),cTot=CAMP_ACT.length*3,camp=campLoad();
+      const ruleBtn=([k,x])=>`<button type="button" class="${k===arenaRules?'primary':''}" data-m="rule" data-rules="${k}"><span><b>${x.t}</b><small>${x.d}</small></span></button>`;
+      const partyRule=RULES_SET[arenaRules]||RULES_SET.free;
       el.querySelector('.mmbtns').innerHTML=sub==='arena'?
-        `<div class="mmhead"><b>Арена дракона</b><small>Кто вынесет больше золота — и выберется живым?</small></div>`+
-        MODES.map(([k,t,d])=>`<button type="button" class="${k==='cpu'?'primary':''}" data-m="${k}"><i>${ico[k]}</i><span><b>${k==='hot'?'На одном устройстве':t}</b><small>${desc[k]}</small></span></button>`).join('')+
+        `<div class="mmhead"><b>Арена дракона</b><small>Выбери правила партии</small></div>`+
+        Object.entries(RULES_SET).filter(([k])=>k!=='descent').map(ruleBtn).join('')+
         `<button type="button" class="mmback" data-m="toplay">← Назад</button>`:
+        sub==='party'?
+        `<div class="mmhead"><b>Тип партии</b><small>${partyRule.t}</small></div>`+
+        MODES.map(([k,t,d])=>`<button type="button" class="${k==='cpu'?'primary':''}" data-m="${k}"><i>${ico[k]}</i><span><b>${k==='hot'?'На одном устройстве':t}</b><small>${desc[k]}</small></span></button>`).join('')+
+        `<button type="button" class="mmback" data-m="torules">← Назад</button>`:
         (st&&sub!=='play'?`<button type="button" class="primary mmres" data-m="resume"><b>${st.mission?'Продолжить миссию':'Продолжить экспедицию'}</b><small>${st.mission?esc(missionById(st.mission)?.t||''):st.players.map(p=>esc(p.name)).join(', ')}</small></button>`:'')+
         (sub==='play'?
           `<div class="mmhead"><b>Играть</b><small>Выбери, куда отправится отряд</small></div>`+
@@ -949,6 +978,8 @@ function mainMenu(startSub){
         if(b.dataset.m==='arena'){sub='arena';paint();return;}
         if(b.dataset.m==='play'){sub='play';paint();return;}
         if(b.dataset.m==='toplay'){sub='play';paint();return;}
+        if(b.dataset.m==='torules'){sub='arena';paint();return;}
+        if(b.dataset.m==='rule'){arenaRules=b.dataset.rules;sub='party';paint();return;}
         if(b.dataset.m==='back'){sub='';paint();return;}
         if(b.dataset.m==='tutor'){
           const r=await tutorial('menu');
@@ -1006,7 +1037,7 @@ async function newGame(){
   if(cfg.mode==='mission'){startMission(cfg.id);return;}
   if(cfg.mode==='net'){
     const st=await netLobby(cfg);
-    if(!st){arenaJump=true;newGame();return;}
+    if(!st){if(cfg.rules!=='descent'){arenaJump=true;arenaPartyJump=true;if(cfg.rules&&RULES_SET[cfg.rules])arenaRules=cfg.rules;}newGame();return;}
     startGame(st.players,st.map,{seed:st.seed,online:true,rules:st.rules,timer:st.timer});return;
   }
   startGame(cfg.players,cfg.map,{rules:cfg.rules});
@@ -1506,7 +1537,7 @@ function modal(o){
         die.classList.remove('spin','idle');void die.offsetWidth;die.classList.add('spin');die.textContent=r;
         setTimeout(()=>{
           if(tot<dc)sfx('fail');
-          $('dc').innerHTML=`${bonus&&!forced?`${r} ${bonus>0?'+':'−'} ${Math.abs(bonus)} = `:''}<b>${tot}</b> против ${dc}<br>${tot>=dc?'<span class="g">Успех</span>':'<span class="f">Провал</span>'}`;
+          $('dc').innerHTML=`${bonus&&!forced?`${r} ${bonus>0?'+':'−'} ${Math.abs(bonus)}${bonusText?` (${bonusText})`:''} = `:''}<b>${tot}</b> против ${dc}<br>${tot>=dc?'<span class="g">Успех</span>':'<span class="f">Провал</span>'}`;
           $('mtext').textContent=outcome(r,tot>=dc);render();
           setBtns([{label:'Дальше',cls:'primary',value:r}]);
         },550);
@@ -1813,7 +1844,7 @@ function netLobby(cfg){
       box.innerHTML=`<div class="lobcode"><small>Код комнаты</small><b>${esc(r.code)}</b><small>Скажи его друзьям — они войдут по коду</small></div>
         <div class="lobslots">${r.slots.map(slot).join('')}</div>
         <div class="cnt maps lobmap" ${coopR?'hidden':''}><span>Карта${host?'':' (выбирает хозяин)'}</span>${[['large','Большая','41×41'],['medium','Средняя','31×31'],['small','Малая','21×21']].map(([k,t,d])=>`<button type="button" data-act="map" data-v="${k}" class="${r.map===k?'on':''}" ${host?'':'disabled'}>${t}<small>${d}</small></button>`).join('')}</div>
-        <div class="cnt rules lobrules"><span>Правила${host?'':' (выбирает хозяин)'}</span>${Object.entries(RULES_SET).map(([k,x])=>`<button type="button" data-act="rules" data-v="${k}" class="${(r.rules||'free')===k?'on':''}" ${host?'':'disabled'}>${x.t}<small>${x.d}</small></button>`).join('')}</div>
+        <div class="cnt rules lobrules"><span>Правила</span>${Object.entries(RULES_SET).map(([k,x])=>`<button type="button" data-act="rules" data-v="${k}" class="${(r.rules||'free')===k?'on':''}" disabled>${x.t}<small>${x.d}</small></button>`).join('')}</div>
         <div class="cnt tmrs lobtmr"><span>Таймер хода${host?'':' (выбирает хозяин)'}</span>${[[0,'Без таймера','не спешить'],[30,'30 секунд','на ход'],[60,'60 секунд','на ход']].map(([k,t,d])=>`<button type="button" data-act="timer" data-v="${k}" class="${(+r.timer||0)===k?'on':''}" ${host?'':'disabled'}>${t}<small>${d}</small></button>`).join('')}</div>
         <div class="cnt lobopen"><span>Комната${host?'':' (выбирает хозяин)'}</span><button type="button" data-act="open" data-v="1" class="${r.open?'on':''}" ${host?'':'disabled'}>Открытая<small>видна в списке</small></button><button type="button" data-act="open" data-v="0" class="${r.open?'':'on'}" ${host?'':'disabled'}>По коду<small>только друзья</small></button></div>
         ${mine?`<div class="lobport"><span>Твой герой</span>${PORTRAITS.map((src,k)=>`<button type="button" data-act="port" data-v="${k}" class="${mine.portrait===k?'on':''}${taken.has(k)?' taken':''}" ${taken.has(k)?'disabled':''}><img alt="" src="${src}"></button>`).join('')}</div>`:''}
@@ -1943,6 +1974,7 @@ function startTurn(){
   S.turnNo++;
   p.jinxTurn=(p.jinx||0)>0;if(p.jinxTurn)p.jinx--;
   p.curseTurn=(p.curse||0)>0;if(p.curseTurn)p.curse--;
+  p.burnTurn=(p.burn||0)>0;if(p.burnTurn){p.burn--;if(!p.burn)addLog(`${p.name}: ожог догорает — это последний ход с ним.`);}   // ожог Огненного вождя
   if(p.bless>0)p.bless--;                 // гармония духа: +1 к броскам
   if(p.ward>0)p.ward--;                   // камень судьбы: защита от негативных эффектов
   if(p.lock>0){p.lock--;if(!p.lock){if(p.hp<MAXHP)p.hp++;addLog(`${p.name}: срок сделки истёк — демон вернул сердце.`);}}
@@ -1978,7 +2010,7 @@ function showRollPop(p){
   pop.style.setProperty('--pc',pcol(p));
   $('rpWho').textContent=p.name;
   $('rpVal').textContent='?';
-  $('rpHint').textContent=!isLocal(p)?(p.cpu?'Компьютер бросает…':`Бросает ${p.name}…`):(p.haste>0?'Нажми, чтобы бросить · скорость +1':'Нажми, чтобы бросить');
+  $('rpHint').textContent=!isLocal(p)?(p.cpu?'Компьютер бросает…':`Бросает ${p.name}…`):(p.haste>0||p.burnTurn?`Нажми, чтобы бросить · ${[p.haste>0?'скорость +1':'',p.burnTurn?'ожог +1':''].filter(Boolean).join(' · ')}`:'Нажми, чтобы бросить');
   pop.classList.remove('done');$('rollcard').classList.toggle('ready',isLocal(p));
   $('rpSkip').hidden=!isLocal(p)||!!p.cpu;
   {const loc=isLocal(p)&&!p.cpu;$('rpHide').hidden=!loc||canHide(p)==='no';$('rpCloak').hidden=!loc||!(p.cloak>0)||p.invis>0;$('rpCloak').textContent=`❖ Плащ${p.cloak>1?' ×'+p.cloak:''}`;
@@ -2012,13 +2044,14 @@ async function rollD4(){
   $('rpVal').textContent=v;
   const bonus=p.haste>0?1:0;if(bonus)p.haste--;
   const rot=p.rot>0?1:0;if(rot)p.rot--;
-  const tot=Math.max(1,v+bonus-rot);
-  $('rpHint').textContent=bonus||rot?`Шагов: ${v}${bonus?' + 1':''}${rot?' − 1 (яд)':''} = ${tot}`:`Шагов: ${v}`;
+  const burn=p.burnTurn?1:0;   // ожог: горящий герой бежит быстрее (+1 шаг), счётчик тикает в startTurn
+  const tot=Math.max(1,v+bonus+burn-rot);
+  $('rpHint').textContent=bonus||rot||burn?`Шагов: ${v}${bonus?' + 1':''}${burn?' + 1 (ожог)':''}${rot?' − 1 (яд)':''} = ${tot}`:`Шагов: ${v}`;
   pop.classList.add('done');
   await wait(750);
   pop.hidden=true;
   p.moves=tot;S.roll=v;
-  addLog(`${p.name} бросил d4: ${v}${bonus?' +1 (скорость)':''}${rot?' −1 (трупный яд)':''}.`);
+  addLog(`${p.name} бросил d4: ${v}${bonus?' +1 (скорость)':''}${burn?' +1 (ожог)':''}${rot?' −1 (трупный яд)':''}.`);
   S.phase='move';S.msg=hereMsg(p);rolling=false;render();
 }
 function hereMsg(p){
@@ -2225,7 +2258,7 @@ function genRoom(R,Cc,from,start){
   if(rm.stairs){const [sr,sc]=S.stairs,x=cell(sr,sc),bi=(S.depth-1)%BOSSES.length,bo=bossOf({boss:bi});
     Object.assign(x,{ev:'boss',boss:bi,hp:bo.hp,hpMax:bo.hp,awake:false,visited:false});addLog(`Лестницу охраняет ${bo.n}!`);}
   const deep=Math.min(4,S.depth-1),v=RNG(),nm=rm.stairs?(v<.5?0:1):v<.28-deep*.04?0:v<.7-deep*.06?1:2;
-  for(let k=0;k<nm&&spots.length;k++){const [r,c]=take(),x=cell(r,c);x.ev='monster';x.mon=Math.floor(RNG()*MONSTERS.length);x.hpMax=monHp(x.mon);x.hp=x.hpMax;}
+  for(let k=0;k<nm&&spots.length;k++){const [r,c]=take(),x=cell(r,c);x.ev='monster';x.mon=pickMon(null);x.hpMax=monHp(x.mon);x.hp=x.hpMax;}
   const w=RNG();
   if(w<.3+deep*.04)rm.trap=Math.floor(RNG()*TRAPS.length);
   else if(w<.85&&spots.length){const [r,c]=take();cell(r,c).ev=pickW(DITEMS);}
@@ -2485,6 +2518,8 @@ function harm(p,h){
     else if(p.gold>0){const l=Math.ceil(p.gold*0.15);p.gold-=l;parts.push(`ведьма стащила ${l} золотых`);}
   }
   if(h.rot){if(warded(p))parts.push('камень судьбы уберёг от трупного яда');else{p.rot=Math.max(p.rot||0,h.rot);parts.push(`трупный яд: ${h.rot} хода −1 шаг`);}}
+  if(h.burn){if(warded(p))parts.push('камень судьбы уберёг от ожога');else{p.burn=Math.max(p.burn||0,h.burn);parts.push(`ожог на ${h.burn} хода: −3 к d20 в бою, но +1 к d4 — горящий герой бежит быстрее`);}}
+  if(h.voidTp){if(warded(p))parts.push('камень судьбы удержал тебя на месте');else{p.voidTp=h.voidTp;parts.push(`пустота перенесёт тебя на клетку в радиусе ${h.voidTp}`);}}
   return parts.join(', ');
 }
 async function resolve(ev,p){
@@ -2550,14 +2585,14 @@ async function resolve(ev,p){
         await modal({icon:'⛧',tone:'line',title:'Ты отказался',sub:'Демон исчезает',text:'«Мы ещё встретимся», — шипит демон и растворяется в дыму.'});}
       break;}
     case'monster':{
-      const mk=cell(p.r,p.c),m=S.monObj?S.monObj:S.monFix!=null?MONSTERS[S.monFix]:mk.mon!=null?MONSTERS[mk.mon]:MONSTERS[rnd(MONSTERS.length)];sfx('monster');
+      const mk=cell(p.r,p.c),m=S.monObj?S.monObj:S.monFix!=null?MONSTERS[S.monFix]:mk.mon!=null?MONSTERS[mk.mon]:MONSTERS[pickMon(p.r,p.c)];sfx('monster');
       const coop=COOP(),mc=S.monCell||[p.r,p.c],mx=cell(mc[0],mc[1]);
       if(coop&&mx.hpMax==null){mx.hpMax=monHp(MONSTERS.indexOf(m));mx.hp=mx.hpMax;}
       const hpLine=coop?`\n\nЗдоровье: ${'♥'.repeat(mx.hp)}${'♡'.repeat(mx.hpMax-mx.hp)} (${mx.hp} из ${mx.hpMax}). Удар: 1 ♥ и ещё по 1 за каждые 3 очка сверх сложности; 20 на кубике — сразу наповал.`:'';
       const dc=COOP()?m.dc-3+Math.min(4,Math.floor((S.depth-1)/2)):m.dc+Math.round(2*(1-dist(p.r,p.c)/(N-1)));
       const wb=weaponB(p,m),b=wb.b+luckB()+cuB;
       const bt=[wb.t,luckB()?'амулет':'',cuB?penLabel(p):''].filter(Boolean).join(', ');
-      const pen=[m.dmg?`−${m.dmg} ♥`:'',m.steal?`потеря ${m.steal*100}% золота`:'',m.skip?'пропуск хода':'',m.rot?`трупный яд — ${m.rot} хода на 1 шаг меньше`:'',m.hex?'ведьма утащит предмет из сумки':''].filter(Boolean).join(', ');
+      const pen=[m.dmg?`−${m.dmg} ♥`:'',m.steal?`потеря ${m.steal*100}% золота`:'',m.skip?'пропуск хода':'',m.rot?`трупный яд — ${m.rot} хода на 1 шаг меньше`:'',m.hex?'ведьма утащит предмет из сумки':'',m.burn?`ожог на ${m.burn} хода (−3 к d20 в бою, +1 к d4)`:'',m.voidTp?`телепорт на случайную клетку в радиусе ${m.voidTp}`:''].filter(Boolean).join(', ');
       await modal({icon:'☠',tone:'fire',img:m.img,title:m.n,sub:'Монстр · бой',
         text:`${m.d}${m.noSword&&p.sword&&!wb.b?' Меч здесь бесполезен.':''}${m.undead&&p.silver?' Серебро жжёт нежить!':''}\n\nПри поражении: ${pen}.${p.shield?' Щит примет удар.':''}${hpLine}`,
         roll:{dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{
@@ -2566,9 +2601,11 @@ async function resolve(ev,p){
           if(win&&coop){const dmg=r===20?mx.hp:Math.max(1,1+Math.floor(Math.max(0,r+b-dc)/3)-(m.armor||0));mx.hp=Math.max(0,mx.hp-dmg);
             if(mx.hp>0){sfx('success');t=`Удар: −${dmg} ♥ монстру. ${m.n} ещё держится — ${mx.hp} из ${mx.hpMax}. Добейте его!`;addLog(`${p.name} ранил: ${m.n} (${mx.hp}/${mx.hpMax}).`);return t;}}
           if(win){sfx('kill');const g=between(m.loot);p.gold+=g;t=`${coop?(m.boss?'Босс повержен! Путь к лестнице свободен. ':'Монстр повержен! '):'Победа! '}Трофей: +${g} золотых.`+trophy(p,m.dc-8);
-            if(m.brew){p.potions++;t+=' В котле ведьмы нашлось зелье здоровья ✚.';}}
+            if(m.brew){p.potions++;t+=' В котле ведьмы нашлось зелье здоровья ✚.';}
+            if(m.win)t+=' '+m.win;}
           else t=shieldSave(p)?`${m.n} бьёт изо всех сил — щит принял удар и раскололся. Ты цел!`:`${m.n} ${m.how||'ранил героя'}: ${harm(p,m)}.`;
           addLog(`${m.n}: ${t}`);return t;}}});
+      if(p.voidTp){const rad=p.voidTp;p.voidTp=0;if(!coop&&p.hp>0&&alive(p))await voidTeleport(p,m,rad);}
       if(coop){
         if(mx.hp<=0){Object.assign(mx,{ev:null,mon:null,hp:null,hpMax:null,awake:false,visited:true});}
         else{mx.awake=true;
@@ -2673,9 +2710,9 @@ async function ratDice(p){
 /* ---------- оружие, щит, новые монстры ---------- */
 // бонус оружия в бою: серебряный клинок +5 против нежити, старый меч +2 (кроме тех, кого сталь не берёт)
 function weaponB(p,m={}){
-  if(m.undead&&p.silver)return{b:5,t:'серебряный клинок'};
-  if(p.sword&&!m.noSword)return{b:2,t:'меч'};
-  return{b:0,t:''};
+  const w=m.undead&&p.silver?{b:5,t:'серебряный клинок'}:p.sword&&!m.noSword?{b:2,t:'меч'}:{b:0,t:''};
+  if(p&&p.burnTurn){w.b-=3;w.t=w.t?w.t+', ожог −3':'ожог −3';}   // ожог Огненного вождя: −3 к d20 только в бою
+  return w;
 }
 // щит один раз принимает удар проигранного боя и раскалывается
 function shieldSave(p){if(!p.shield)return false;p.shield=false;sfx('shield');buzz(90);addLog(`${p.name}: щит принял удар и раскололся.`);return true;}
@@ -3394,7 +3431,7 @@ async function applyScroll(p,id,q,pickLoot){
       if(q.hp<=0)await die(q,'Ловушка, наведённая сглазом, оказалась смертельной. Герой выбывает из игры.','💀','Погиб');
       break;}
     case'beast':{
-      const m=MONSTERS[rnd(MONSTERS.length)];sfx('monster');sfx('fail');
+      const m=MONSTERS[pickMon(null)];sfx('monster');sfx('fail');
       const t=harm(q,m);addLog(`Призыв зверя: ${m.n} напал на ${q.name}: ${t}.`);
       await show({img:m.img,text:`Из тьмы на героя ${q.name} бросается ${m.n.toLowerCase()}. ${m.d}\n\nБой проигран: ${t}.`});
       if(q.hp<=0)await die(q,'Призванный зверь оказался сильнее. Герой выбывает из игры.','💀','Погиб');
@@ -3402,8 +3439,8 @@ async function applyScroll(p,id,q,pickLoot){
     case'jinx':q.jinx=Math.max(q.jinx||0,2);addLog(`${q.name} проклят: 2 хода все проверки равны 1.`);
       await show({text:`Два следующих хода героя ${q.name} любая его проверка d20 даёт 1.`});break;
     case'harmony':{
-      const was=[p.jinx>0||p.jinxTurn?'заговор на неудачу':'',p.curse>0||p.curseTurn?'проклятие демона':'',p.wound>0||p.woundTurn?'рана после встречи':'',p.stun>0?'оцепенение':''].filter(Boolean);
-      p.jinx=0;p.jinxTurn=false;p.curse=0;p.curseTurn=false;p.wound=0;p.woundTurn=false;p.stun=0;p.bless=2;
+      const was=[p.jinx>0||p.jinxTurn?'заговор на неудачу':'',p.curse>0||p.curseTurn?'проклятие демона':'',p.wound>0||p.woundTurn?'рана после встречи':'',p.burn>0||p.burnTurn?'ожог':'',p.stun>0?'оцепенение':''].filter(Boolean);
+      p.burn=0;p.burnTurn=false;p.jinx=0;p.jinxTurn=false;p.curse=0;p.curseTurn=false;p.wound=0;p.woundTurn=false;p.stun=0;p.bless=2;
       addLog(`Гармония духа: ${p.name} очищен${was.length?` (${was.join(', ')})`:''}, +1 к броскам на 2 хода.`);
       await show({text:`Тёплый свет окутывает героя.${was.length?` Сняты: ${was.join(', ')}.`:' Негативных эффектов не было.'}\n\nЭтот и следующий ход: +1 ко всем броскам d20.${p.lock>0?'\n\nСердце, отданное демону, остаётся в залоге.':''}`});break;}
     case'stone':p.ward=3;addLog(`${p.name} под защитой камня судьбы: 3 хода.`);
@@ -3444,6 +3481,18 @@ async function applyScroll(p,id,q,pickLoot){
   }
 }
 // ---------- телепортация ----------
+// Пустотное тело: проигравшего переносит на случайную допустимую клетку в радиусе rad шагов (те же клетки, что у свитка «Телепортация»).
+async function voidTeleport(p,m,rad){
+  const spots=tpSpots(p).filter(([r,c])=>Math.abs(r-p.r)+Math.abs(c-p.c)<=rad);
+  if(!spots.length){addLog(`${p.name}: пустоте некуда тебя выбросить.`);return;}
+  const dest=spots[rnd(spots.length)],far=Math.abs(dest[0]-p.r)+Math.abs(dest[1]-p.c);
+  sfx('teleport');
+  const show=o=>modal({icon:'◌',tone:'sleep',img:m.img,title:'Пустота выплёвывает тебя',sub:m.n,
+    text:`Чёрная дыра в груди твари втягивает тебя целиком. Мир гаснет, камни свистят у самого уха — и пустота с отвращением выплёвывает тебя на другую плитку, в ${far} ${plural(far,'клетке','клетках','клетках')} от места боя.`,buttons:o.buttons});
+  await teleportTo(p,dest,show);
+  addLog(`${m.n}: ${p.name} выброшен на клетку в ${far} ${plural(far,'шаге','шагах','шагах')}.`);
+  if(!alive(p))p.moves=0;
+}
 // клетки в радиусе 3 (по шагам), куда можно встать: не логово и не пропасть
 function tpSpots(p){
   const out=[];if(p.mode!=='out'&&p.mode!=='back')return out;
@@ -3485,7 +3534,7 @@ async function cpuScroll(me){
     if(id==='necro'&&me.hp>=maxHP(me))continue;
     if(sc.t==='self'){
       if(sc.self&&sc.self(me))continue;
-      if(id==='harmony'&&!(me.jinx>0||me.jinxTurn||me.curse>0||me.curseTurn||me.wound>0||me.woundTurn||me.stun>0))continue;
+      if(id==='harmony'&&!(me.burn>0||me.burnTurn||me.jinx>0||me.jinxTurn||me.curse>0||me.curseTurn||me.wound>0||me.woundTurn||me.stun>0))continue;
       if(id==='stone'&&(warded(me)||!S.players.some(x=>x!==me&&alive(x)&&(x.scrolls||[]).some(k=>['one','all'].includes(SCROLLS[k].t)))))continue;
       if(id==='teleport'){const g=([r,c])=>me.mode==='out'?dist(r,c):edgeDist(r,c);if(g([me.r,me.c])-Math.min(...tpSpots(me).map(g))<2)continue;}
       await castScroll(me,id);return;
@@ -4340,6 +4389,7 @@ function pill(i){
   if(p.mantle)inv.push(`<span class="g" title="Огнестойкая мантия">♨</span>`);
   if(p.ghostP>0||p.ghost)inv.push(`<span class="s" title="${p.ghost?'Сквозь стены: этот ход':'Зелье призрачного шага'}">≋${p.ghost?'!':p.ghostP>1?p.ghostP:''}</span>`);
   if(p.rot>0)inv.push(`<span class="f" title="Трупный яд: −1 шаг">☣${p.rot}</span>`);
+  if(p.burn>0||p.burnTurn)inv.push(`<span class="f" title="Ожог: −3 к d20 в бою, +1 к d4">🔥${Math.max(p.burn||0,p.burnTurn?1:0)}</span>`);
   if(p.cloak>0)inv.push(`<span class="s" title="Плащ-невидимка">❖${p.cloak>1?p.cloak:''}</span>`);
   if(p.invis>0)inv.push(`<span class="s" title="Невидим для охотников">✧${p.invis}</span>`);
   if(p.hidden)inv.push(`<span class="s" title="Затаился">☁</span>`);
@@ -4447,6 +4497,7 @@ const RULES=`<ul>
 <li>Кончились сердца, съел дракон или поглотила бездна — герой выбывает. Когда все вернулись или погибли, побеждает выживший с наибольшей добычей.</li>
 <li>Мешок павшего. Погибший в подземелье оставляет мешок с золотом на своей клетке (в логове золото забирает дракон, в бездне — бездна). Вошедший на клетку находит: мешок, погрызенный крысами, — 50–100% золота (50%), пустоту (20%) или зомби павшего героя — проклятие дракона (30%, после пробуждения дракона — 50%). Зомби — нежить, бой d20 против 14: победа — весь мешок, поражение — −1 ♥, и зомби остаётся сторожить мешок.</li>
 <li>Кобольд-вор не ранит: проиграв ему, теряешь случайный предмет (или 20% золота), а кобольд удирает с ним — в начале каждого твоего хода делает шаг прочь от тебя. Догони его за 4 хода (бой d20 против 10 вернёт добычу), иначе он скроется; добежав до края подземелья, он сбегает сразу. Культист дракона, победив, бьёт в гонг: в «Пробуждении» дракон проснётся на 2 раунда раньше, в «Свободном исследовании» риск в логове +5% для всех; если дракон уже проснулся — проклятие −1 ♥. Детёныш дракона: откупись 30 золотыми, прогони (d20 против 10) или сразись (d20 против 12): победа — +60 золотых, но мать-дракон проснётся сразу, а в «Свободном исследовании» придёт в ярость — риск в логове +15% для всех до конца партии.</li>
+<li>Огненный вождь (сложность 16) бьёт факелом: проиграешь — −1 ♥ и ожог на 3 твоих хода: −3 к броскам d20 в бою, зато +1 к броску d4 — горящий герой бежит быстрее (знак 🔥 на карточке). Пустотное тело (сложность 10) выползает из бездны у логова: у внешнего края подземелья его почти не встретить, а на клетках у самой пропасти так выглядят 9 монстров из 10. Проиграешь — −1 ♥, и пустота выбросит тебя на случайную клетку в радиусе 3. Щит и камень судьбы защищают и от этого.</li>
 <li>Снаряжение. Щит один раз принимает удар проигранного боя и раскалывается. Кирка один раз пробивает стену из тупика в соседнюю клетку (клетки со знаком ⚒) и ломается. Серебряный клинок даёт +5 в бою с нежитью: скелетами, призраками, вампирами и зомби.</li>
 <li>Сделка с демоном: на клетке может ждать демон. Выбор — +150 золотых, но одно сердце уходит демону в залог на 10 твоих ходов (его нельзя вылечить, потом демон вернёт его); редкая реликвия ценой проклятия (3 хода −3 ко всем броскам d20); или отказ.</li>
 <li>Свиток «Гармония духа» снимает с тебя заговор, проклятие, рану и оцепенение и даёт +1 ко всем броскам d20 на 2 хода. Свиток «Телепортация» переносит на выбранную клетку в радиусе 3 клеток (не в логово). Камень судьбы — редкий артефакт в сумке свитков: 3 хода на тебя нельзя наложить негативный эффект.</li>
