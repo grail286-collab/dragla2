@@ -301,7 +301,7 @@ const plateColor=(r,c,dead,burn)=>{const col=new THREE.Color(1,1,1);
 
 // --- поле: строится заново для каждой партии
 let B=null;   // {g, n, rocks[], walls[], rims[], floors[], cache[], torches[], flames, lair...}
-const WALL_H=.22,TILE_Y=0,ROCK_H=.3,ROCK_W=.94;
+const WALL_H=.286,TILE_Y=0,ROCK_H=.3,ROCK_W=.94;   // WALL_H было .22, +30% на внутренних стенах открытых плиток
 hookAspectUV(rockMat,WALL_H);hookAspectUV(rockTopMat,WALL_H);hookAspectUV(wallTopMat,WALL_H);
 wallSideMats.forEach(m=>hookAspectUV(m,WALL_H));
 // у скалы и бортика UV запечены в геометрию (boxWithSideUV) — шейдерный крючок для них не нужен

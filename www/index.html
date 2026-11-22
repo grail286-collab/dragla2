@@ -67,13 +67,13 @@ body{height:100%;overflow:hidden;color:var(--ink);font-family:var(--body);font-s
 /* гербы героев */
 .top{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media (min-width:700px){.top.n3{grid-template-columns:repeat(3,1fr)}.top.n4{grid-template-columns:repeat(4,1fr)}}
-.pill{padding:8px 10px 8px 8px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 9px;align-items:center;min-width:0;transition:box-shadow .25s,border-color .25s}
+.pill{padding:6px 10px 6px 8px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 8px;align-items:center;min-width:0;transition:box-shadow .25s,border-color .25s}
 .pill.active{border-color:var(--pc);box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--pc),0 0 18px -4px var(--pc),0 8px 22px -6px rgba(0,0,0,.65)}
 .pill.out{filter:grayscale(.8) brightness(.6)}
 .pill{cursor:pointer}.pill:active{transform:scale(.98)}
 .crest img,.micon img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover}
 .micon.pic{padding:0;overflow:hidden}
-.crest{overflow:hidden;grid-row:1/3;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);
+.crest{overflow:hidden;grid-row:1/3;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:19px;color:var(--ink);
   background:radial-gradient(circle at 35% 30%,var(--panel-hi),var(--panel-lo));
   box-shadow:0 0 0 2px var(--pc),0 0 0 3px var(--panel-lo),0 0 0 4px var(--gold-lo),0 0 12px -2px var(--pc)}
 .pl1{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}
@@ -89,7 +89,7 @@ body{height:100%;overflow:hidden;color:var(--ink);font-family:var(--body);font-s
 .pl2{overflow:hidden}
 .inv .g{color:var(--good)} .inv .s{color:var(--sleep)} .inv .f{color:var(--fire)}
 .ai{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--panel-lo);background:var(--pc);border-radius:3px;padding:1px 4px;flex:none}
-@media (max-width:699px){.top.n3 .st,.top.n4 .st{display:none}.top.n3 .pill,.top.n4 .pill{padding:6px 8px 6px 6px}.top.n3 .crest,.top.n4 .crest{width:32px;height:32px;font-size:17px}.top.n3 .pname,.top.n4 .pname{font-size:14.5px}}
+@media (max-width:699px){.top.n3 .st,.top.n4 .st{display:none}.top.n3 .pill,.top.n4 .pill{padding:5px 7px 5px 5px}.top.n3 .crest,.top.n4 .crest{width:30px;height:30px;font-size:16px}.top.n3 .pname,.top.n4 .pname{font-size:14px}}
 
 /* поле */
 .board{flex:1;min-height:0;overflow:auto;display:flex;padding:5px;background:var(--wall);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -103,13 +103,16 @@ canvas{display:block;touch-action:pan-x pan-y;cursor:pointer}
 @media (prefers-reduced-motion:reduce){#dark{animation:none}}
 
 /* панель хода */
-.bottom{padding:0 12px 11px;display:flex;flex-direction:column;gap:8px}
-.ribbon{align-self:center;margin-top:-1px;padding:3px 22px 4px;min-width:60%;text-align:center;
-  font-family:var(--display);font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--pc,var(--ink));
+.bottom{padding:0 10px 6px;display:flex;flex-direction:column;gap:3px}
+.ribbon{align-self:center;margin-top:-1px;padding:2px 18px 3px;min-width:52%;text-align:center;
+  font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--pc,var(--ink));
   background:linear-gradient(180deg,var(--panel-lo),#081430);border:1px solid var(--frame);border-top:0;border-radius:0 0 8px 8px;
-  box-shadow:inset 0 -1px 0 var(--frame-in),0 4px 10px -4px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  box-shadow:inset 0 -1px 0 var(--frame-in),0 4px 10px -4px rgba(0,0,0,.6);overflow:hidden;max-width:100%}
+.ribbon .whoname{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ribbon .whohint{display:block;font-family:var(--body);font-size:11.5px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--ink);opacity:.9;line-height:1.25;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ribbon .whohint:empty{display:none}
 .msgrow{display:flex;align-items:center;gap:10px}
-.msg{font-size:15px;min-height:2.8em;color:var(--ink);text-align:center;text-wrap:balance;display:flex;align-items:center;justify-content:center}
+.msg{display:none}
 .d4{position:relative;flex:none;width:52px;height:48px;min-height:0;padding:0 0 4px;border:0;border-radius:0;box-shadow:none;background:none;
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;color:#241a06;font-family:var(--display);font-size:20px;line-height:1}
 .d4::before,.d4::after{content:"";position:absolute;clip-path:polygon(50% 0,100% 100%,0 100%);z-index:0}
@@ -176,13 +179,48 @@ button.hex:disabled{opacity:1}
 .scrollbtn.has:not(:disabled){color:var(--gold);border-color:var(--gold);box-shadow:inset 0 0 0 2px var(--panel-lo),inset 0 0 0 3px #8c6522,0 0 12px -3px rgba(236,198,106,.6)}
 .scrollbtn .n{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--gold);color:#241a06;font:800 11px/17px var(--body);padding:0 4px}
 .scrollbtn .n:empty{display:none}
+.invbtn{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",var(--display),sans-serif;font-size:18px}
+.invbtn .invico{display:block;line-height:1;transform:translateY(.5px)}
 .scrolls{font-size:14px;color:var(--muted)}
 .scrolls b{color:var(--gold)}
 #mbtns button.tgt{color:var(--ink)}
 .round{width:46px;height:46px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;font-size:19px;line-height:1}
 @media (max-width:440px){.hex{--hs:37px;font-size:16px}.round{width:38px;height:38px;font-size:16px}.hexes{gap:3px}.tools{gap:4px}}
-@media (max-width:400px){.hex{--hs:32px;font-size:14px}.round{width:35px;height:35px;font-size:15px}.scrollbtn{font-size:19px}}
+@media (max-width:400px){.hex{--hs:32px;font-size:14px}.round{width:35px;height:35px;font-size:15px}.scrollbtn{font-size:19px}.invbtn{font-size:16px}}
 
+
+/* лист персонажа: отдельный оверлей, чтобы не перехватывать боевые окна #modal */
+#charsheet{z-index:19;align-items:stretch}
+/* карточки героев остаются поверх затемнения, чтобы можно было открыть лист другого */
+body.cs-open .top{position:relative;z-index:22}
+body.cs-open #charsheet{padding-top:var(--cs-top,16px)}
+#csheet{width:100%;max-width:400px;max-height:100%;margin:auto;overflow:hidden;gap:10px;min-height:0;display:flex;flex-direction:column}
+#csbody{overflow:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:4px}
+.cshead{display:flex;align-items:center;gap:12px}
+.cshead .crest{flex:none}
+.csid{min-width:0}
+.csstats{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-variant-numeric:tabular-nums;font-size:15px}
+.csstats .hp{margin-left:0;font-size:16px}
+.cssec{margin:14px 0 0}
+.cssec h3{margin:0 0 2px;font-family:var(--display);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.csrow{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:0 10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);min-height:44px}
+.csrow .csico{font-size:22px;line-height:1;text-align:center}
+.csrow .csico.g{color:var(--good)} .csrow .csico.s{color:var(--sleep)} .csrow .csico.y{color:var(--gold)} .csrow .csico.f{color:var(--fire)}
+.csrow b{font-size:15px;font-weight:700}
+.csrow small{display:block;color:var(--muted);font-size:13px;line-height:1.35;font-weight:500;margin-top:1px}
+.cscnt{color:var(--gold);font-weight:800;font-variant-numeric:tabular-nums;font-size:15px;align-self:start;padding-top:2px}
+.csrow.hasact{align-items:start}
+.csacts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:104px;padding-top:1px}
+.csact{min-height:40px;padding:7px 12px;font-size:13.5px;letter-spacing:.01em;white-space:nowrap}
+.csact:disabled{opacity:.58}
+.cswhy{font-size:11px;color:var(--muted);text-align:right;max-width:128px;line-height:1.25;font-weight:600}
+.csfx{display:flex;flex-wrap:wrap;gap:4px;width:100%;margin-top:4px}
+.csfx i{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border:1px solid var(--line);border-radius:10px;color:var(--muted);background:var(--panel-lo)}
+.csempty{color:var(--muted);text-align:center;padding:18px 8px;font-size:15px}
+.csbonus{margin-top:14px;background:var(--panel-lo);border:1px solid var(--frame-in);border-radius:4px;padding:10px 12px;font-size:15px;line-height:1.45}
+.csbonus .note{color:var(--muted);font-size:13px;margin-top:6px}
+.csbtns{display:flex;flex-direction:column;gap:8px;flex:none}
+@media (max-width:400px){.csrow{min-height:42px;padding:8px 0}.csrow b{font-size:14.5px}.csrow small{font-size:12.5px}}
 /* кнопки */
 button{font:inherit;font-weight:700;letter-spacing:.02em;border-radius:5px;padding:11px 12px;min-height:44px;color:var(--ink);cursor:pointer;
   border:1px solid var(--frame);background:linear-gradient(180deg,#1d3a69,var(--panel-lo));
@@ -239,7 +277,7 @@ button.sleep{color:var(--sleep);border-color:var(--sleep)}
 #mbtns button.auto{pointer-events:none;filter:grayscale(1) brightness(.75)}
 #mbtns button.auto.pick{filter:grayscale(1) brightness(.95)}
 body.cpu-turn .bottom button,body.cpu-turn .bottom .hex{filter:grayscale(1) brightness(.7);cursor:default}
-body.cpu-turn .bottom #bZoom{cursor:pointer}
+body.cpu-turn .bottom #bZoom,body.cpu-turn .bottom #bScroll{cursor:pointer;filter:none}
 body.cpu-turn .rollcard{cursor:default}
 #mbtns button.auto:not(.pick){opacity:.45}
 #mbtns button.pick{outline:2px solid var(--glow);outline-offset:2px}
@@ -495,8 +533,8 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   <div class="board frame" id="box"><div class="stage" id="stage"><canvas id="board" aria-label="Игровое поле 21 на 21"></canvas><canvas id="dark" aria-hidden="true"></canvas><canvas id="fog" aria-hidden="true"></canvas><canvas id="fx" aria-hidden="true"></canvas></div></div>
   <div class="hedge" id="hedge"></div>
   <div class="bottom frame">
-    <div class="ribbon" id="who"></div>
-    <div class="msg" id="msg"></div>
+    <div class="ribbon" id="who"><span class="whoname" id="whoName"></span><span class="whohint" id="whoHint"></span></div>
+    <div class="msg" id="msg" hidden></div>
     <div class="bar">
       <div class="hexes" aria-label="Снаряжение героя">
         <button class="hex g" id="bPotion" title="Выпить зелье здоровья" aria-label="Выпить зелье здоровья"><span>✚</span><b class="n" id="nPotion"></b></button>
@@ -514,7 +552,7 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
         <div class="hex f" id="hMantle" title="Огнестойкая мантия: спасёт от пламени дракона в логове" hidden><span>♨</span><b class="n"></b></div>
       </div>
       <div class="tools">
-        <button class="round scrollbtn" id="bScroll" title="Сумка свитков" aria-label="Сумка свитков">§<b class="n" id="nScroll"></b></button>
+        <button class="round scrollbtn invbtn" id="bScroll" title="Инвентарь" aria-label="Инвентарь"><span class="invico" aria-hidden="true">🎒</span><b class="n" id="nScroll"></b></button>
         <button class="round" id="bZoom" title="Масштаб" aria-label="Масштаб">⊕</button>
         <button class="round" id="bMenu" title="Меню" aria-label="Меню">☰</button>
       </div>
@@ -570,6 +608,24 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
     <div class="mtip" id="mtip" hidden></div>
     <div class="mroll" id="mroll" hidden><div class="die" id="die">d20</div><div class="dc" id="dc"></div></div>
     <div class="mbtns" id="mbtns"></div>
+  </div>
+</div>
+
+<div class="modal" id="charsheet" hidden role="dialog" aria-modal="true" aria-labelledby="csTitle">
+  <div class="sheet frame" id="csheet" style="--tone:var(--gold)">
+    <div class="cshead">
+      <div class="crest" id="csCrest" style="--pc:var(--gold)"></div>
+      <div class="csid">
+        <div class="mtitle" id="csTitle">Лист персонажа</div>
+        <div class="msub" id="csSub"></div>
+        <div class="csstats" id="csStats"></div>
+      </div>
+    </div>
+    <div id="csbody"></div>
+    <div class="csbtns">
+      <button type="button" id="csLook">Показать на карте</button>
+      <button type="button" class="primary" id="csClose">Закрыть</button>
+    </div>
   </div>
 </div>
 
@@ -1440,9 +1496,8 @@ function introCamera(){
     const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
     const set=(k,x,y)=>{st.style.transform=`translate(${x}px,${y}px) scale(${k})`;};
     introOn=true;bx.style.overflow='hidden';st.style.transformOrigin='0 0';st.style.willChange='transform';
-    $('who').textContent='Экспедиция начинается';$('who').style.setProperty('--pc',css('--gold'));
-    $('msg').textContent='Цель — логово дракона в центре. Набери золота и вернись живым!';
-    toast('Логово дракона — в центре подземелья',2600);
+    $('who').innerHTML='<span class="whoname" id="whoName">Экспедиция начинается</span><span class="whohint" id="whoHint"></span>';$('who').style.setProperty('--pc',css('--gold'));
+    toast('Логово дракона — в центре подземелья. Набери золота и вернись живым!',3200);
     const t0=performance.now();let ended=false;
     const finish=()=>{if(ended)return;ended=true;introOn=false;
       document.removeEventListener('pointerdown',skip,true);
@@ -1479,6 +1534,7 @@ let modalPrimary=null;
 let MODAL=null,modalSeq=0;
 function modal(o){
   return new Promise(res=>{
+    if(typeof closeCharSheet==='function')closeCharSheet();
     const sync=!!(S&&S.online&&!o.local);
     if(sync&&MODAL&&MODAL.local)MODAL.close();          // игровое окно вытесняет открытое меню
     if(S)render();
@@ -1575,7 +1631,7 @@ function doAct(a,d){
     case'move':{const o=options(P()).find(o=>o.r===d.r&&o.c===d.c&&!!o.jump===!!d.j);return o?move(o):undefined;}
     case'exit':return doExit(d.r,d.c);
     case'potion':return drinkAct();
-    case'bag':return useScrollBag();
+    case'bag':return useScrollBag(d);
     case'claim':return claimVictory(P());
     case'tp':if(S.phase==='tp'&&S.tp&&S.tp.spots.some(([r,c])=>r===d.r&&c===d.c))S.tp.res([d.r,d.c]);return;
   }
@@ -1589,7 +1645,7 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=13;
+const NET_PROTO=14;
 const NET={ws:null,id:null,token:null,room:null,queue:[],lastSeq:0,sent:false,drops:[],connecting:null,
   onRoom:null,onStart:null,onError:null,pendingStart:null,stuck:0,lost:0};
 try{NET.token=sessionStorage.getItem('dragon-net-token');}catch(e){}
@@ -1934,7 +1990,7 @@ async function nextTurn(){
     addLog(`${w.name} решил доиграть партию.`);
   }
   if(!S.vsCpu&&!S.online&&!S.mission&&(S.players.filter(alive).length>1||S.first))await handoff(notes);
-  else notes.forEach(t=>{S.msg=t;});
+  else if(notes.length)toast(notes.join(' '),4000);
   S.first=false;
   startTurn();
 }
@@ -2042,16 +2098,14 @@ async function rollD4(){
   const v=1+rnd(4);
   pd.classList.remove('rolling');
   $('rpVal').textContent=v;
-  const bonus=p.haste>0?1:0;if(bonus)p.haste--;
-  const rot=p.rot>0?1:0;if(rot)p.rot--;
-  const burn=p.burnTurn?1:0;   // ожог: горящий герой бежит быстрее (+1 шаг), счётчик тикает в startTurn
-  const tot=Math.max(1,v+bonus+burn-rot);
-  $('rpHint').textContent=bonus||rot||burn?`Шагов: ${v}${bonus?' + 1':''}${burn?' + 1 (ожог)':''}${rot?' − 1 (яд)':''} = ${tot}`:`Шагов: ${v}`;
+  const dm=d4Mods(p);if(dm.haste)p.haste--;if(dm.rot)p.rot--;
+  const tot=Math.max(1,v+dm.total);
+  $('rpHint').textContent=dm.total?`Шагов: ${v}${dm.haste?' + 1':''}${dm.burn?' + 1 (ожог)':''}${dm.rot?' − 1 (яд)':''} = ${tot}`:`Шагов: ${v}`;
   pop.classList.add('done');
   await wait(750);
   pop.hidden=true;
   p.moves=tot;S.roll=v;
-  addLog(`${p.name} бросил d4: ${v}${bonus?' +1 (скорость)':''}${burn?' +1 (ожог)':''}${rot?' −1 (трупный яд)':''}.`);
+  addLog(`${p.name} бросил d4: ${v}${dm.haste?' +1 (скорость)':''}${dm.burn?' +1 (ожог)':''}${dm.rot?' −1 (трупный яд)':''}.`);
   S.phase='move';S.msg=hereMsg(p);rolling=false;render();
 }
 function hereMsg(p){
@@ -2714,6 +2768,8 @@ function weaponB(p,m={}){
   if(p&&p.burnTurn){w.b-=3;w.t=w.t?w.t+', ожог −3':'ожог −3';}   // ожог Огненного вождя: −3 к d20 только в бою
   return w;
 }
+// модификаторы броска d4 (скорость, ожог, трупный яд) — те же, что в rollD4 и в листе персонажа
+function d4Mods(p){const haste=p&&p.haste>0?1:0,burn=p&&p.burnTurn?1:0,rot=p&&p.rot>0?1:0;return{haste,burn,rot,total:haste+burn-rot};}
 // щит один раз принимает удар проигранного боя и раскалывается
 function shieldSave(p){if(!p.shield)return false;p.shield=false;sfx('shield');buzz(90);addLog(`${p.name}: щит принял удар и раскололся.`);return true;}
 const bonusT=(...a)=>a.filter(Boolean).join(', ');
@@ -3071,7 +3127,7 @@ async function cpuHunt(me,wait){
   if(!huntOn()||!(me.mode==='out'||me.mode==='back'))return false;
   const near=huntActive().filter(h=>h.tgt===S.cur).map(h=>md(h.r,h.c,me.r,me.c)).sort((a,b)=>a-b)[0];
   if(near==null)return false;
-  if(near<=5&&me.cloak>0&&!(me.invis>0)){S.msg=`${me.name} накидывает плащ-невидимку.`;useCloak();$('rollpop').hidden=true;await wait(900);return false;}
+  if(near<=5&&me.cloak>0&&!(me.invis>0)){toast(`${me.name} накидывает плащ-невидимку.`,1800);useCloak();$('rollpop').hidden=true;await wait(900);return false;}
   if(near>=2&&near<=4&&canHide(me)==='ok'&&(me.gold>=80||me.hp<=1)&&RNG()<0.7){hideTurn();return true;}
   return false;
 }
@@ -3164,11 +3220,11 @@ async function cpuTurn(){
   const wait=ms=>new Promise(r=>setTimeout(r,ms*cpuPace()));
   await wait(1000);
   if(!mine())return;
-  if(me.potions&&me.hp===1&&['roll','move'].includes(S.phase)){S.msg=`${me.name} пьёт зелье здоровья.`;await drink();if(me.mode==='dead'){nextTurn();return;}render();await wait(900);if(!mine())return;}
+  if(me.potions&&me.hp===1&&['roll','move'].includes(S.phase)){toast(`${me.name} пьёт зелье здоровья.`,1800);await drink();if(me.mode==='dead'){nextTurn();return;}render();await wait(900);if(!mine())return;}
   if(S.phase==='roll'){$('rollpop').hidden=true;await cpuScroll(me);if(!mine())return;if(me.mode==='dead'||me.mode==='home'){nextTurn();return;}
     if(await cpuHunt(me,wait)||!mine())return;
     if(me.ghostP>0&&!me.ghost&&(me.mode==='out'||me.mode==='back')){const o=options(me);
-      if(!o.length||o.every(x=>x.back||x.lost)){S.msg=`${me.name} пьёт зелье призрачного шага.`;useGhost();$('rollpop').hidden=true;await wait(900);if(!mine())return;}}
+      if(!o.length||o.every(x=>x.back||x.lost)){toast(`${me.name} пьёт зелье призрачного шага.`,1800);useGhost();$('rollpop').hidden=true;await wait(900);if(!mine())return;}}
     showRollPop(me);await wait(700);await rollD4();await wait(700);}
   while(mine()&&S.phase==='move'&&!busy){
     const o=cpuChoose(me);if(!o)return;
@@ -4335,6 +4391,7 @@ cv.addEventListener('click',e=>{
   if(o)act('move',{r:o.r,c:o.c,j:o.jump?1:0});
 });
 document.addEventListener('keydown',e=>{
+  if($('charsheet')&&!$('charsheet').hidden&&e.key==='Escape'){e.preventDefault();closeCharSheet();return;}
   if(!$('modal').hidden){
     const tag=document.activeElement?.tagName;
     if((e.key==='Enter'||(e.key===' '&&tag!=='INPUT'))&&modalPrimary&&tag!=='BUTTON'){e.preventDefault();modalPrimary.click();}
@@ -4347,10 +4404,208 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- панели ---------- */
+
+/* ---------- лист персонажа ----------
+   Отдельный оверлей (#charsheet), не #modal: его можно открыть на ходе ИИ или чужого игрока,
+   он не уходит в сеть и не ломает боевое окно. Если #modal уже открыт — лист не показываем.
+   Осталось ходов у эффекта с флагом *Turn: счётчик + текущий ход, если он уже начался. */
+const fxLeft=(n,on)=> (n||0)+(on?1:0);
+const signed=n=>n>0?'+'+n:String(n);
+let CS_IDX=null,CS_MODE='sheet';
+function charSheetBlocked(){return !S||!!introOn||!$('modal').hidden||!$('tutor').hidden;}
+function closeCharSheet(){const el=$('charsheet');if(el&&!el.hidden){el.hidden=true;CS_IDX=null;CS_MODE='sheet';}document.body.classList.remove('cs-open');}
+function invHero(){
+  if(!S||!S.players)return null;
+  if(S.online)return S.players.find(q=>isLocal(q)&&alive(q))||S.players.find(q=>isLocal(q))||null;
+  if(S.vsCpu)return S.players.find(q=>!q.cpu)||null;
+  return P();
+}
+function invCanAct(p){return !!(p&&S&&!S.over&&alive(p)&&isLocal(p)&&P()===p&&!lockedTurn());}
+function onHeroCard(i){
+  if(!S||introOn)return;
+  if(CS_IDX===i&&$('charsheet')&&!$('charsheet').hidden){closeCharSheet();lookAt(i);return;}
+  openCharSheet(i);
+}
+function showSheetOverlay(){
+  document.body.classList.add('cs-open');
+  const t=$('toast');if(t)t.hidden=true;
+  const topEl=$('top');$('charsheet').style.setProperty('--cs-top',((topEl?Math.ceil(topEl.getBoundingClientRect().bottom):0)+8)+'px');
+  $('charsheet').hidden=false;
+  setTimeout(()=>{const b=$('csClose');b&&b.focus({preventScroll:true});},30);
+}
+function openCharSheet(i){
+  if(charSheetBlocked())return;
+  const p=S.players[i];if(!p)return;
+  CS_MODE='sheet';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();
+}
+function openInventory(){
+  if(charSheetBlocked())return;
+  const p=invHero();if(!p)return;
+  const i=S.players.indexOf(p);
+  if(CS_MODE==='inv'&&CS_IDX===i&&$('charsheet')&&!$('charsheet').hidden){closeCharSheet();return;}
+  CS_MODE='inv';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();
+}
+function whyScroll(p,id){
+  if(!S||S.over||!alive(p))return 'сейчас нельзя';
+  if(!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(!['roll','move'].includes(S.phase)){
+    if(S.phase==='lair')return 'в логове — из окна поиска';
+    if(S.phase==='exit')return 'сейчас выбирай край';
+    if(S.phase==='tp')return 'сейчас выбери клетку';
+    return 'сейчас нельзя';
+  }
+  if(p.scrollTurn===S.turnNo)return 'уже читал в этот ход';
+  const sc=SCROLLS[id];if(!sc)return 'сейчас нельзя';
+  if(sc.t==='self'&&sc.self){const w=sc.self(p);if(w)return w;}
+  if(coopOn()&&id==='necro'){
+    const near=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=p.r+dr,c=p.c+dc;if((dr||dc)&&inB(r,c)){const x=cell(r,c);if(x.rev&&x.ev==='monster'&&!x.visited&&x.mon!=null)near.push(x);}}
+    const okM=near.filter(x=>!MONSTERS[x.mon].undead&&x.mon!==7);
+    if(!okM.length)return near.length?'рядом только нежить':'рядом нет монстров';
+  }else if(sc.t==='one'){
+    const ts=scrollTargets(p,id);
+    if(!ts.length)return 'нет других героев';
+    if(!ts.some(x=>!x.why))return 'нет подходящей цели';
+  }
+  return '';
+}
+function whyPotion(p){
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(p.hp>=maxHP(p))return 'здоровье полное';
+  if(S.phase==='roll')return 'сначала брось d4';
+  if(!['move','exit'].includes(S.phase))return 'сейчас нельзя';
+  return '';
+}
+function whyCloak(p){
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(S.phase!=='roll')return 'только перед броском d4';
+  if((p.invis||0)>0)return 'уже невидим';
+  return '';
+}
+function whyGhost(p){
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(S.phase!=='roll')return 'только перед броском d4';
+  if(p.ghost)return 'уже действует';
+  if(!(p.mode==='out'||p.mode==='back'))return 'не на плите подземелья';
+  return '';
+}
+function invDo(kind,id){
+  if(CS_MODE!=='inv')return;
+  const p=S&&S.players[CS_IDX];if(!invCanAct(p))return;
+  closeCharSheet();
+  if(kind==='potion')act('potion');
+  else if(kind==='cloak')act('cloak');
+  else if(kind==='ghost')act('ghost');
+  else if(kind==='scroll'&&id)act('bag',{id});
+}
+function csRow(ico,cls,name,desc,cnt,act){
+  const mid=cnt==null||cnt===''?'':`<span class="cscnt">×${cnt}</span>`;
+  let right=mid;
+  if(act){
+    const why=act.why||'',dis=why?' disabled':'';
+    right=`<div class="csacts">${mid}<button type="button" class="csact"${dis} data-kind="${act.kind}" data-id="${esc(act.id||'')}"${why?` title="${esc(why)}"`:''}>${esc(act.label)}</button>${why?`<span class="cswhy">${esc(why)}</span>`:''}</div>`;
+  }
+  return `<div class="csrow${act?' hasact':''}"><span class="csico ${cls||''}">${ico}</span><div><b>${esc(name)}</b><small>${esc(desc)}</small></div>${right}</div>`;
+}
+function csSec(title,rows){return rows&&rows.length?`<section class="cssec"><h3>${title}</h3>${rows.join('')}</section>`:'';}
+function csTurns(n){return n?`${n} ${plural(n,'ход','хода','ходов')}`:'';}
+function d20FightLine(p){
+  if(p.jinxTurn)return {line:'Сейчас к d20 в бою: заговор на неудачу — выпадет 1, бонусы не действуют.', notes:[]};
+  const w=weaponB(p,{}),cb=curseB(p),luck=p.luck>0?3:0,tot=w.b+cb+luck;
+  const parts=[];
+  if(p.sword)parts.push('меч +2');
+  if(p.burnTurn)parts.push('ожог −3');
+  if(luck)parts.push('амулет +3');
+  if(p.curseTurn)parts.push('проклятие −3');
+  if(p.woundTurn)parts.push('рана −3');
+  if(p.bless>0)parts.push('гармония +1');
+  const line=parts.length?`Сейчас к d20 в бою: ${parts.join(', ')} = итого ${signed(tot)}`:`Сейчас к d20 в бою: без модификаторов, итого 0`;
+  const notes=[];
+  if(p.silver)notes.push('Серебряный клинок: +5 против нежити (вместо меча).');
+  if(p.luck>0)notes.push('Амулет также даёт +3 к прыжку через пропасть и к ловушкам (тратится на проверку).');
+  return {line,notes};
+}
+function d4BonusLine(p){
+  const d=d4Mods(p),parts=[];
+  if(d.haste)parts.push('скорость +1');
+  if(d.burn)parts.push('ожог +1');
+  if(d.rot)parts.push('яд −1');
+  return parts.length?`К d4: ${parts.join(', ')} = итого ${signed(d.total)}`:'К d4: без модификаторов, итого 0';
+}
+function paintCharSheet(){
+  const p=S&&S.players[CS_IDX];if(!p){closeCharSheet();return;}
+  const crest=$('csCrest');
+  crest.style.setProperty('--pc',css(p.color));
+  crest.innerHTML=p.portrait!=null?`<img alt="" src="${PORTRAITS[p.portrait]}">`:esc((p.name||'?').slice(0,1).toUpperCase());
+  $('csTitle').textContent=p.name+(p.cpu?' · ИИ':'');
+  const st={out:COOP()?'ищет лестницу вниз':'идёт к логову',room:'в логове дракона',back:'возвращается с добычей',home:'выбрался из подземелья',dead:'погиб'}[p.mode]||'';
+  const inv=CS_MODE==='inv';
+  $('csSub').textContent=(inv?'Инвентарь':'Лист персонажа')+(st?' · '+st:'');
+  const hp=Math.max(0,p.hp),cap=maxHP(p);
+  const hearts=`<span class="hp">${'♥'.repeat(hp)}${'♡'.repeat(Math.max(0,cap-hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона">♥</span>`:''}</span> <span>${hp} из ${cap}</span>`;
+  const tro=S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔ трофеи <b>${p.tro||0}</b></span>`:'';
+  const bag=p.mode==='dead'?'<span>мешок потерян</span>':`<span class="coin" title="Золото в мешке"><b>${p.gold}</b></span>`;
+  $('csStats').innerHTML=`${hearts}${bag}${tro}`;
+  const gear=[],cons=[],scs=[],arts=[],fx=[];
+  if(p.sword)gear.push(csRow('†','g','Старый меч','+2 в бою (сталь не берёт призраков и им подобных)'));
+  if(p.silver)gear.push(csRow('†','s','Серебряный клинок','+5 против нежити вместо меча'));
+  if(p.shield)gear.push(csRow('⛨','y','Щит с драконом','Один раз примет удар в бою и расколется'));
+  if(p.luck>0)gear.push(csRow('☘','g','Амулет удачи','+3 к проверкам в бою, ловушках и к прыжку через пропасть',p.luck));
+  if(p.mantle)gear.push(csRow('♨','g','Огнестойкая мантия','Спасёт от пламени дракона в логове: останется 1 ♥, часть золота сгорит'));
+  if(p.rope)gear.push(csRow('➰',p.ropeWorn?'f':'y',p.ropeWorn?'Гнилая верёвка':'Верёвка с крюком',p.ropeWorn?'Переход через пропасть без проверки, но рвётся в 70% случаев':'Переход через пропасть без проверки'));
+  if(p.pick)gear.push(csRow('⚒','y','Кирка','Один раз пробьёт стену из тупика'));
+  if(p.key>0)gear.push(csRow('⚷','y','Медный ключ','Откроет потайную дверь без проверки',p.key));
+  const actOn=inv;  // действия только в инвентаре текущего локального героя; чужой лист — только чтение
+  if(p.potions>0)cons.push(csRow('✚','g','Зелье здоровья','Восстанавливает 1 ♥ (редко выдыхается или оказывается отравой)',p.potions,actOn?{kind:'potion',label:'Выпить',why:whyPotion(p)}:null));
+  if(p.bombs>0)cons.push(csRow('✹','s','Сонная бомба','В логове усыпляет дракона на несколько поисков без риска',p.bombs));
+  if(p.haste>0)cons.push(csRow('»','g','Зелье скорости','+1 шаг к броску d4',p.haste));
+  if(p.cloak>0)cons.push(csRow('❖','s','Плащ-невидимка','Накинуть перед броском: 3 хода охотники тебя не видят',p.cloak,actOn?{kind:'cloak',label:'Накинуть',why:whyCloak(p)}:null));
+  if(p.ghostP>0)cons.push(csRow('≋','s','Зелье призрачного шага','Перед броском: этот ход проходишь сквозь стены',p.ghostP,actOn?{kind:'ghost',label:'Выпить',why:whyGhost(p)}:null));
+  const bagSc=p.scrolls||[];
+  const scCnt={};bagSc.forEach(id=>scCnt[id]=(scCnt[id]||0)+1);
+  Object.keys(scCnt).forEach(id=>{
+    const sc=SCROLLS[id];if(!sc)return;
+    const act=actOn?{kind:'scroll',id,label:sc.artifact?'Использовать':'Прочитать',why:whyScroll(p,id)}:null;
+    const row=csRow(sc.icon,sc.tone==='fire'?'f':sc.tone==='good'?'g':sc.tone==='gold'?'y':'s',sc.n,sc.d,scCnt[id],act);
+    if(sc.artifact)arts.push(row);else scs.push(row);
+  });
+  const pushFx=(ico,cls,name,turns,desc,later)=>{fx.push(csRow(ico,cls,name,turns?`${csTurns(turns)} · ${later?'со следующего хода, ':''}${desc}`:desc));};
+  const jx=fxLeft(p.jinx,p.jinxTurn);if(jx)pushFx('☾','f','Заговор на неудачу',jx,'все проверки d20 равны 1',p.jinx>0&&!p.jinxTurn);
+  if(p.stun>0)pushFx('⏸','f','Оцепенение',p.stun,'пропускает ход');
+  const wd=fxLeft(p.wound,p.woundTurn);if(wd)pushFx('✖','f','Рана после встречи',wd,'−3 ко всем проверкам d20 (итог не ниже 1)',p.wound>0&&!p.woundTurn);
+  if(p.lock>0)pushFx('⛧♥','f','Сердце у демона',p.lock,'максимум сердец снижен, зельем эту клетку не вылечить');
+  const cu=fxLeft(p.curse,p.curseTurn);if(cu)pushFx('⛧','f','Проклятие демона',cu,'−3 ко всем проверкам d20 (итог не ниже 1)',p.curse>0&&!p.curseTurn);
+  const br=fxLeft(p.burn,p.burnTurn);if(br)pushFx('🔥','f','Ожог',br,'−3 к d20 в бою, +1 к броску d4',p.burn>0&&!p.burnTurn);
+  if(p.rot>0)pushFx('☣','f','Трупный яд',p.rot,'−1 шаг к броску d4');
+  if(p.bless>0)pushFx('✦','g','Гармония духа',p.bless,'+1 ко всем броскам d20');
+  if(p.ward>0)pushFx('◈','s','Камень судьбы',p.ward,'на тебя нельзя наложить негативный эффект');
+  if(p.invis>0)pushFx('✧','s','Невидимка',p.invis,'охотники тебя не видят и проходят мимо');
+  if(p.hidden)pushFx('☁','s','Затаился',0,'охотники потеряли след до следующего хода');
+  if(p.ghost)pushFx('≋','s','Призрачный шаг',0,'этот ход проходишь сквозь стены');
+  if(huntOn()&&alive(p)&&huntActive().some(h=>S.players[h.tgt]===p)){
+    const hs=huntActive().filter(h=>S.players[h.tgt]===p).map(h=>HUNTERS[h.k].n).join(', ');
+    pushFx('☠','f','Цель охотника',0,hs+' идёт по твоему следу');
+  }
+  if(inv&&fx.length){
+    const chips=fx.map(r=>{const m=r.match(/<b>([^<]+)<\/b>/);return m?'<i>'+m[1]+'</i>':'';}).filter(Boolean).join('');
+    if(chips)$('csStats').insertAdjacentHTML('beforeend','<span class="csfx">'+chips+'</span>');
+  }
+  let extra='';
+  if(p.mode==='room'&&!COOP())extra+=`<p class="csbonus note" style="margin-top:8px">Поисков в логове: ${p.searches||0}. Риск разбудить дракона сейчас ${risk(p)}%.</p>`;
+  const d20=d20FightLine(p),d4=d4BonusLine(p);
+  const bonus=`<div class="csbonus">${esc(d20.line)}<div style="margin-top:6px">${esc(d4)}</div>${d20.notes.map(t=>`<div class="note">${esc(t)}</div>`).join('')}${extra}</div>`;
+  const body=[csSec('Статусы',fx),csSec('Снаряжение',gear),csSec('Расходники',cons),csSec('Свитки',scs),csSec('Артефакты',arts)].join('');
+  const empty=!fx.length&&!gear.length&&!cons.length&&!scs.length&&!arts.length;
+  $('csbody').innerHTML=(empty?`<p class="csempty">Сумка пуста — пока ничего нет.</p>`:'')+body+bonus;
+}
+
 function buildPills(){
   const t=$('top');t.className='top n'+S.players.length;
-  t.innerHTML=S.players.map((p,i)=>`<div class="pill frame" id="pill${i}" role="button" tabindex="0" title="Показать героя на поле"></div>`).join('');
-  S.players.forEach((p,i)=>{const el=$('pill'+i);el.onclick=()=>lookAt(i);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();lookAt(i);}};});
+  t.innerHTML=S.players.map((p,i)=>`<div class="pill frame" id="pill${i}" role="button" tabindex="0" title="Лист персонажа"></div>`).join('');
+  S.players.forEach((p,i)=>{const el=$('pill'+i);el.onclick=()=>onHeroCard(i);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onHeroCard(i);}};});
 }
 // камера к герою: на поле крупно, с короткой вспышкой вокруг фишки
 let lookFx=null;
@@ -4368,37 +4623,10 @@ function pill(i){
   el.classList.toggle('active',S.cur===i&&!S.over&&alive(p)&&S.phase!=='intro');
   el.classList.toggle('out',p.mode==='dead');
   const st={out:COOP()?'ищет лестницу':'к логову',room:'в логове',back:'назад к краю',home:'спасён',dead:'погиб'}[p.mode];
-  const inv=[];
-  if(p.potions)inv.push(`<span class="g">✚${p.potions}</span>`);
-  if(p.bombs)inv.push(`<span class="s">✹${p.bombs}</span>`);
-  if(p.haste)inv.push(`<span class="g">»${p.haste}</span>`);
-  if(p.luck)inv.push(`<span class="g">☘${p.luck}</span>`);
-  if(p.sword)inv.push(`<span class="g">†</span>`);
-  if(p.rope)inv.push(p.ropeWorn?`<span class="f" title="Гнилая верёвка торговца: рвётся в 70% случаев">➰</span>`:`<span class="g">➰</span>`);
-  if(p.shield)inv.push(`<span class="y" title="Щит">⛨</span>`);
-  if(p.pick)inv.push(`<span class="y" title="Кирка">⚒</span>`);
-  if(p.silver)inv.push(`<span class="s" title="Серебряный клинок">†</span>`);
-  if(p.key>0)inv.push(`<span class="y" title="Медный ключ">⚷${p.key>1?p.key:''}</span>`);
-  if(p.scrolls&&p.scrolls.length)inv.push(`<span class="y">§${p.scrolls.length}</span>`);
-  if(p.jinx>0||p.jinxTurn)inv.push(`<span class="f">☾</span>`);
-  if(p.stun)inv.push(`<span class="f">⏸${p.stun}</span>`);
-  if(p.wound>0||p.woundTurn)inv.push(`<span class="f" title="рана после встречи">✖${Math.max(p.wound||0,p.woundTurn?1:0)}</span>`);
-  if(p.lock>0)inv.push(`<span class="f" title="Сердце у демона">⛧♥${p.lock}</span>`);
-  if(p.bless>0)inv.push(`<span class="g" title="Гармония духа: +1 к броскам">✦${p.bless}</span>`);
-  if(p.ward>0)inv.push(`<span class="s" title="Камень судьбы: защита от негативных эффектов">◈${p.ward}</span>`);
-  if(p.mantle)inv.push(`<span class="g" title="Огнестойкая мантия">♨</span>`);
-  if(p.ghostP>0||p.ghost)inv.push(`<span class="s" title="${p.ghost?'Сквозь стены: этот ход':'Зелье призрачного шага'}">≋${p.ghost?'!':p.ghostP>1?p.ghostP:''}</span>`);
-  if(p.rot>0)inv.push(`<span class="f" title="Трупный яд: −1 шаг">☣${p.rot}</span>`);
-  if(p.burn>0||p.burnTurn)inv.push(`<span class="f" title="Ожог: −3 к d20 в бою, +1 к d4">🔥${Math.max(p.burn||0,p.burnTurn?1:0)}</span>`);
-  if(p.cloak>0)inv.push(`<span class="s" title="Плащ-невидимка">❖${p.cloak>1?p.cloak:''}</span>`);
-  if(p.invis>0)inv.push(`<span class="s" title="Невидим для охотников">✧${p.invis}</span>`);
-  if(p.hidden)inv.push(`<span class="s" title="Затаился">☁</span>`);
-  if(huntOn()&&alive(p)&&huntActive().some(h=>S.players[h.tgt]===p))inv.push(`<span class="f" title="За тобой идёт охотник">☠</span>`);
-  if(p.curse>0||p.curseTurn)inv.push(`<span class="f">⛧${Math.max(p.curse||0,p.curseTurn?1:0)}</span>`);
-  {const c=S.players[S.cur];S.met=S.met||{};if(c&&c!==p&&alive(p)&&alive(c)&&p.gold>0&&!S.met[pairKey(c,p)]&&!S.over)inv.push(`<span class="y" title="цель">⚔</span>`);}
+  // значки статусов и предметов убраны: они есть в листе персонажа и инвентаре
   const html=`<div class="crest">${p.portrait!=null?`<img alt="" src="${PORTRAITS[p.portrait]}">`:esc((p.name||'?').slice(0,1).toUpperCase())}</div>
     <div class="pl1"><span class="pname">${esc(p.short)}</span>${p.cpu?'<span class="ai">ИИ</span>':''}<span class="hp">${'♥'.repeat(Math.max(0,p.hp))}${'♡'.repeat(Math.max(0,maxHP(p)-p.hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона: ещё ${p.lock} ${plural(p.lock,'ход','хода','ходов')}">♥</span>`:''}</span></div>
-    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${S&&S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span>${p.mode!=='dead'&&inv.length?`<span class="inv">${inv.join('')}</span>`:''}</div>`;
+    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${S&&S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span></div>`;
   if(el.__h!==html){el.__h=html;el.innerHTML=html;}   // плашка не пересобирается, если ничего не поменялось (портрет не мигает, нет лишней вёрстки)
 }
 function renderWake(){
@@ -4424,6 +4652,41 @@ function renderWake(){
 }
 function srowSync(){const r=$('srow'),h=$('wake').hidden&&$('tmr').hidden&&$('mgoal').hidden;if(r.hidden!==h){r.hidden=h;if(S)size();}}
 let lastFire=null;
+function shortHere(p){
+  const o=options(p);
+  const bits=[`${p.moves} ${plural(p.moves,'шаг','шага','шагов')}`];
+  if(p.ghost)bits.push('сквозь стены');
+  if(o[0]&&o[0].lost)bits.push('выходы закрыты — ищи открытые плиты');
+  else if(o.some(x=>x.pick))bits.push('кирка: ⚒ сквозь стену');
+  else if(o.length===1&&o[0].back)bits.push('тупик, назад ↩');
+  if(o.some(x=>x.jump))bits.push('пропасть: прыжок, нужно 15+');
+  const nr=nearRival(p);
+  if(nr)bits.push(`рядом ${nr.q.short}`);
+  return bits.join(' · ');
+}
+function bannerHint(){
+  if(!S||S.over||S.phase==='intro'||S.phase==='handoff'||S.phase==='lair')return '';
+  const p=P();
+  if(S.phase==='tp')return isLocal(p)?'телепорт: выбери клетку в радиусе 3':`${p.name} выбирает клетку…`;
+  if(S.phase==='exit')return p.cpu?'выбирает выход из логова…':'выбери край обрыва';
+  if(S.phase==='roll')return isLocal(p)?'':`${p.name} бросает d4…`;
+  if(S.phase==='move')return shortHere(p);
+  if(S.phase==='event'&&!isLocal(p))return `${p.name}…`;
+  return '';
+}
+function paintWho(){
+  const who=$('who');if(!who||!S)return;
+  let nameEl=$('whoName'),hintEl=$('whoHint');
+  if(!nameEl||!hintEl){
+    who.innerHTML='<span class="whoname" id="whoName"></span><span class="whohint" id="whoHint"></span>';
+    nameEl=$('whoName');hintEl=$('whoHint');
+  }
+  const p=P();
+  const title=S.over?'Экспедиция окончена':S.phase==='intro'?'Экспедиция начинается':'Ходит '+(p?p.name:'');
+  const hint=bannerHint();
+  nameEl.textContent=title;hintEl.textContent=hint;
+  who.style.setProperty('--pc',S.over||S.phase==='intro'?css('--gold'):css(p?p.color:'--gold'));
+}
 function render(){
   hedgeSoon();
   TG=null;boardDirty=true;
@@ -4431,10 +4694,8 @@ function render(){
   renderWake();
   S.players.forEach((p,i)=>pill(i));
   const p=P();
-  const who=$('who');
-  who.textContent=S.over?'Экспедиция окончена':'Ходит '+p.name;
-  who.style.setProperty('--pc',S.over?css('--gold'):css(p.color));
-  $('msg').textContent=S.msg;
+  paintWho();
+  const msgEl=$('msg');if(msgEl)msgEl.textContent=S.msg||'';
   const bp=$('bPotion');
   const hexSet=(el,n)=>{el.classList.toggle('empty',!n);const b=el.querySelector('.n');b.textContent=n>1||el===bp?n||'':'';b.hidden=!n;};
   hexSet(bp,p.potions);
@@ -4451,22 +4712,32 @@ function render(){
      hx.classList.add('many');hx.classList.toggle('rows',rows>1);
      vis.forEach(x=>{x.style.setProperty('--hs',Math.max(18,size)+'px');x.style.fontSize=Math.max(10,Math.round(size*0.45))+'px';});}}
   $('bMenu').disabled=!S.online&&isCpuTurn();
+  if(CS_IDX!=null&&$('charsheet')&&!$('charsheet').hidden)paintCharSheet();
   coachCheck();
   document.body.classList.toggle('cpu-turn',lockedTurn());
-  {const n=(p.scrolls||[]).length,bs=$('bScroll');$('nScroll').textContent=n||'';bs.disabled=lockedTurn()||!n||!alive(p)||!['roll','move'].includes(S.phase)||p.scrollTurn===S.turnNo;bs.classList.toggle('has',!!n);}
+  {const h=invHero()||p;const n=(h.scrolls||[]).length+(h.potions||0)+(h.cloak||0)+(h.ghostP||0);
+   const bs=$('bScroll');$('nScroll').textContent=n||'';bs.disabled=!h||!!introOn;bs.classList.toggle('has',n>0);}
   bp.disabled=busy||!isLocal(p)||!alive(p)||!p.potions||p.hp>=maxHP(p)||!['move','exit'].includes(S.phase);
 }
 $('bPotion').onclick=()=>act('potion');
+$('csClose').onclick=()=>closeCharSheet();
+$('csLook').onclick=()=>{const i=CS_IDX;closeCharSheet();if(i!=null)lookAt(i);};
+$('charsheet').addEventListener('click',e=>{if(e.target===$('charsheet'))closeCharSheet();});
+$('csheet').addEventListener('click',e=>e.stopPropagation());
 $('mgoal').onclick=()=>{if(S&&S.mission&&!S.over&&$('modal').hidden)missionInfo();};
-$('bScroll').onclick=()=>{
-  if(!S||S.over||lockedTurn()||busy||rolling||!$('modal').hidden)return;
-  const p=P();if(!alive(p)||!['roll','move'].includes(S.phase))return;
-  act('bag');
-};
-async function useScrollBag(){
+$('bScroll').onclick=()=>{if(!S||introOn)return;openInventory();};
+$('csbody').addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('.csact');if(!b||b.disabled)return;
+  invDo(b.dataset.kind,b.dataset.id);
+});
+async function useScrollBag(d={}){
   const p=P();if(!alive(p)||!['roll','move'].includes(S.phase))return;
   const pop=$('rollpop'),wasPop=!pop.hidden;pop.hidden=true;
-  busy=true;try{await openScrollBag();}finally{busy=false;}
+  if(typeof closeCharSheet==='function')closeCharSheet();
+  busy=true;try{
+    if(d.id){if(!(p.scrolls||[]).includes(d.id)||p.scrollTurn===S.turnNo)return;await castScroll(p,d.id);}
+    else await openScrollBag();
+  }finally{busy=false;}
   if(p.mode==='dead'||p.mode==='home'){nextTurn();return;}
   if(S.phase==='roll'&&wasPop)showRollPop(p);
   render();
@@ -4543,6 +4814,7 @@ let inMenu=false;
 window.onAndroidBack=function(){
   if(tutorOn){tutorOn();return true;}
   if(!S)return false;
+  if($('charsheet')&&!$('charsheet').hidden){closeCharSheet();return true;}
   if(!$('modal').hidden){if(inMenu&&modalPrimary)modalPrimary.click();return true;}
   if(!S.online&&(isCpuTurn()||busy))return true;
   $('bMenu').click();return true;
