@@ -1020,7 +1020,7 @@ function tap(x,y){
   const c=Math.round(hit.x)+C,r=Math.round(hit.z)+C;if(!inB(r,c))return;
   if(S.phase==='tp'){if(S.tp&&S.tp.spots.some(([a,b2])=>a===r&&b2===c))act('tp',{r,c});return;}
   if(busy)return;
-  if(S.phase==='roll'){act('roll');return;}
+  if(S.phase==='roll'){if(typeof hintRollDie==='function')hintRollDie();return;}
   if(S.phase==='exit'){if(EXITS.some(([a,b2])=>a===r&&b2===c))act('exit',{r,c});return;}
   if(S.phase!=='move')return;
   const o=options(P()).find(o=>(o.r===r&&o.c===c)||(o.jump&&inRoom(r,c)));
