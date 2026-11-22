@@ -22,7 +22,7 @@ const MAX_SEATS = 4;
 const BOT_MALE = ['Ульф', 'Борг', 'Торвин', 'Грок'];
 const BOT_FEMALE = ['Ирма', 'Сельма', 'Сигрид', 'Эйра'];
 const MAPS = ['small', 'medium', 'large'];
-const RULES = ['free', 'wake', 'hunt'];  // свободное исследование / пробуждение дракона / охотники
+const RULES = ['free', 'wake', 'hunt', 'trophy', 'descent'];  // свободное исследование / пробуждение дракона / охотники / охота на монстров / спуск
 const TIMERS = [0, 30, 60];              // таймер хода, секунд (0 — без таймера)
 const PORTRAITS = 8;
 
