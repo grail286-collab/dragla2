@@ -57,11 +57,11 @@ function sliceFloorTile(img,i,cols,rows,insetFrac,outSize){
 }
 function stampFloor(r,c,i,x,z,isDead,burn){
   const plate=pickFloorPlate(r,c),rot=Math.floor(hsh(r,c,12)*4)%4;
-  B.floors.forEach((f,j)=>{if(j!==plate){f.setMatrixAt(i,B.zero);f.instanceMatrix.needsUpdate=true;}});
+  B.floors.forEach((f,j)=>{if(j!==plate)poolDel(f,i);});
   if(S.rules==='descent'){const lift=hsh(r,c,31)*.045;dm.position.set(x,TILE_Y+.001+lift,z);dm.rotation.set((hsh(r,c,32)-.5)*.05,rot*Math.PI/2,(hsh(r,c,33)-.5)*.05);}
   else{dm.position.set(x,TILE_Y+.001,z);dm.rotation.set(0,rot*Math.PI/2,0);}
   dm.scale.set(1,1,1);dm.updateMatrix();
-  const F=B.floors[plate];F.setMatrixAt(i,dm.matrix);F.setColorAt(i,plateColor(r,c,isDead,burn));F.instanceMatrix.needsUpdate=true;F.instanceColor.needsUpdate=true;
+  poolSet(B.floors[plate],i,dm.matrix,plateColor(r,c,isDead,burn));
 }
 function restampFloors(){
   if(!B||!S)return;
@@ -76,7 +76,7 @@ function applyFloorAtlas(img,mode){
   if(mode==='atlas'){
     floorTileCount=FLOOR_ATLAS_COLS*FLOOR_ATLAS_ROWS;
     for(let i=0;i<FLOOR_TILE_MAX;i++){
-      plateTex[i].image=sliceFloorTile(img,i,FLOOR_ATLAS_COLS,FLOOR_ATLAS_ROWS,FLOOR_ATLAS_INSET,512);
+      plateTex[i].image=sliceFloorTile(img,i,FLOOR_ATLAS_COLS,FLOOR_ATLAS_ROWS,FLOOR_ATLAS_INSET,256);   // плитка атласа ~170px: 512 только раздувал память в 4 раза
       plateTex[i].needsUpdate=true;
     }
   }else{
@@ -219,7 +219,7 @@ function applyBigWallAtlas(img){
   const {xs,ys}=atlasGutters(img,BIG_WALL_ATLAS_COLS,BIG_WALL_ATLAS_ROWS);
   bigWallTileCount=BIG_WALL_ATLAS_COLS*BIG_WALL_ATLAS_ROWS;
   for(let i=0;i<BIG_WALL_TILE_MAX;i++){
-    bigWallTex[i].image=sliceAtlasTile(img,i,xs,ys,BIG_WALL_ATLAS_INSET,512,512);
+    bigWallTex[i].image=sliceAtlasTile(img,i,xs,ys,BIG_WALL_ATLAS_INSET,256,256);   // плитка ~189px — 256 хватает без потери чёткости
     bigWallTex[i].needsUpdate=true;
     const col=0x8e8a86;
     rockSideMats[i].map=bigWallTex[i];rockSideMats[i].color.setHex(0xa8a49e);rockSideMats[i].roughness=.95;rockSideMats[i].needsUpdate=true;
@@ -324,36 +324,56 @@ function boxWithSideUV(sx,sy,sz,v0,v1){
   }
   uv.needsUpdate=true;g._shared=true;return g;
 }
-function hideRock(i){if(!B||!B.rocks)return;B.rocks.forEach(m=>{m.setMatrixAt(i,B.zero);m.instanceMatrix.needsUpdate=true;});}
-function hideWall(wi){if(!B||!B.walls)return;B.walls.forEach(m=>{m.setMatrixAt(wi,B.zero);m.instanceMatrix.needsUpdate=true;});}
+// --- компактные InstancedMesh: в буфере только реально видимые экземпляры (а не все слоты поля с нулевой матрицей).
+// Ключ — номер слота (клетка / стена клетки), значение — индекс экземпляра; удаление — перестановкой последнего на место удалённого.
+const _pm4=new THREE.Matrix4(),_pc3=new THREE.Color(),_rockCol=new THREE.Color();
+function poolInit(m){m.count=0;m.visible=false;m.userData.slot=new Map();m.userData.key=[];m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);if(m.instanceColor)m.instanceColor.setUsage(THREE.DynamicDrawUsage);}
+function poolTouch(m){m.visible=m.count>0;m.instanceMatrix.updateRange.offset=0;m.instanceMatrix.updateRange.count=m.count*16;m.instanceMatrix.needsUpdate=true;
+  if(m.instanceColor){m.instanceColor.updateRange.offset=0;m.instanceColor.updateRange.count=m.count*3;m.instanceColor.needsUpdate=true;}}
+function poolSet(m,key,mat,col){const u=m.userData;let i=u.slot.get(key);if(i===undefined){i=m.count++;u.slot.set(key,i);u.key[i]=key;}
+  m.setMatrixAt(i,mat);if(col&&m.instanceColor)m.setColorAt(i,col);poolTouch(m);}
+function poolDel(m,key){const u=m.userData,i=u.slot.get(key);if(i===undefined)return;const last=--m.count,lk=u.key[last];
+  if(i!==last){m.getMatrixAt(last,_pm4);m.setMatrixAt(i,_pm4);if(m.instanceColor){m.getColorAt(last,_pc3);m.setColorAt(i,_pc3);}u.slot.set(lk,i);u.key[i]=lk;}
+  u.slot.delete(key);u.key.length=last;poolTouch(m);}
+function hideRock(i){if(!B||!B.rocks)return;B.rocks.forEach(m=>poolDel(m,i));}
+// Бокс: 4 боковые грани — одна группа (материал 0), верх — вторая (материал 1), низ не рисуем (его никогда не видно).
+// Было 6 групп = 6 вызовов отрисовки на каждую InstancedMesh (и столько же в каждом проходе теней).
+function regroupBox(g){const idx=g.index.array,side=[],top=[];
+  g.groups.forEach(q=>{const part=Array.from(idx.subarray(q.start,q.start+q.count));if(q.materialIndex===2)top.push(...part);else if(q.materialIndex!==3)side.push(...part);});
+  g.setIndex(side.concat(top));g.clearGroups();g.addGroup(0,side.length,0);g.addGroup(side.length,top.length,1);return g;}
+// Стены режем на куски WALL_CH×WALL_CH клеток: у каждого куска своя сфера охвата, и three.js отсекает далёкие куски —
+// и в кадре, и в 6 проходах тени от факела героя (его свет бьёт всего на ~5 клеток).
+let WALL_CH=6;   // ставится в build(): ~4×4 куска на любую карту (21 → по 6, 41 → по 11 клеток), чтобы вызовов отрисовки было немного и в обзоре
+function wallMeshes(wi){const i=Math.floor(wi/16),r=Math.floor(i/N),c=i%N,nc=Math.ceil(N/WALL_CH);return B.wallsCh[Math.floor(r/WALL_CH)*nc+Math.floor(c/WALL_CH)];}
+function hideWall(wi){if(!B||!B.wallsCh)return;wallMeshes(wi).forEach(m=>poolDel(m,wi));}
 function rockAt(i,r,c,sink,tall){const [x,z]=cellXZ(r,c),k=sink||0,h=tall?WALL_H*2.25*(1+hsh(r,c,21)*.12):ROCK_H*(.7+hsh(r,c,21)*.75),wd=tall?1/ROCK_W:1;
   dm.position.set(x,h/2-.04-k*h*1.1,z);dm.rotation.set(0,Math.floor(hsh(r,c,22)*4)*Math.PI/2,0);dm.scale.set((1-k*.15)*wd,h/ROCK_H,(1-k*.15)*wd);dm.updateMatrix();
   const tile=pickBigWallTile(r,c,71);
-  B.rocks.forEach((m,j)=>{if(j!==tile){m.setMatrixAt(i,B.zero);m.instanceMatrix.needsUpdate=true;}});
-  B.rocks[tile].setMatrixAt(i,dm.matrix);B.rocks[tile].instanceMatrix.needsUpdate=true;}
+  const v=.6+hsh(r,c,23)*.45;_rockCol.setRGB(v,v*.97,v*.93);
+  B.rocks.forEach((m,j)=>{if(j!==tile)poolDel(m,i);});
+  poolSet(B.rocks[tile],i,dm.matrix,_rockCol);}
 function stampWall(wi,r,c,salt,px,pz,w,dd,f){
   if(S.rules==='descent')f*=2.25;   // в «Спуске» стены залов выше
-  dm.position.set(px,TILE_Y+WALL_H*f/2,pz);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();
+  const ms=wallMeshes(wi),ce=ms.center;
+  dm.position.set(px-ce.x,TILE_Y+WALL_H*f/2,pz-ce.z);dm.rotation.set(0,0,0);dm.scale.set(w,f,dd);dm.updateMatrix();
   const tile=pickWallTile(r,c,salt);
-  B.walls.forEach((m,j)=>{if(j!==tile){m.setMatrixAt(wi,B.zero);m.instanceMatrix.needsUpdate=true;}});
-  B.walls[tile].setMatrixAt(wi,dm.matrix);B.walls[tile].instanceMatrix.needsUpdate=true;
+  ms.forEach((m,j)=>{if(j!==tile)poolDel(m,wi);});
+  poolSet(ms[tile],wi,dm.matrix);
 }
 function stampRim(rims,rimN,rimEdges){
-  const zero=B&&B.zero||new THREE.Matrix4().makeScale(0,0,0);
-  rims.forEach(m=>{for(let i=0;i<rimN;i++)m.setMatrixAt(i,zero);});
+  rims.forEach(m=>{if(!m.userData.slot)poolInit(m);});
   let j=0;
   for(let q=-1;q<N;q++)for(const [r,c] of [[-1,q],[q+1,-1],[N,q+1],[q,N]]){const [x,z]=cellXZ(r,c),h=(.4+hsh(r,c,41)*.5)*1.5,w=.82+hsh(r,c,42)*.26;
     dm.position.set(x+(hsh(r,c,43)-.5)*.14,h/2-.3,z+(hsh(r,c,44)-.5)*.14);dm.rotation.set((hsh(r,c,46)-.5)*.08,(hsh(r,c,45)-.5)*.3,(hsh(r,c,47)-.5)*.08);dm.scale.set(w,h,w);dm.updateMatrix();
     const tile=pickBigWallTile(r,c,81),v=.38+hsh(r,c,48)*.24,col=new THREE.Color(v,v,v*1.04);
-    rims.forEach((m,t)=>{if(t!==tile)m.setMatrixAt(j,zero);else{m.setMatrixAt(j,dm.matrix);m.setColorAt(j,col);}});
+    rims.forEach((m,t)=>{if(t!==tile)poolDel(m,j);else poolSet(m,j,dm.matrix,col);});
     j++;}
   rimEdges.forEach(([r,c,dr,dc],e)=>{const [x,z]=cellXZ(r,c),q=e*7+3,h=(.4+hsh(q,r,41)*.5)*1.5,w=.86+hsh(q,c,42)*.3,d=.36+hsh(q,c,49)*.16;
     dm.position.set(x+dc*.32+(hsh(q,r,43)-.5)*.1,h/2-.3,z+dr*.32+(hsh(q,r,44)-.5)*.1);dm.rotation.set((hsh(q,c,46)-.5)*.1,(hsh(q,c,45)-.5)*.3,(hsh(q,c,47)-.5)*.1);
     dm.scale.set(dr?w:d,h,dr?d:w);dm.updateMatrix();
     const tile=pickBigWallTile(q,c,81),v=.38+hsh(q,c,48)*.24,col=new THREE.Color(v,v,v*1.04);
-    rims.forEach((m,t)=>{if(t!==tile)m.setMatrixAt(j,zero);else{m.setMatrixAt(j,dm.matrix);m.setColorAt(j,col);}});
+    rims.forEach((m,t)=>{if(t!==tile)poolDel(m,j);else poolSet(m,j,dm.matrix,col);});
     j++;});
-  rims.forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
 }
 const dm=new THREE.Object3D();
 function cellXZ(r,c){return [c-C,r-C];}
@@ -364,31 +384,32 @@ function build(){
   const n=N*N;
   // скала закрытых клеток: по одной InstancedMesh на плитку атласа (общий материал нельзя развести по экземплярам)
   const rockSideV=1-Math.min(0.95,ROCK_H/ROCK_W);   // на боках — верхняя полоса текстуры по аспекту ROCK_H:ROCK_W
-  const rockGeo=boxWithSideUV(ROCK_W,ROCK_H,ROCK_W,rockSideV,1);
+  const rockGeo=regroupBox(boxWithSideUV(ROCK_W,ROCK_H,ROCK_W,rockSideV,1));
   const rocks=[];
   for(let t=0;t<BIG_WALL_TILE_MAX;t++){
-    const mat=[rockSideMats[t],rockSideMats[t],rockTopMats[t],rockSideMats[t],rockSideMats[t],rockSideMats[t]];
+    const mat=[rockSideMats[t],rockTopMats[t]];
     const rock=new THREE.InstancedMesh(rockGeo,mat,n);
     rock.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);
     rock.castShadow=rock.receiveShadow=true;g.add(rock);rocks.push(rock);
   }
-  const wallGeo=new THREE.BoxGeometry(1,WALL_H,1);wallGeo._shared=true;
-  const walls=[];
-  for(let t=0;t<WALL_TILE_MAX;t++){
-    const mat=[wallSideMats[t],wallSideMats[t],wallTopMat,wallSideMats[t],wallSideMats[t],wallSideMats[t]];
-    const wmesh=new THREE.InstancedMesh(wallGeo,mat,n*16);
-    wmesh.castShadow=wmesh.receiveShadow=true;g.add(wmesh);walls.push(wmesh);
+  const wallGeo=regroupBox(new THREE.BoxGeometry(1,WALL_H,1));wallGeo._shared=true;
+  WALL_CH=Math.max(6,Math.ceil(N/4));
+  const walls=[],wallsCh=[],wnc=Math.ceil(N/WALL_CH);
+  for(let q=0;q<wnc*wnc;q++){
+    const r0=Math.floor(q/wnc)*WALL_CH,c0=(q%wnc)*WALL_CH,r1=Math.min(N,r0+WALL_CH)-1,c1=Math.min(N,c0+WALL_CH)-1;
+    const [x0,z0]=cellXZ(r0,c0),[x1,z1]=cellXZ(r1,c1),arr=[];arr.center={x:(x0+x1)/2,z:(z0+z1)/2};
+    const geo=wallGeo.clone();geo.boundingSphere=new THREE.Sphere(new THREE.Vector3(0,.4,0),Math.hypot(x1-x0+1,z1-z0+1)/2+.6);   // своя сфера охвата куска
+    for(let t=0;t<WALL_TILE_MAX;t++){
+      const wmesh=new THREE.InstancedMesh(geo,[wallSideMats[t],wallTopMat],(r1-r0+1)*(c1-c0+1)*16);
+      wmesh.position.set(arr.center.x,0,arr.center.z);wmesh.castShadow=wmesh.receiveShadow=true;g.add(wmesh);arr.push(wmesh);walls.push(wmesh);
+    }
+    wallsCh.push(arr);
   }
   // в «Спуске» плиты пола — толстые и чуть разной высоты, со щелями между ними; в остальных режимах — ровная плоскость
   const fgeo=S.rules==='descent'?new THREE.BoxGeometry(.965,.09,.965).translate(0,-.045,0):new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
   const floors=floorMats.map(m=>{const im=new THREE.InstancedMesh(fgeo,m,n);im.receiveShadow=true;im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);g.add(im);return im;});
   const zero=new THREE.Matrix4().makeScale(0,0,0);
-  for(let i=0;i<n;i++){floors.forEach(f=>f.setMatrixAt(i,zero));}
-  for(let i=0;i<n*16;i++)walls.forEach(m=>m.setMatrixAt(i,zero));
-  // нераскрытая скала
-  for(let r=0;r<N;r++)for(let c=0;c<N;c++){const i=r*N+c,v=.6+hsh(r,c,23)*.45,col=new THREE.Color(v,v*.97,v*.93);
-    rocks.forEach(rock=>{rock.setColorAt(i,col);rock.setMatrixAt(i,zero);});}
-  rocks.forEach(rock=>rock.instanceColor.needsUpdate=true);
+  floors.forEach(poolInit);walls.forEach(poolInit);rocks.forEach(poolInit);   // пустые: экземпляры добавляются по мере раскрытия
   // бортик подземелья: крупные неровные каменные блоки по внешнему краю (плитки big_wall)
   const rimEdges=[];   // кромка пропасти: стороны клеток пропасти, граничащие с подземельем
   for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(inChasm(r,c))for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){const r2=r+dr,c2=c+dc;if(inB(r2,c2)&&!inChasm(r2,c2)&&!inRoom(r2,c2))rimEdges.push([r,c,dr,dc]);}
@@ -413,9 +434,9 @@ function build(){
   // огонь пробуждения: по два язычка на клетку, видимость по кольцу
   const fgeo1=new THREE.ConeGeometry(.08,.34,6),fgeo2=new THREE.ConeGeometry(.045,.22,6);
   const flames=[new THREE.InstancedMesh(fgeo1,flameMat,n),new THREE.InstancedMesh(fgeo2,flameMat2,n)];
-  flames.forEach(f=>{f.frustumCulled=false;for(let i=0;i<n;i++)f.setMatrixAt(i,zero);g.add(f);});
+  flames.forEach(f=>{f.frustumCulled=false;f.count=0;f.visible=false;g.add(f);});
   const sh=N/2+1;Object.assign(moon.shadow.camera,{left:-sh,right:sh,top:sh,bottom:-sh,near:1,far:40});moon.shadow.camera.updateProjectionMatrix();
-  B={g,n,N,rocks,walls,rims,floors,zero,rim:rims[0],rimN,rimEdges,rockGeo,wallGeo,rimGeo,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S,cells:S.cells,monYaw:new Map()};
+  B={g,n,N,rocks,walls,wallsCh,rims,floors,zero,rim:rims[0],rimN,rimEdges,rockGeo,wallGeo,rimGeo,cache:new Array(n).fill(''),deco:[],arches:new Set(),archG:new Map(),torches:[],flames,fireN:-1,lair,pitLight,anim:[],G:S,cells:S.cells,monYaw:new Map()};
   if(S.rules==='descent'){lair.g.visible=false;}   // в «Спуске» логова нет — в центре просто провал
   {const need=['dragon',...new Set(S.players.map(heroKind))];if(S.awake)need.push('wake');if(S.rules==='hunt'&&(S.hunters||[]).length)need.push(...S.hunters.map(h=>h.k));
    const todo=need.filter(k=>!FIG[k].mesh);
@@ -748,14 +769,15 @@ const TL_POOL=[];for(let i=0;i<8;i++){const l=new THREE.PointLight(0xff8a2c,0,2.
 
 // огонь пробуждения
 function syncFire(){
-  const f=S.awake?S.fire:-1;if(f===B.fireN)return;B.fireN=f;B.burnCells=[];
+  const f=S.awake?S.fire:-1;if(f===B.fireN)return;B.fireN=f;B.burnCells=[];let fk=0;   // язычков ровно столько, сколько горящих клеток
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){const i=r*N+c;
     if(f>=0&&!inRoom(r,c)&&!inChasm(r,c)&&ring(r,c)<=f){const [x,z]=cellXZ(r,c);
       dm.rotation.set(0,0,0);dm.scale.set(1,1,1);
-      dm.position.set(x+(hsh(r,c,31)-.5)*.5,.2,z+(hsh(r,c,32)-.5)*.5);dm.updateMatrix();B.flames[0].setMatrixAt(i,dm.matrix);
-      dm.position.set(x+(hsh(r,c,33)-.5)*.5,.13,z+(hsh(r,c,34)-.5)*.5);dm.updateMatrix();B.flames[1].setMatrixAt(i,dm.matrix);
+      dm.position.set(x+(hsh(r,c,31)-.5)*.5,.2,z+(hsh(r,c,32)-.5)*.5);dm.updateMatrix();B.flames[0].setMatrixAt(fk,dm.matrix);
+      dm.position.set(x+(hsh(r,c,33)-.5)*.5,.13,z+(hsh(r,c,34)-.5)*.5);dm.updateMatrix();B.flames[1].setMatrixAt(fk++,dm.matrix);
       B.cache[i]=B.cache[i]+'?';B.burnCells.push([r,c]);   // перекрасить плиту в огненный тон
-    }else{B.flames[0].setMatrixAt(i,B.zero);B.flames[1].setMatrixAt(i,B.zero);}}
+    }}
+  B.flames.forEach(m=>{m.count=fk;m.visible=fk>0;});
   B.flames.forEach(m=>m.instanceMatrix.needsUpdate=true);
 }
 
@@ -1006,6 +1028,10 @@ cv.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;
 const up=e=>{const p=ptr.get(e.pointerId);ptr.delete(e.pointerId);
   if(p&&moved<10&&performance.now()-downAt<600)tap(e.clientX,e.clientY);};
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',e=>ptr.delete(e.pointerId));
+// любое касание/колесо — сразу полный FPS (жесты камеры не должны идти рывками)
+let activeUntil=0;const wake3d=()=>{activeUntil=performance.now()+600;};
+['pointerdown','pointermove','pointerup','wheel'].forEach(ev=>cv.addEventListener(ev,wake3d,{passive:true}));
+addEventListener('keydown',wake3d);
 cv.addEventListener('wheel',e=>{e.preventDefault();distMul=Math.min(2.6,Math.max(.45,distMul*(1+Math.sign(e.deltaY)*.1)));},{passive:false});
 // пилюля героя — камера к нему
 lookAt=function(i){if(!S)return;focusI=i;focusUntil=performance.now()+3500;userUntil=0;};
@@ -1043,10 +1069,15 @@ addEventListener('resize',()=>{rectKey='';});
 
 // --- кадр
 const clock=new THREE.Clock();let lastPlace=0,lastCells=0,fpsAcc=0,fpsN=0,perfLevel=0;
+let lastRender=0,prevRendered=false,camPrev=new THREE.Vector3(),camMovedAt=0;
 function frame(){
   requestAnimationFrame(frame);
-  if(document.hidden)return;
-  const now=performance.now(),dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
+  if(document.hidden){prevRendered=false;return;}
+  const now=performance.now();
+  // в простое — ~30 FPS: кадр пропускаем, если с прошлого прошло меньше ~28 мс и ничего не движется
+  if(S&&B&&now>activeUntil&&now-lastRender<28){prevRendered=false;return;}
+  const consecutive=prevRendered,interval=now-lastRender;lastRender=now;prevRendered=true;
+  const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
   if(now-lastPlace>400){place();lastPlace=now;}
   cv.style.display=S?'block':'none';
   if(!S)return;
@@ -1079,6 +1110,9 @@ function frame(){
     const face=Math.atan2(cam.position.x-T.g.position.x,cam.position.z-T.g.position.z);T.stand.quaternion.copy(cam.quaternion);   // портрет всегда лицом к игроку, как в 2D
     if(T.fig)T.fig.rotation.y=T.hd??face;
   });
+  // где сейчас свет героя с тенью: рядом с ним вращающиеся предметы и дышащий дракон требуют редкого пересчёта тени
+  let curLt=null,rareShadow=false;{const T=tokens.get(S.cur);if(T&&T.g.visible)curLt=T.g.position;}
+  if(curLt&&S.rules!=='descent'&&curLt.x*curLt.x+curLt.z*curLt.z<6.5*6.5)rareShadow=true;   // логово в центре поля, свет бьёт на ~4.8
   // охотники
   const act0=(S.hunters||[]).filter(h=>!h.away);
   hTok.forEach((T,id)=>{if(!act0.some(h=>h.id===id)||T.G!==S){SC.remove(T.g);hTok.delete(id);}});
@@ -1092,7 +1126,7 @@ function frame(){
   B.deco.forEach(d=>{if(!d)return;const u=d.g.userData,w=u.kob||u.face;if(w)w.rotation.y=Math.atan2(cam.position.x-d.g.position.x,cam.position.z-d.g.position.z)-.35;
     if(u.slide){const k=Math.min(1,(performance.now()-u.slide.t0)/450),e=1-Math.pow(1-k,3),o=u.slide.o;   // монстр делает шаг
       if(!u.slide.p0)u.slide.p0=o.position.clone();o.position.copy(u.slide.p0).multiplyScalar(1-e);o.position.y=Math.sin(k*Math.PI)*.12;if(k>=1){o.position.set(0,0,0);u.slide=null;}shadowDirty=true;}
-    if(u.spin){u.spin.rotation.y+=dt*.9;u.spin.position.y=.08+Math.sin(t*2+d.g.position.x)*.03;}});
+    if(u.spin){if(curLt&&d.g.position.distanceToSquared(curLt)<25)rareShadow=true;u.spin.rotation.y+=dt*.9;u.spin.position.y=.08+Math.sin(t*2+d.g.position.x)*.03;}});
   // метки ходов
   const tg=targets();marks.forEach((m,i)=>{const q=tg[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?(S.rules==='descent'?.07:.03):blockTopY(q[0],q[1])+.025,z);m.scale.setScalar(1+Math.sin(t*5)*.08);}});
   markMat.opacity=.6+Math.sin(t*5)*.25;
@@ -1132,10 +1166,18 @@ function frame(){
   const want=zoomDist()*distMul;dist+=(want-dist)*Math.min(1,dt*4);
   cam.position.set(tgt.x+Math.sin(az)*Math.cos(el)*dist,Math.sin(el)*dist,tgt.z+Math.cos(az)*Math.cos(el)*dist);cam.lookAt(tgt.x,0,tgt.z);
   moon.position.set(tgt.x-8,14,tgt.z+6);moon.target.position.set(tgt.x,0,tgt.z);
-  if(shadowDirty||now-lastShadow>1500){R.shadowMap.needsUpdate=true;shadowDirty=false;lastShadow=now;}
+  // камера сдвинулась (пан/зум/вращение/следование) — полный FPS; фигурки «лицом к игроку» поворачиваются — тень пересчитаем один раз, когда камера остановится
+  const camMoved=cam.position.distanceToSquared(camPrev)>1e-6;camPrev.copy(cam.position);if(camMoved)camMovedAt=now;
+  const moving=shadowDirty||camMoved||B.anim.length>0||ptr.size>0||!!S.awake||(typeof busy!=='undefined'&&busy)||now<focusUntil;
+  if(moving)activeUntil=Math.max(activeUntil,now+300);
+  // тени: только при реальных изменениях; редкий пересчёт (1.5 с) — лишь когда рядом со светом героя дышит дракон или крутится предмет
+  if(shadowDirty||(rareShadow&&now-lastShadow>1500)||(camMovedAt>lastShadow&&now-camMovedAt>200)){R.shadowMap.needsUpdate=true;shadowDirty=false;lastShadow=now;}
   R.render(SC,cam);
   // если телефон не тянет (кадр дольше ~30 мс два секунды подряд) — сначала меньше пикселей, потом без теней
-  fpsAcc+=dt;fpsN++;if(fpsAcc>2){const ms=fpsAcc/fpsN*1000;fpsAcc=0;fpsN=0;
+  // автодеградация: при полном FPS — интервал между подряд идущими кадрами (отражает и GPU), в простое — время работы кадра;
+  // пропуски кадров троттлинга в замер не попадают, ложного срабатывания нет
+  const work=performance.now()-now,sample=Math.min(50,consecutive?Math.max(interval,work):work);   // как раньше dt: один долгий кадр (сборка поля) не валит среднее
+  fpsAcc+=sample/1000;fpsN++;if(fpsAcc>2||fpsN>=60){const ms=fpsAcc/fpsN*1000;fpsAcc=0;fpsN=0;
     if(ms>30&&perfLevel<2){perfLevel++;if(perfLevel===1){DPR=1;R.setPixelRatio(1);rectKey='';}else{R.shadowMap.enabled=false;SC.traverse(o=>{if(o.material)[].concat(o.material).forEach(m=>m.needsUpdate=true);});}}}
 }
 requestAnimationFrame(frame);
