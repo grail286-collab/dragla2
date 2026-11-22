@@ -114,17 +114,32 @@ canvas{display:block;touch-action:pan-x pan-y;cursor:pointer}
   box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--frame-in),0 8px 18px -6px rgba(0,0,0,.65)}
 .movedie .d4{width:56px;height:52px;font-size:22px}
 .movedie.ready{cursor:pointer}
-.movedie.ready .d4{animation:d4pulse 1.1s ease-in-out infinite}
 .movedie.rolling .d4{animation:d4spin .18s linear infinite}
 .movedie.done .d4{animation:rpPop .35s ease-out}
+.movedie.nudge{animation:dieNudge 1.25s ease-out}
+@keyframes dieNudge{
+  0%,100%{box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--frame-in),0 0 0 0 rgba(236,198,106,0),0 8px 18px -6px rgba(0,0,0,.65)}
+  18%{box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--gold),0 0 18px 5px rgba(236,198,106,.95),0 0 36px 10px rgba(255,220,120,.55)}
+}
+.rollhint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:31;pointer-events:none;opacity:0;
+  max-width:92vw;padding:7px 16px;border-radius:6px;border:1px solid var(--gold);
+  background:linear-gradient(180deg,rgba(24,50,96,.94),rgba(8,18,40,.96));
+  box-shadow:0 0 0 3px rgba(8,18,40,.85),0 8px 20px rgba(0,0,0,.6),0 0 18px rgba(236,198,106,.22);
+  font-family:var(--display);font-size:18px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+  color:var(--gold);text-align:center;text-shadow:0 2px 12px #000,0 0 18px rgba(236,198,106,.35)}
+.rollhint.on{opacity:1;animation:rollhintIn .15s ease-out,rollhintOut .55s ease-in 1s forwards}
+@keyframes rollhintIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes rollhintOut{to{opacity:0;transform:translate(-50%,-50%)}}
+@media (prefers-reduced-motion:reduce){.movedie.nudge{animation:none;box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--gold),0 0 18px 5px rgba(236,198,106,.8)}
+  .rollhint{animation:none}}
 .movedie:disabled{opacity:1;cursor:default;filter:none}
 .movedie:hover:not(.ready):not(:disabled){border-color:var(--frame);box-shadow:inset 0 0 0 3px var(--panel-lo),inset 0 0 0 4px var(--frame-in),0 8px 18px -6px rgba(0,0,0,.65)}
 body.cpu-turn .movedie{cursor:default;filter:none}
 @media (max-width:400px){.movedie{width:68px;height:68px;min-width:68px;min-height:68px}.movedie .d4{width:50px;height:46px;font-size:20px}.diehud{right:6px;bottom:6px}}
 
 /* панель хода */
-.bottom{padding:0 10px 6px;display:flex;flex-direction:column;gap:3px}
-.ribbon{align-self:center;margin-top:-1px;padding:4px 18px 5px;min-width:52%;text-align:center;
+.bottom{padding:0 12px 13px;display:flex;flex-direction:column;gap:9px}
+.ribbon{align-self:center;margin-top:-1px;padding:6px 20px 7px;min-width:52%;text-align:center;
   font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--pc,var(--ink));
   background:linear-gradient(180deg,var(--panel-lo),#081430);border:1px solid var(--frame);border-top:0;border-radius:0 0 8px 8px;
   box-shadow:inset 0 -1px 0 var(--frame-in),0 4px 10px -4px rgba(0,0,0,.6);overflow:hidden;max-width:100%;
@@ -622,6 +637,7 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 <div class="coach" id="coach" hidden role="status"><div class="ci">?</div><div class="cb"><p id="coachText"></p>
   <div class="cr"><button type="button" class="primary" id="coachOk">Понятно</button><button type="button" class="off" id="coachOff">Выключить подсказки</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
+<div class="rollhint" id="rollhint" hidden>Тапните по кубику</div>
 <div class="rollpop" id="rollpop" hidden>
   <div class="rpwrap">
   <button class="rollcard frame" id="rollcard" aria-label="Бросить кубик d4">
@@ -1497,7 +1513,7 @@ function startGame(names,map,opt={}){
    Всё поле сверху (куда идти) → плавное приближение к логову дракона → перелёт к герою игрока.
    Анимация — CSS-трансформацией поля; в конце поле переходит в обычный масштаб ровно с того же вида.
    Нажатие на экран пропускает облёт. */
-let introOn=false;
+let introOn=false,introSkipAt=0;
 function introCamera(){
   return new Promise(done=>{
     const st=stage,bx=box,finalZoom=zoom;
@@ -1530,7 +1546,7 @@ function introCamera(){
     $('who').innerHTML='<span class="whoname" id="whoName">Экспедиция начинается</span><span class="whohint" id="whoHint"></span>';$('who').style.setProperty('--pc',css('--gold'));
     toast('Логово дракона — в центре подземелья. Набери золота и вернись живым!',3200);
     const t0=performance.now();let ended=false;
-    const finish=()=>{if(ended)return;ended=true;introOn=false;
+    const finish=()=>{if(ended)return;ended=true;introOn=false;introSkipAt=performance.now();
       document.removeEventListener('pointerdown',skip,true);
       st.style.transform='';st.style.willChange='';bx.style.overflow='';
       zoom=finalZoom;size();
@@ -4412,15 +4428,19 @@ function draw(){drawFrame(performance.now());}
   lastFx=now;drawFrame(now);
 })(0);
 
+let cvDown=null;
+cv.addEventListener('pointerdown',e=>{cvDown={x:e.clientX,y:e.clientY,intro:!!introOn};});
 cv.addEventListener('click',e=>{
   if(!S||!$('modal').hidden||lockedTurn())return;
+  const down=cvDown;cvDown=null;
+  const dragged=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>12;
   const b=cv.getBoundingClientRect(),s=b.width/N;
   const c=Math.floor((e.clientX-b.left)/s),r=Math.floor((e.clientY-b.top)/s);
   if(S.phase==='tp'){if(S.tp&&S.tp.spots.some(([a,b2])=>a===r&&b2===c))act('tp',{r,c});return;}
   if(busy)return;
-  if(S.phase==='roll'){act('roll');return;}
+  if(S.phase==='roll'){if(!dragged&&!(down&&down.intro))hintRollDie();return;}
   if(S.phase==='exit'){if(EXITS.some(([a,b2])=>a===r&&b2===c))act('exit',{r,c});return;}
-  if(S.phase!=='move')return;
+  if(S.phase!=='move'||dragged)return;
   const o=options(P()).find(o=>(o.r===r&&o.c===c)||(o.jump&&inRoom(r,c)));
   if(o)act('move',{r:o.r,c:o.c,j:o.jump?1:0});
 });
@@ -4709,6 +4729,20 @@ function choiceToast(p){
   if(o.some(x=>x.jump))bits.push('Перед тобой пропасть: прыжок к логову, нужно 15+.');
   if(bits.length)toast(bits.join(' '),4000);
 }
+function hintRollDie(){
+  if(!S||S.phase!=='roll'||rolling)return;
+  const p=P();if(!p||!isLocal(p)||p.cpu||lockedTurn())return;
+  if(performance.now()-introSkipAt<450)return;
+  const btn=$('movedie');
+  if(btn){btn.classList.remove('nudge');void btn.offsetWidth;btn.classList.add('nudge');
+    const done=e=>{if(!e||e.animationName==='dieNudge')btn.classList.remove('nudge');};
+    btn.addEventListener('animationend',done,{once:true});}
+  const el=$('rollhint');if(!el)return;
+  el.hidden=false;el.textContent='Тапните по кубику';
+  el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  clearTimeout(hintRollDie.t);
+  hintRollDie.t=setTimeout(()=>{el.hidden=true;el.classList.remove('on');},1600);
+}
 function paintMovedie(p){
   const hud=$('diehud'),btn=$('movedie'),die=$('mdDie'),val=$('mdVal');
   if(!hud||!btn)return;
@@ -4718,7 +4752,8 @@ function paintMovedie(p){
   btn.style.setProperty('--pc',p?pcol(p):css('--gold'));
   const ready=S.phase==='roll'&&isLocal(p)&&!p.cpu&&!lockedTurn()&&!rolling;
   btn.classList.toggle('ready',ready);
-  if(S.phase!=='roll'||rolling){['rpSkip','rpHide','rpCloak','rpGhost'].forEach(id=>{const e=$(id);if(e)e.hidden=true;});}
+  if(S.phase!=='roll'||rolling){['rpSkip','rpHide','rpCloak','rpGhost'].forEach(id=>{const e=$(id);if(e)e.hidden=true;});
+    const rh=$('rollhint');if(rh)rh.hidden=true;btn.classList.remove('nudge');}
   if(!rolling){
     die.classList.remove('rolling');btn.classList.remove('rolling');
     if(S.phase==='roll')val.textContent='?';
