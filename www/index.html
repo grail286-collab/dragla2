@@ -348,8 +348,26 @@ body.cpu-turn .rollcard{cursor:default}
 .mrow i{font-style:normal;font-size:18px;width:20px;text-align:center;color:var(--muted)}.mrow span{display:flex;flex-direction:column;font-weight:700}.mrow small{font-weight:500;opacity:.75;font-size:13px}
 .mrow.ok i{color:var(--gold)}.mrow.ok{border-color:rgba(236,198,106,.55)}.mrow.fail i{color:var(--fire)}.mrow.fail{opacity:.75}.mrow.main i{color:var(--gold)}
 .mnote{margin:10px 0 0;font-size:12.5px;opacity:.7}.mgoal b{color:var(--gold);font-weight:700;overflow:hidden;text-overflow:ellipsis}.mgoal span{flex:none;font-variant-numeric:tabular-nums}
-.mmhead{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:2px}.mmhead b{font:400 24px var(--display);color:var(--gold)}.mmhead small{font-size:13px;color:var(--muted)}
-.mmbtns .mmback{justify-content:center;min-height:42px;font-size:15px;color:var(--muted)}
+.mmhead{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:2px;padding:6px 28px 8px;background:radial-gradient(ellipse at center,rgba(5,8,18,.78),rgba(5,8,18,.45) 55%,rgba(5,8,18,0) 75%)}.mmhead b{font:400 24px var(--display);color:var(--gold);text-shadow:0 2px 10px #000}.mmhead small{font-size:13.5px;color:#d9ccaa;text-shadow:0 1px 6px #000,0 0 2px #000}
+/* тип партии: выбранные правила — крупно и со свечением */
+.mmhead .mmrule{margin-top:4px;font:400 clamp(30px,4.6vh,38px)/1.1 var(--display);color:#fff4cc;letter-spacing:.03em;opacity:1;
+  text-shadow:0 0 6px rgba(255,214,120,1),0 0 16px rgba(236,198,106,.95),0 0 34px rgba(255,170,60,.7),0 2px 4px #000;animation:mmglow 2.6s ease-in-out infinite}
+.mmhead .mmruled{font-size:13.5px;color:#e8d9b0;opacity:.9;text-shadow:0 1px 6px #000}
+@keyframes mmglow{50%{text-shadow:0 0 8px rgba(255,224,140,1),0 0 22px rgba(236,198,106,1),0 0 48px rgba(255,170,60,.85),0 2px 4px #000}}
+/* «← Назад»: вдвое меньше и с отступом от остальных кнопок */
+.mmbtns .mmback,#mbtns button.mback{align-self:center;justify-content:center;width:50%;min-width:120px;min-height:34px;padding:4px 10px;font-size:13.5px;color:var(--muted);margin-top:12px}
+#mbtns button.mback{width:50%}
+/* в лобби вместо кнопок правил — название правил крупно */
+.lobrule{display:flex;flex-direction:column;align-items:center;margin:0 0 12px}
+.lobrule small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.14em}
+.lobrule b{font:400 26px/1.15 var(--display);color:#ffeab0;text-shadow:0 0 10px rgba(236,198,106,.9),0 0 24px rgba(236,198,106,.5),0 2px 4px #000}
+.mmexit{margin-top:10px;width:100%;min-height:40px;padding:6px 14px;font-size:14px;justify-content:center}
+.mmpriv{background:none;border:0;box-shadow:none;min-height:0;padding:2px 6px;font-size:12px;color:var(--muted);text-decoration:underline;margin-top:4px}
+.mmpriv::before,.mmpriv::after{display:none}
+.bye{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#050812;color:var(--ink);text-align:center;padding:24px}
+.bye b{font:400 32px var(--display);color:var(--gold)}
+/* окно «Звук» в игре */
+.inmenu-sub{color:var(--muted)}
 .camp{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .camp .cm{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px;text-align:left;min-height:58px}
 .camp .cm .no{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--gold);color:var(--gold);font:400 20px var(--display);background:rgba(0,0,0,.25)}
@@ -638,9 +656,9 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
       <div class="mmbtns"></div>
       <div class="mmsmall"></div>
       <button type="button" class="mmvk" data-a="vk"><b>VK</b><span>Наше сообщество ВКонтакте</span></button>
-      <button type="button" class="mmquit" data-a="exit" hidden>⏻ Выйти из игры</button>
+      <button type="button" class="mmquit mmexit" data-a="exit" hidden>⏻ Выход</button>
     </div>
-    <div class="mmfoot">Разработано: 2026 г. студия 514-lab!</div>
+    <div class="mmfoot">Разработано: 2026 г. студия 514-lab!<br><button type="button" class="mmpriv" data-a="privacy">Конфиденциальность</button></div>
   </div>
 </div>
 <div class="tutor" id="tutor" hidden>
@@ -1001,7 +1019,7 @@ async function setupGame(startMode,presetRules){
       <div class="cnt rules" role="group" aria-label="Правила партии"><span>Правила</span>${Object.entries(RULES_SET).filter(([k])=>k!=='descent').map(([k,x])=>`<button type="button" data-rules="${k}">${x.t}<small>${x.d}</small></button>`).join('')}</div>
       <div class="nms">${SEATS.map((x,i)=>field(i)).join('')}
         <div class="nm code" id="joinrow" hidden><span class="nmside">Код</span><input id="joincode" aria-label="Код комнаты" maxlength="4" autocomplete="off" inputmode="numeric" pattern="[0-9]*" placeholder="Код комнаты друга" value=""></div></div>`,
-    buttons:[{label:'В подземелье',cls:'primary',value:'go'},{label:'Открытые комнаты',cls:'primary',value:'browse'},{label:'Создать комнату',value:'create'},{label:'Войти по коду',value:'join'},{label:'← Назад',value:'back'}],noFocus:true});
+    buttons:[{label:'В подземелье',cls:'primary',value:'go'},{label:'Открытые комнаты',cls:'primary',value:'browse'},{label:'Создать комнату',value:'create'},{label:'Войти по коду',value:'join'},{label:'← Назад',cls:'mback',value:'back'}],noFocus:true});
   const btn=v=>document.querySelector(`#mbtns button[data-v="${v}"]`);
   const shown=()=>[...document.querySelectorAll('.nm[data-seat]')].filter(l=>!l.hidden).map(l=>+l.dataset.seat);
   const refresh=()=>{
@@ -1081,7 +1099,7 @@ function mainMenu(startSub){
         Object.entries(RULES_SET).filter(([k])=>k!=='descent').map(ruleBtn).join('')+
         `<button type="button" class="mmback" data-m="toplay">← Назад</button>`:
         sub==='party'?
-        `<div class="mmhead"><b>Тип партии</b><small>${partyRule.t}</small></div>`+
+        `<div class="mmhead"><b>Тип партии</b><span class="mmrule">${partyRule.t}</span><small class="mmruled">${partyRule.d}</small></div>`+
         MODES.map(([k,t,d])=>`<button type="button" class="${k==='cpu'?'primary':''}" data-m="${k}"><i>${ico[k]}</i><span><b>${k==='hot'?'На одном устройстве':t}</b><small>${desc[k]}</small></span></button>`).join('')+
         `<button type="button" class="mmback" data-m="torules">← Назад</button>`:
         (st&&sub!=='play'?`<button type="button" class="primary mmres" data-m="resume"><b>${st.mission?'Продолжить миссию':'Продолжить экспедицию'}</b><small>${st.mission?esc(missionById(st.mission)?.t||''):st.players.map(p=>esc(p.name)).join(', ')}</small></button>`:'')+
@@ -1091,11 +1109,15 @@ function mainMenu(startSub){
           `<button type="button" class="mmtut" data-m="descent"><i>⇣</i><span><b>Спуск</b><small>Вместе: 1–4 героя ищут путь вглубь</small></span><em>Новое</em></button>`+
           `<button type="button" data-m="arena"><i>⚔</i><span><b>Арена дракона</b><small>Против ИИ, вдвоём или по сети</small></span></button>`+
           `<button type="button" class="mmback" data-m="back">← Назад</button>`:
-        `<button type="button" class="mmtut ${fresh&&!st?'primary':''}" data-m="tutor"><i>✦</i><span><b>Обучение</b><small>Как играть — за 2 минуты</small></span>${fresh?'<em>Новичку</em>':''}</button>`+
-        `<button type="button" class="${!fresh&&!st?'primary':''}" data-m="play"><i>⚔</i><span><b>Играть</b><small>Приключение, Спуск или Арена дракона</small></span></button>`);
-      el.querySelector('.mmsmall').innerHTML=`<button type="button" data-a="rules">Правила</button><button type="button" data-a="vol">${musicOn||soundOn?'🔊':'🔇'} Громкость</button>`;
-      el.querySelector('.mmquit').hidden=!canExit();
-      el.querySelector('.mmvk').hidden=!!window.YA;   // в Яндекс Играх внешние ссылки запрещены правилами каталога
+        `<button type="button" class="mmtut" data-m="tutor"><i>✦</i><span><b>Обучение</b><small>Как играть — за 2 минуты</small></span>${fresh?'<em>Новичку</em>':''}</button>`+
+        `<button type="button" class="${!st?'primary':''}" data-m="play"><i>⚔</i><span><b>Играть</b><small>Приключение, Спуск или Арена дракона</small></span></button>`);
+      // правила, громкость, сообщество и выход — только на самом первом экране меню; в подменю их нет
+      const top=sub==='';
+      el.querySelector('.mmsmall').innerHTML=top?`<button type="button" data-a="rules">Правила</button><button type="button" data-a="vol">${musicOn||soundOn?'🔊':'🔇'} Громкость</button>`:'';
+      el.querySelector('.mmsmall').hidden=!top;
+      el.querySelector('.mmquit').hidden=!top;
+      el.querySelector('.mmpriv').hidden=!top;
+      el.querySelector('.mmvk').hidden=!top||!!window.YA;   // в Яндекс Играх внешние ссылки запрещены правилами каталога
     };
     paint();
     el.hidden=false;$('rollpop').hidden=true;
@@ -1115,7 +1137,8 @@ function mainMenu(startSub){
         if(b.dataset.m==='resume'){el.hidden=true;el.onclick=null;res('resume');return;}
         el.hidden=true;el.onclick=null;res(b.dataset.m);return;}
       const a=b.dataset.a;
-      if(a==='exit'){const ok=await modal({local:true,icon:'⏻',tone:'gold',title:'Выйти из игры?',text:loadSave()?'Экспедиция сохранена — её можно будет продолжить.':'До встречи в подземелье!',buttons:[{label:'Остаться',cls:'primary',value:false},{label:'Выйти',value:true}]});if(ok)appExit();return;}
+      if(a==='exit'){el.hidden=true;const ok=await modal({local:true,icon:'⏻',tone:'gold',title:'Выйти из игры?',text:loadSave()?'Экспедиция сохранена — её можно будет продолжить.':'До встречи в подземелье!',buttons:[{label:'Остаться',cls:'primary',value:false},{label:'Выйти',cls:'danger',value:true}]});el.hidden=false;if(ok)appExit();return;}
+      if(a==='privacy'){el.hidden=true;await modal({local:true,icon:'⚿',tone:'gold',title:'Ваши данные',sub:'Политика конфиденциальности',html:PRIVACY});el.hidden=false;}
       if(a==='rules'){el.hidden=true;await modal({local:true,icon:'?',tone:'gold',title:'Правила',html:RULES});el.hidden=false;}
       if(a==='vol'){el.hidden=true;await volumeDlg();el.hidden=false;}
       if(a==='vk'){openCommunity();return;}
@@ -1146,10 +1169,21 @@ function reviewMoment(){
 }
 // выйти из приложения можно там, где платформа это умеет: Android и ВКонтакте
 const canExit=()=>!!((window.Android&&Android.exit)||(window.IN_VK&&window.vkBridge));
+// Выход: Android — закрыть приложение; ВКонтакте — VKWebAppClose; в браузере — попытка закрыть вкладку,
+// а если браузер не даёт (вкладку открыл не скрипт) — экран прощания с кнопкой «Вернуться в игру»
 function appExit(){
-  if(S)saveGame();
+  if(S&&!S.over)saveGame();
   try{if(window.Android&&Android.exit){Android.exit();return;}
-    if(window.IN_VK&&window.vkBridge)vkBridge.send('VKWebAppClose',{status:'success'}).catch(()=>{});}catch(e){}
+    if(window.IN_VK&&window.vkBridge){vkBridge.send('VKWebAppClose',{status:'success'}).catch(()=>byeScreen());return;}}catch(e){}
+  try{window.close();}catch(e){}
+  setTimeout(()=>{if(!window.closed)byeScreen();},300);
+}
+function byeScreen(){
+  if($('bye'))return;stopMusic&&stopMusic();
+  const d=document.createElement('div');d.className='bye';d.id='bye';
+  d.innerHTML='<b>До встречи в подземелье!</b><p>Игру можно закрыть — просто закрой эту вкладку.</p><button type="button" class="primary">Вернуться в игру</button>';
+  d.querySelector('button').onclick=()=>{d.remove();playMusic('intro');};
+  document.body.appendChild(d);
 }
 function resumeSave(){
   const st=loadSave();if(!st){newGame();return;}
@@ -1372,7 +1406,7 @@ async function campaignMenu(){
     const tot=campStars();
     const pick=await modal({local:true,icon:'♜',tone:'gold',img:'img/story-entrance.jpg',title:'Акт I · Тайный вход',sub:'Приключение',
       html:`<div class="camp">${list}</div><div class="camptot">Звёзд: <b>★ ${tot}</b> из ${CAMP_ACT.length*3}${st.actDone?' · акт пройден':''}</div>`,
-      buttons:[{label:'← В главное меню',value:null}],noFocus:true,
+      buttons:[{label:'← В главное меню',cls:'mback',value:null}],noFocus:true,
       onOpen:done=>{$('mtext').querySelectorAll('.cm:not(.lock)').forEach(b=>b.onclick=()=>done(b.dataset.id));}});
     if(!pick)return null;
     if(await missionBrief(pick))return pick;
@@ -1383,7 +1417,7 @@ function missionBrief(id){
   return modal({local:true,icon:String(i+1),tone:'gold',img:m.img,title:m.t,sub:`Акт I · миссия ${i+1} из ${CAMP_ACT.length}`,
     html:`<div class="brief"><p>${m.story}</p><div class="goal">◎ <b>${m.goal}</b><small>${m.tip}</small></div>
       <div class="stars3">${m.stars.map((x,k)=>`<div class="${k<have?'':'no'}"><i>★</i>${x.t}</div>`).join('')}</div></div>`,
-    buttons:[{label:'В подземелье',cls:'primary',value:true},{label:'← К миссиям',value:false}]});
+    buttons:[{label:'В подземелье',cls:'primary',value:true},{label:'← К миссиям',cls:'mback',value:false}]});
 }
 function startMission(id){
   const m=missionById(id);if(!m){newGame();return;}
@@ -1487,10 +1521,10 @@ function coachCheck(){
     ['stash',()=>ph==='move'&&S.cells.some((row,r)=>row.some((x,c)=>x.stash&&x.stash.kind==='dead'&&Math.abs(r-p.r)+Math.abs(c-p.c)<=4)),onTurn],
     ['move',()=>ph==='move'&&p.moves>0,onTurn],
     ['back',()=>p.mode==='back',onTurn],
-    ['potion',()=>ph==='move'&&p.potions>0&&p.hp<maxHP(p),onTurn],
+    ['potion',()=>(ph==='move'||ph==='roll')&&p.potions>0&&p.hp<maxHP(p),onTurn],
     ['hp',()=>p.hp<maxHP(p),onTurn],
     ['rival',()=>ph==='move'&&!!nearRival(p),onTurn],
-    ['items',()=>!!(p.sword||p.luck||p.haste||p.rope||p.bombs),onTurn],
+    ['items',()=>!!(p.sword||p.luck||p.haste||p.hasteP||p.rope||p.bombs),onTurn],
     ['scroll',()=>ph==='roll'&&(p.scrolls||[]).length&&S.turnNo>S.players.length,()=>S.phase==='roll'&&P()===p],
     ['wake',()=>S.rules==='wake'&&!S.awake&&S.turnNo>S.players.length,onTurn]];
   for(const [k,cond,still] of want){if(tipsSeen.has(k))continue;if(cond()){coachShow(k,still);return;}}
@@ -1692,7 +1726,7 @@ function act(a,d={}){
   NET.sent=true;netInput({a,...d});
 }
 const PHASE_OK={roll:()=>S.phase==='roll',skip:()=>S.phase==='roll',hide:()=>S.phase==='roll',cloak:()=>S.phase==='roll',ghost:()=>S.phase==='roll',move:()=>S.phase==='move',exit:()=>S.phase==='exit',
-  potion:()=>['move','exit'].includes(S.phase),bag:()=>['roll','move'].includes(S.phase),claim:()=>true,
+  potion:()=>['roll','move','exit'].includes(S.phase),haste:()=>S.phase==='roll',bag:()=>['roll','move'].includes(S.phase),claim:()=>true,
   dact:()=>S.phase==='move'&&coopOn(),dend:()=>S.phase==='move'&&coopOn()};
 function doAct(a,d){
   switch(a){
@@ -1701,6 +1735,7 @@ function doAct(a,d){
     case'hide':return hideTurn();
     case'cloak':return useCloak();
     case'ghost':return useGhost();
+    case'haste':return useHaste();
     case'move':{const o=options(P()).find(o=>o.r===d.r&&o.c===d.c&&!!o.jump===!!d.j);return o?move(o):undefined;}
     case'exit':return doExit(d.r,d.c);
     case'potion':return drinkAct();
@@ -1720,7 +1755,7 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=15;   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
+const NET_PROTO=16;   // 16: зелье до броска, зелье скорости из инвентаря, вопрос перед выходом из подземелья   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
 const NET={ws:null,id:null,token:null,room:null,queue:[],lastSeq:0,sent:false,drops:[],connecting:null,
   onRoom:null,onStart:null,onError:null,pendingStart:null,stuck:0,lost:0};
 try{NET.token=sessionStorage.getItem('dragon-net-token');}catch(e){}
@@ -1978,7 +2013,7 @@ function netLobby(cfg){
       box.innerHTML=`<div class="lobcode"><small>Код комнаты</small><b>${esc(r.code)}</b><small>Скажи его друзьям — они войдут по коду</small></div>
         <div class="lobslots">${r.slots.map(slot).join('')}</div>
         <div class="cnt maps lobmap" ${coopR?'hidden':''}><span>Карта${host?'':' (выбирает хозяин)'}</span>${[['large','Большая','41×41'],['medium','Средняя','31×31'],['small','Малая','21×21']].map(([k,t,d])=>`<button type="button" data-act="map" data-v="${k}" class="${r.map===k?'on':''}" ${host?'':'disabled'}>${t}<small>${d}</small></button>`).join('')}</div>
-        <div class="cnt rules lobrules"><span>Правила</span>${Object.entries(RULES_SET).map(([k,x])=>`<button type="button" data-act="rules" data-v="${k}" class="${(r.rules||'free')===k?'on':''}" disabled>${x.t}<small>${x.d}</small></button>`).join('')}</div>
+        <div class="lobrule"><small>Правила партии</small><b>${esc((RULES_SET[r.rules]||RULES_SET.free).t)}</b></div>
         <div class="cnt tmrs lobtmr"><span>Таймер хода${host?'':' (выбирает хозяин)'}</span>${[[0,'Без таймера','не спешить'],[30,'30 секунд','на ход'],[60,'60 секунд','на ход']].map(([k,t,d])=>`<button type="button" data-act="timer" data-v="${k}" class="${(+r.timer||0)===k?'on':''}" ${host?'':'disabled'}>${t}<small>${d}</small></button>`).join('')}</div>
         <div class="cnt lobopen"><span>Комната${host?'':' (выбирает хозяин)'}</span><button type="button" data-act="open" data-v="1" class="${r.open?'on':''}" ${host?'':'disabled'}>Открытая<small>видна в списке</small></button><button type="button" data-act="open" data-v="0" class="${r.open?'':'on'}" ${host?'':'disabled'}>По коду<small>только друзья</small></button></div>
         ${mine?`<div class="lobport"><span>Твой герой</span>${PORTRAITS.map((src,k)=>`<button type="button" data-act="port" data-v="${k}" class="${mine.portrait===k?'on':''}${taken.has(k)?' taken':''}" ${taken.has(k)?'disabled title="Этот герой уже занят"':''}><img alt="" src="${src}"></button>`).join('')}</div>`:''}
@@ -2130,8 +2165,14 @@ function startTurn(){
   }
   beginTurn(p);
 }
-function beginTurn(p){
+async function beginTurn(p){
   if(p.mode==='room'){S.phase='lair';S.msg='В логове дракона.';render();follow();lairTurn();return;}
+  if(canEscape(p)&&!p.cpu&&!COOP()){
+    S.phase='event';busy=true;render();follow();
+    const out=await askLeave(p);busy=false;
+    if(S.over||P()!==p)return;
+    if(out){busy=true;await escapeHero(p,'Герой выбрался из подземелья живым');busy=false;nextTurn();return;}
+  }
   // перед ходом — бросок d4: столько шагов герой сделает в этот ход
   S.phase='roll';S.roll=null;
   S.msg=!isLocal(p)?`${p.name} бросает d4…`:'Брось кубик d4 — он покажет, сколько шагов ты сделаешь.';
@@ -2299,7 +2340,7 @@ async function move(o){
   }
   reveal(p.r,p.c,p.mode,OPP[o.d]);revealAhead(p.r,p.c,p.mode);
   if(p.mode==='out')p.trail.push([p.r,p.c]);
-  if(canEscape(p)){
+  if(canEscape(p)&&await askLeave(p)){
     await escapeHero(p,'Герой выбрался из подземелья живым');
     busy=false;nextTurn();return;
   }
@@ -2327,6 +2368,17 @@ async function move(o){
 
 // выход из подземелья: с добычей — на любую клетку края; когда дракон проснулся — и не побывав в логове
 const canEscape=p=>(p.mode==='back'||(p.mode==='out'&&S.awake))&&onEdge(p.r,p.c);
+// Герой у края подземелья: спросить, точно ли выбираться. Компьютер решает сам (выходит).
+// В сети окно общее: нажимает только тот, чей герой, остальные видят «Выбирает …».
+async function askLeave(p){
+  if(!p||p.cpu)return true;
+  addLog(`${p.name} у края подземелья.`);
+  const v=await modal({icon:'☀',tone:'good',title:'Выбраться наружу?',sub:`${p.name} · в мешке ${p.gold} золотых`,owner:p,
+    text:'Точно хотите выбраться наружу? Может, ещё немного золота?',
+    buttons:[{label:'Выбраться наружу',cls:'primary',value:'out'},{label:'Остаться в подземелье',value:'stay'}],cpuPick:()=>'out'});
+  if(v==='stay'){addLog(`${p.name} решил задержаться в подземелье.`);return false;}
+  return true;
+}
 async function escapeHero(p,lead){
   p.mode='home';let bonusT='';
   if(S.rules==='wake'){const k=[0.25,0.10][S.homeN||0]||0;S.homeN=(S.homeN||0)+1;
@@ -2548,7 +2600,7 @@ function giveList(p){
     if(p.silver&&!q.silver)out.push({q,k:'silver',t:`† Серебряный клинок → ${q.name}`});
     if(p.shield&&!q.shield)out.push({q,k:'shield',t:`⛨ Щит → ${q.name}`});
     if(p.luck>0&&!(q.luck>0))out.push({q,k:'luck',t:`☘ Амулет удачи → ${q.name}`});
-    if(p.haste>0&&!(q.haste>0))out.push({q,k:'haste',t:`» Зелье скорости → ${q.name}`});
+    if(p.hasteP>0)out.push({q,k:'haste',t:`» Зелье скорости → ${q.name}`});
     [...new Set(p.scrolls||[])].forEach(id=>out.push({q,k:'scroll',id,t:`§ «${SCROLLS[id].n}» → ${q.name}`}));
   }
   return out;}
@@ -2646,7 +2698,7 @@ async function descAction(k){
         else if(g.k==='silver'){p.silver=false;q.silver=true;}
         else if(g.k==='shield'){p.shield=false;q.shield=true;}
         else if(g.k==='luck'){q.luck=p.luck;p.luck=0;}
-        else if(g.k==='haste'){q.haste=p.haste;p.haste=0;}
+        else if(g.k==='haste'){p.hasteP--;q.hasteP=(q.hasteP||0)+1;}
         else if(g.k==='scroll'){const i=p.scrolls.indexOf(g.id);if(i>=0){p.scrolls.splice(i,1);q.scrolls=q.scrolls||[];q.scrolls.push(g.id);}}
         sfx('coins');addLog(`${p.name} передаёт ${q.name}: ${g.t.replace(/ → .*$/,'').replace(/^\S+ /,'')} (действие).`);}}
       render();}
@@ -2853,9 +2905,7 @@ function startHeart(risk){
   const beat=()=>{
     heartBeatSound(vol);
     pulse(Math.round(12+k*28),k);
-    const sh=$('sheet');
-    try{sh.animate([{transform:'translate(0,0)'},{transform:`translate(${amp}px,${-amp*0.6}px)`},{transform:`translate(${-amp}px,${amp*0.5}px)`},{transform:`translate(${amp*0.5}px,${amp*0.4}px)`},{transform:'translate(0,0)'}],{duration:240,easing:'ease-out'});
-      document.body.animate([{transform:'translate(0,0)'},{transform:`translate(${-amp*0.5}px,${amp*0.4}px)`},{transform:'translate(0,0)'}],{duration:200,delay:190});}catch(e){}
+    // экран больше не трясётся в такт сердцу — только звук и лёгкая вибрация
   };
   beat();heartTimer=setInterval(beat,period);
 }
@@ -2869,7 +2919,7 @@ function harm(p,h){
   if(h.hex){   // ведьма утаскивает случайный предмет из сумки; если брать нечего — горсть золота
     const pool=[];
     if(p.potions>0)pool.push(['potions','зелье здоровья']);if(p.bombs>0)pool.push(['bombs','сонную бомбу']);
-    if(p.luck>0)pool.push(['luck','амулет удачи']);if(p.haste>0)pool.push(['haste','зелье скорости']);
+    if(p.luck>0)pool.push(['luck','амулет удачи']);if(p.hasteP>0)pool.push(['hasteP','зелье скорости']);
     if(p.ghostP>0)pool.push(['ghostP','зелье призрачного шага']);if(p.cloak>0)pool.push(['cloak','плащ-невидимку']);
     if(p.scrolls&&p.scrolls.length)pool.push(['scrolls','свиток']);if(p.sword)pool.push(['sword','старый меч']);
     if(pool.length){const [k,n]=pool[rnd(pool.length)];
@@ -2889,7 +2939,7 @@ async function resolve(ev,p){
     case'gold':{const g=between([15,40]);p.gold+=g;await good('$','Кошель',`В луже лежит потёртый кошель: +${g} золотых.`);break;}
     case'chest':{const g=between([50,90]);p.gold+=g;await good('◆','Сундук',`Замок поддался. Внутри ${g} золотых!`);break;}
     case'potion':p.potions++;await good('✚','Зелье здоровья','Зелёный флакон восстановит 1 сердце. Пить можно в любой свой ход. Но кто знает, что за лавка его продала…');break;
-    case'haste':p.haste=3;await good('»','Зелье скорости','Ноги сами несут вперёд: следующие 3 хода +1 шаг к броску d4.');break;
+    case'haste':p.hasteP=(p.hasteP||0)+1;await good('»','Зелье скорости','Флакон убран в сумку. Выпей его в инвентаре перед броском d4 — 3 хода подряд +1 шаг к броску.');break;
     case'key':p.key=(p.key||0)+1;await good('⚷','Медный ключ','Позеленевший медный ключ с тяжёлой бородкой. Он открывает потайную дверь — без всякой проверки. Потайные двери редки, береги ключ.');break;
     case'door':await secretDoor(p);break;
     case'rat':await ratDice(p);break;
@@ -3105,7 +3155,7 @@ function koboldTick(p){
   }
   if(moved)render();
 }
-const STEALABLE=[['potions','зелье здоровья'],['bombs','сонную бомбу'],['sword','старый меч'],['silver','серебряный клинок'],['shield','щит'],['pick','кирку'],['rope','верёвку'],['luck','амулет удачи'],['haste','зелье скорости'],['key','медный ключ']];
+const STEALABLE=[['potions','зелье здоровья'],['bombs','сонную бомбу'],['sword','старый меч'],['silver','серебряный клинок'],['shield','щит'],['pick','кирку'],['rope','верёвку'],['luck','амулет удачи'],['hasteP','зелье скорости'],['key','медный ключ']];
 function koboldSteal(p){
   const have=STEALABLE.filter(([k])=>typeof p[k]==='number'?p[k]>0:!!p[k]);
   if(!have.length){const g=Math.ceil(p.gold*0.2);p.gold-=g;return{gold:g,text:g?`${g} ${plural(g,'золотой','золотых','золотых')}`:'пустой мешок'};}
@@ -3215,7 +3265,7 @@ const SHOP={
 function shopItems(p,kind,scr){
   if(kind==='P')return[
     {k:'potion',n:'Зелье здоровья ✚',d:'+1 ♥ в любой ход',price:40,ok:()=>true,buy:()=>{p.potions++;}},
-    {k:'haste',n:'Зелье скорости »',d:'3 хода +1 шаг',price:35,ok:()=>!(p.haste>0),buy:()=>{p.haste=3;}},
+    {k:'haste',n:'Зелье скорости »',d:'3 хода +1 шаг (пить из инвентаря)',price:35,ok:()=>true,buy:()=>{p.hasteP=(p.hasteP||0)+1;}},
     ...scr.map((id,i)=>({k:'s'+i,n:`${/^Свиток/.test(SCROLLS[id].n)?SCROLLS[id].n:'Свиток «'+SCROLLS[id].n+'»'} §`,d:SCROLLS[id].d.split(/\.\s/)[0].replace(/\.$/,''),price:45,ok:()=>!scr.bought||!scr.bought.includes(i),buy:()=>{p.scrolls=p.scrolls||[];p.scrolls.push(id);(scr.bought=scr.bought||[]).push(i);}}))];
   return[
     {k:'sword',n:'Старый меч †',d:'+2 в бою',price:55,ok:()=>!p.sword,buy:()=>{p.sword=true;}},
@@ -3421,6 +3471,13 @@ function hideTurn(){
   addLog(`${p.name} затаился в тени — охотники потеряли след.`);toast(`${p.name} затаился в тени`,1800);
   S.phase='event';render();nextTurn();
 }
+// зелье скорости пьют перед броском d4: этот и ещё 2 хода +1 шаг к броску
+function useHaste(){
+  const p=P();if(S.phase!=='roll'||rolling||!(p.hasteP>0)||p.haste>0)return;
+  p.hasteP--;p.haste=3;sfx('speed');addLog(`${p.name} выпил зелье скорости: 3 хода +1 шаг к броску d4.`);
+  if(isLocal(p))toast('Зелье скорости: 3 хода +1 шаг к броску d4',2600);
+  render();showRollPop(p);
+}
 function useGhost(){
   const p=P();if(S.phase!=='roll'||rolling||!(p.ghostP>0)||p.ghost||!(p.mode==='out'||p.mode==='back'))return;
   p.ghostP--;p.ghost=1;sfx('potion');addLog(`${p.name} выпил зелье призрачного шага: этот ход — сквозь стены.`);
@@ -3537,6 +3594,7 @@ async function cpuTurn(){
     if(await cpuHunt(me,wait)||!mine())return;
     if(me.ghostP>0&&!me.ghost&&(me.mode==='out'||me.mode==='back')){const o=options(me);
       if(!o.length||o.every(x=>x.back||x.lost)){toast(`${me.name} пьёт зелье призрачного шага.`,1800);useGhost();$('rollpop').hidden=true;await wait(900);if(!mine())return;}}
+    if(me.hasteP>0&&!(me.haste>0)){toast(`${me.name} пьёт зелье скорости.`,1800);useHaste();$('rollpop').hidden=true;await wait(700);if(!mine())return;}
     showRollPop(me);await wait(700);await rollD4();await wait(700);}
   while(mine()&&S.phase==='move'&&!busy){
     const o=cpuChoose(me);if(!o)break;
@@ -3887,7 +3945,7 @@ async function teleportTo(p,[r,c],show){
   p.r=r;p.c=c;newLeg(p);if(p.mode==='out')p.trail.push([r,c]);boardFull=true;
   addLog(`${p.name} телепортировался.`);render();follow();
   await show({img:'img/portal.jpg',text:'Портал вспыхивает лиловым светом — и герой выходит из него на новом месте.'})
-  if(canEscape(p)){await escapeHero(p,'Телепорт вынес героя прямо к выходу из подземелья');return;}
+  if(canEscape(p)&&await askLeave(p)){await escapeHero(p,'Телепорт вынес героя прямо к выходу из подземелья');return;}
   for(const q of rivalsHere(p)){await wait(150);await duel(p,q);}
   for(const h of huntersHere(p)){if(!alive(p))break;await wait(150);await hunterFight(p,h,false);}
   if(x.stash&&alive(p))await stashAt(p);
@@ -3939,8 +3997,10 @@ async function drink(){
   }finally{busy=was;}
 }
 async function drinkAct(){
-  const p=P();await drink();
-  if(p.mode==='dead'&&P()===p&&!S.over){busy=false;nextTurn();}
+  const p=P(),wasRoll=S.phase==='roll';if(wasRoll&&rolling)return;
+  await drink();
+  if(p.mode==='dead'&&P()===p&&!S.over){busy=false;nextTurn();return;}
+  if(wasRoll&&S.phase==='roll'&&P()===p&&!S.over){render();showRollPop(p);}   // выпил до броска — кубик по-прежнему ждёт
 }
 // сонная бомба усыпляет самого дракона: глубокий сон (S.calm поисков) — общий для всех героев в логове
 const calmN=()=>S&&S.calm>0?S.calm:0;
@@ -4741,10 +4801,22 @@ function invHero(){
   return P();
 }
 function invCanAct(p){return !!(p&&S&&!S.over&&alive(p)&&isLocal(p)&&P()===p&&!lockedTurn());}
+// карточка героя вверху: камера показывает, где он, 5 секунд — и возвращается туда, где была
+const PEEK_MS=5000;let peekTimer=null;
 function onHeroCard(i){
   if(!S||introOn)return;
-  if(CS_IDX===i&&$('charsheet')&&!$('charsheet').hidden){closeCharSheet();lookAt(i);return;}
-  openCharSheet(i);
+  closeCharSheet();
+  const q=S.players[i];if(!q)return;
+  if(q.mode!=='dead'&&q.mode!=='home')toast(q.mode==='room'?`${q.name} — в логове дракона`:`${q.name} здесь`,1600);
+  peekHero(i);
+}
+function peekHero(i){
+  // 2D: запоминаем прокрутку и масштаб; в 3D lookAt сам вернёт камеру (three3d.js)
+  if(!peekTimer)peekHero.back={zoom,l:box.scrollLeft,t:box.scrollTop};
+  clearTimeout(peekTimer);
+  lookAt(i,PEEK_MS);
+  peekTimer=setTimeout(()=>{peekTimer=null;const b=peekHero.back;peekHero.back=null;if(!S||!b||window.__3d)return;
+    if(zoom!==b.zoom){zoom=b.zoom;size();}box.scrollTo({left:b.l,top:b.t,behavior:'smooth'});},PEEK_MS);
 }
 function showSheetOverlay(){
   document.body.classList.add('cs-open');
@@ -4793,8 +4865,8 @@ function whyPotion(p){
   if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
   if(busy||rolling)return 'подожди';
   if(p.hp>=maxHP(p))return 'здоровье полное';
-  if(S.phase==='roll')return 'сначала брось d4';
-  if(!['move','exit'].includes(S.phase))return 'сейчас нельзя';
+  if(S.phase==='roll'&&rolling)return 'подожди';
+  if(!['roll','move','exit'].includes(S.phase))return 'сейчас нельзя';
   return '';
 }
 function whyCloak(p){
@@ -4812,6 +4884,13 @@ function whyGhost(p){
   if(!(p.mode==='out'||p.mode==='back'))return 'не на плите подземелья';
   return '';
 }
+function whyHaste(p){
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(S.phase!=='roll')return 'только перед броском d4';
+  if(p.haste>0)return 'уже действует';
+  return '';
+}
 function invDo(kind,id){
   if(CS_MODE!=='inv')return;
   const p=S&&S.players[CS_IDX];if(!invCanAct(p))return;
@@ -4819,6 +4898,7 @@ function invDo(kind,id){
   if(kind==='potion')act('potion');
   else if(kind==='cloak')act('cloak');
   else if(kind==='ghost')act('ghost');
+  else if(kind==='haste')act('haste');
   else if(kind==='scroll'&&id)act('bag',{id});
 }
 function csRow(ico,cls,name,desc,cnt,act){
@@ -4881,7 +4961,7 @@ function paintCharSheet(){
   const actOn=inv;  // действия только в инвентаре текущего локального героя; чужой лист — только чтение
   if(p.potions>0)cons.push(csRow('✚','g','Зелье здоровья','Восстанавливает 1 ♥ (редко выдыхается или оказывается отравой)',p.potions,actOn?{kind:'potion',label:'Выпить',why:whyPotion(p)}:null));
   if(p.bombs>0)cons.push(csRow('✹','s','Сонная бомба','В логове усыпляет дракона на несколько поисков без риска',p.bombs));
-  if(p.haste>0)cons.push(csRow('»','g','Зелье скорости','+1 шаг к броску d4',p.haste));
+  if(p.hasteP>0)cons.push(csRow('»','g','Зелье скорости','Перед броском: 3 хода +1 шаг к броску d4',p.hasteP,actOn?{kind:'haste',label:'Выпить',why:whyHaste(p)}:null));
   if(p.cloak>0)cons.push(csRow('❖','s','Плащ-невидимка','Накинуть перед броском: 3 хода охотники тебя не видят',p.cloak,actOn?{kind:'cloak',label:'Накинуть',why:whyCloak(p)}:null));
   if(p.ghostP>0)cons.push(csRow('≋','s','Зелье призрачного шага','Перед броском: этот ход проходишь сквозь стены',p.ghostP,actOn?{kind:'ghost',label:'Выпить',why:whyGhost(p)}:null));
   const bagSc=p.scrolls||[];
@@ -4905,6 +4985,7 @@ function paintCharSheet(){
   if(p.invis>0)pushFx('✧','s','Невидимка',p.invis,'охотники тебя не видят и проходят мимо');
   if(p.hidden)pushFx('☁','s','Затаился',0,'охотники потеряли след до следующего хода');
   if(p.ghost)pushFx('≋','s','Призрачный шаг',0,'этот ход проходишь сквозь стены');
+  if(p.haste>0)pushFx('»','g','Скорость',p.haste,'+1 шаг к броску d4');
   if(huntOn()&&alive(p)&&huntActive().some(h=>S.players[h.tgt]===p)){
     const hs=huntActive().filter(h=>S.players[h.tgt]===p).map(h=>HUNTERS[h.k].n).join(', ');
     pushFx('☠','f','Цель охотника',0,hs+' идёт по твоему следу');
@@ -4924,7 +5005,7 @@ function paintCharSheet(){
 
 function buildPills(){
   const t=$('top');t.className='top n'+S.players.length;
-  t.innerHTML=S.players.map((p,i)=>`<div class="pill frame" id="pill${i}" role="button" tabindex="0" title="Лист персонажа"></div>`).join('');
+  t.innerHTML=S.players.map((p,i)=>`<div class="pill frame" id="pill${i}" role="button" tabindex="0" title="Показать героя на поле"></div>`).join('');
   S.players.forEach((p,i)=>{const el=$('pill'+i);el.onclick=()=>onHeroCard(i);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onHeroCard(i);}};});
 }
 // камера к герою: на поле крупно, с короткой вспышкой вокруг фишки
@@ -5055,7 +5136,7 @@ function render(){
   const hexSet=(el,n)=>{el.classList.toggle('empty',!n);const b=el.querySelector('.n');b.textContent=n>1||el===bp?n||'':'';b.hidden=!n;};
   hexSet(bp,p.potions);
   // в ряду только то, что герой несёт сейчас; зелье здоровья — всегда (это кнопка)
-  [['hBomb',p.bombs],['hSword',p.sword?1:0],['hSilver',p.silver?1:0],['hShield',p.shield?1:0],['hLuck',p.luck],['hHaste',p.haste],['hRope',p.rope?1:0],
+  [['hBomb',p.bombs],['hSword',p.sword?1:0],['hSilver',p.silver?1:0],['hShield',p.shield?1:0],['hLuck',p.luck],['hHaste',(p.hasteP||0)||(p.haste>0?1:0)],['hRope',p.rope?1:0],
    ['hPick',p.pick?1:0],['hKey',p.key],['hCloak',p.cloak],['hGhost',p.ghostP],['hMantle',p.mantle?1:0]].forEach(([id,v])=>{const el=$(id);el.hidden=!(v>0);if(v>0)hexSet(el,v);});
   {const hx=document.querySelector('.hexes');
    const vis=[...hx.children].filter(x=>!x.hidden);
@@ -5070,9 +5151,9 @@ function render(){
   if(CS_IDX!=null&&$('charsheet')&&!$('charsheet').hidden)paintCharSheet();
   coachCheck();
   document.body.classList.toggle('cpu-turn',lockedTurn());
-  {const h=invHero()||p;const n=(h.scrolls||[]).length+(h.potions||0)+(h.cloak||0)+(h.ghostP||0);
+  {const h=invHero()||p;const n=(h.scrolls||[]).length+(h.potions||0)+(h.cloak||0)+(h.ghostP||0)+(h.hasteP||0);
    const bs=$('bScroll');$('nScroll').textContent=n||'';bs.disabled=!h||!!introOn;bs.classList.toggle('has',n>0);}
-  bp.disabled=busy||!isLocal(p)||!alive(p)||!p.potions||p.hp>=maxHP(p)||!['move','exit'].includes(S.phase);
+  bp.disabled=busy||rolling||!isLocal(p)||!alive(p)||!p.potions||p.hp>=maxHP(p)||!['roll','move','exit'].includes(S.phase);
 }
 $('bPotion').onclick=()=>act('potion');
 $('csClose').onclick=()=>closeCharSheet();
@@ -5146,25 +5227,42 @@ $('bMenu').onclick=async()=>{
   if(!$('modal').hidden)return;
   inMenu=true;
   try{
-  const items=[{label:'Продолжить',cls:'primary',value:'go'},{label:'Правила',value:'rules'},{label:'Обучение',value:'tutor'},{label:DUN()?'Вид поля: подземелье':'Вид поля: классика',value:'view'},{label:tipsOn?'Подсказки: включены':'Подсказки: выключены',value:'tips'},{label:'Журнал событий',value:'log'},{label:'Конфиденциальность',value:'privacy'},S.online?{label:'Выйти из партии',cls:'danger',value:'quit'}:{label:'Новая игра',cls:'danger',value:'new'}];
-  if(S.soloOffered&&alive(P())&&isLocal(P())&&!busy&&S.players.filter(alive).length===1)items.splice(1,0,{label:`Забрать победу — ${P().gold} золотых`,cls:'heal',value:'claim'});
-  items.splice(items.length-1,0,{label:`Громкость: музыка ${musicVol?musicVol+'%':'выкл'} · звуки ${sfxVol?sfxVol+'%':'выкл'}`,value:'vol'});
-  if(canExit())items.push({label:'Выйти из игры',value:'exit'});
+  // меню партии: продолжить · начать заново · звук · подсказки · выйти из партии
+  // по сети «Начать заново» нет: партию нельзя перезапустить за всех игроков сразу
+  const items=[{label:'Продолжить',cls:'primary',value:'go'}];
+  if(S.soloOffered&&alive(P())&&isLocal(P())&&!busy&&S.players.filter(alive).length===1)items.push({label:`Забрать победу — ${P().gold} золотых`,cls:'heal',value:'claim'});
+  if(!S.online)items.push({label:'Начать заново',value:'restart'});
+  items.push({label:`Звук: музыка ${musicVol?musicVol+'%':'выкл'} · звуки ${sfxVol?sfxVol+'%':'выкл'}`,value:'vol'});
+  items.push({label:tipsOn?'Подсказки: включены':'Подсказки: выключены',value:'tips'});
+  items.push({label:'Выйти из партии',cls:'danger',value:'quit'});
   const v=await modal({local:true,icon:'☰',tone:'gold',title:'Меню',sub:S.online&&NET.room?`Логово дракона · комната ${NET.room.code}`:'Логово дракона',text:'',buttons:items});
-  if(v==='exit'){appExit();return;}
   if(v==='claim'){act('claim');return;}
   if(v==='vol'){await volumeDlg();setTimeout(()=>$('bMenu').click(),0);return;}
-  if(v==='rules')await modal({local:true,icon:'?',tone:'gold',title:'Правила',html:RULES});
-  if(v==='view'){VIEW=DUN()?'classic':'dungeon';try{localStorage.setItem('dragon-view',VIEW);}catch(e){}size();follow();render();
-    toast(DUN()?'Вид «Подземелье»: коридоры, факелы и тьма.':'Классический вид: плитки со стрелками.',2600);setTimeout(()=>$('bMenu').click(),0);return;}
-  if(v==='tutor'){coachHide();await tutorial('game');render();}
-  if(v==='tips'){tipsOn=!tipsOn;if(tipsOn)tipsSeen=new Set();saveTips();toast(tipsOn?'Подсказки включены — они снова появятся в нужный момент.':'Подсказки выключены.',2600);setTimeout(()=>$('bMenu').click(),0);return;}
-  if(v==='privacy')await modal({local:true,icon:'⚿',tone:'gold',title:'Ваши данные',sub:'Политика конфиденциальности',html:PRIVACY});
-  if(v==='log')await modal({local:true,icon:'✎',tone:'gold',title:'Журнал',html:`<ul class="log">${S.log.slice(0,30).map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`});
-  if(v==='quit'){const ok=await modal({local:true,icon:'!',tone:'fire',title:'Выйти из партии?',text:'Твоим героем дальше будет играть компьютер.',buttons:[{label:'Остаться',value:false},{label:'Выйти',cls:'danger',value:true}]});if(ok){netLeave();newGame();}}
-  if(v==='new'){const ok=await modal({local:true,icon:'!',tone:'fire',title:'Начать заново?',text:'Текущая экспедиция будет потеряна.',buttons:[{label:'Отмена',value:false},{label:'Новая игра',cls:'danger',value:true}]});if(ok){clearSave();newGame();}}
+  if(v==='tips'){tipsOn=!tipsOn;if(tipsOn)tipsSeen=new Set();else coachHide();saveTips();toast(tipsOn?'Подсказки включены — они снова появятся в нужный момент.':'Подсказки выключены.',2600);setTimeout(()=>$('bMenu').click(),0);return;}
+  if(v==='restart'){const ok=await modal({local:true,icon:'↻',tone:'fire',title:'Начать заново?',text:'Партия начнётся сначала с теми же настройками: те же герои, режим и размер карты. Текущий прогресс будет потерян.',buttons:[{label:'Отмена',value:false},{label:'Начать заново',cls:'danger',value:true}]});if(ok)restartGame();}
+  if(v==='quit'){
+    if(S.online){const ok=await modal({local:true,icon:'!',tone:'fire',title:'Выйти из партии?',text:'Твоим героем дальше будет играть компьютер.',buttons:[{label:'Остаться',value:false},{label:'Выйти',cls:'danger',value:true}]});if(ok){netLeave();leaveToMenu();}}
+    else{const ok=await modal({local:true,icon:'!',tone:'fire',title:'Выйти из партии?',text:S.mission||S.players.some(q=>!q.cpu&&alive(q))?'Партия сохранится — её можно будет продолжить из главного меню.':'Ты вернёшься в главное меню.',buttons:[{label:'Остаться',value:false},{label:'Выйти',cls:'danger',value:true}]});if(ok){saveGame();leaveToMenu();}}
+  }
   }finally{inMenu=false;}
 };
+// выйти из партии в самое первое меню: партия останавливается (офлайн — сохранена заранее)
+function leaveToMenu(){
+  stopHeart();coachHide();closeCharSheet();clearTimeout(peekTimer);peekTimer=null;
+  if(S)S.over=true;busy=false;rolling=false;
+  campJump=false;arenaJump=false;arenaPartyJump=false;
+  newGame();
+}
+// «Начать заново»: та же партия с теми же настройками (герои, режим, правила, размер карты; миссия — та же миссия)
+function restartGame(){
+  if(!S||S.online)return;
+  const g=S;stopHeart();coachHide();closeCharSheet();clearTimeout(peekTimer);peekTimer=null;
+  clearSave();g.over=true;busy=false;rolling=false;
+  if(g.mission){startMission(g.mission);return;}
+  const mapKey=Object.keys(MAP_SIZES).find(k=>MAP_SIZES[k]===g.N)||'small';
+  const players=g.players.map(q=>({seat:q.seat,name:q.name,portrait:q.portrait,cpu:!!q.cpu}));
+  startGame(players,mapKey,{rules:g.rules});
+}
 // Кнопка «Назад» Android: закрывает окно меню или открывает меню; на стартовом экране — выход
 let inMenu=false;
 window.onAndroidBack=function(){

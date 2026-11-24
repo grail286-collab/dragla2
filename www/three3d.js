@@ -6,7 +6,7 @@ if(typeof THREE==='undefined'){console.warn('3D: three.js не загрузил�
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.body.classList.add('three');
 const st=document.createElement('style');
-st.textContent=`body.three #stage{visibility:hidden} body.three #box{overflow:hidden!important} body.three #hedge{display:none}
+st.textContent=`body.three #stage{visibility:hidden} body.three #box{overflow:hidden!important}
 #gl3d{position:fixed;z-index:3;display:block;touch-action:none;cursor:grab}
 #gl3d:active{cursor:grabbing}`;
 document.head.appendChild(st);
@@ -1034,8 +1034,16 @@ let activeUntil=0;const wake3d=()=>{activeUntil=performance.now()+600;};
 addEventListener('keydown',wake3d);
 cv.addEventListener('wheel',e=>{e.preventDefault();distMul=Math.min(2.6,Math.max(.45,distMul*(1+Math.sign(e.deltaY)*.1)));},{passive:false});
 // пилюля героя — камера к нему
-lookAt=function(i){if(!S)return;focusI=i;focusUntil=performance.now()+3500;userUntil=0;};
-follow=function(){focusI=-1;userUntil=0;};
+// ms — сколько держать героя в кадре; потом камера возвращается к прежнему виду (поворот, наклон, приближение)
+let peekBack=null,focusXZ=null;
+lookAt=function(i,ms){if(!S)return;const now=performance.now();
+  if(!peekBack||now>=focusUntil)peekBack={tAz,tEl,distMul};
+  focusI=i;focusXZ=null;focusUntil=now+(ms||3500);userUntil=0;activeUntil=now+400;};
+// охотник за краем экрана — камера к нему на 5 секунд
+lookHunter=function(id){if(!S)return;const h=(S.hunters||[]).find(x=>x.id===id);if(!h||h.away)return;const now=performance.now();
+  if(!peekBack||now>=focusUntil)peekBack={tAz,tEl,distMul};
+  focusI=-2;focusXZ=cellXZ(h.r,h.c);focusUntil=now+5000;userUntil=0;activeUntil=now+400;};
+follow=function(){focusI=-1;focusXZ=null;userUntil=0;};
 
 // касание: луч до плоскости пола -> клетка -> то же, что клик по 2D-клетке
 const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-.05),hit=new THREE.Vector3();
@@ -1055,6 +1063,39 @@ function tap(x,y){
 
 // 2D-поле больше не рисуем — экономим батарею
 drawFrame=function(){};drawDark=function(){};
+// «Охотники»: как в 2D — охотник за краем видимой части поля показан аватаром у края окна игры,
+// стрелка смотрит туда, откуда он идёт, число — сколько до него клеток от героя, чей ход. Нажатие — камера к охотнику.
+const hv=new THREE.Vector3();let hedgeAt=0;
+huntEdge=function(){
+  const el=document.getElementById('hedge');if(!el)return;
+  const list=[];
+  if(S&&typeof huntOn==='function'&&huntOn()&&!S.over&&!introOn&&S.phase!=='intro'&&cv.style.display!=='none'){
+    const b=cv.getBoundingClientRect(),m=27,cur=P();
+    if(b.width>m*3&&b.height>m*3)for(const h of huntActive()){
+      const T=hTok.get(h.id);const [x0,z0]=cellXZ(h.r,h.c);
+      // в координатах камеры: перед камерой — обычная проекция (дальняя плоскость не мешает), за спиной — только направление
+      hv.set(T&&T.x!=null?T.x:x0,.35,T&&T.z!=null?T.z:z0).applyMatrix4(cam.matrixWorldInverse);
+      const behind=hv.z>-.05;let nx,ny;
+      if(behind){const l=Math.hypot(hv.x,hv.y)||1;nx=hv.x/l*9;ny=-hv.y/l*9;}
+      else{const w=-hv.z;nx=hv.x*cam.projectionMatrix.elements[0]/w;ny=-hv.y*cam.projectionMatrix.elements[5]/w;}
+      const inside=!behind&&Math.abs(nx)<=.9&&Math.abs(ny)<=.9;if(inside)continue;   // охотник виден на поле
+      const cx=b.left+b.width/2,cy=b.top+b.height/2,dx=nx*b.width/2,dy=ny*b.height/2,hw=b.width/2-m,hh=b.height/2-m;
+      const k=Math.min(Math.abs(dx)>.01?hw/Math.abs(dx):1e9,Math.abs(dy)>.01?hh/Math.abs(dy):1e9);
+      const d=cur&&cur.r!=null&&(cur.mode==='out'||cur.mode==='back')?Math.abs(cur.r-h.r)+Math.abs(cur.c-h.c):null;
+      list.push({h,x:Math.round(cx+dx*k),y:Math.round(cy+dy*k),a:Math.round(Math.atan2(dy,dx)*180/Math.PI),d});
+    }
+  }
+  const have=new Map([...el.children].map(x=>[+x.dataset.id,x]));
+  for(const o of list){
+    let bt=have.get(o.h.id);have.delete(o.h.id);const hd=HUNTERS[o.h.k];
+    if(!bt){bt=document.createElement('button');bt.type='button';bt.dataset.id=o.h.id;bt.style.setProperty('--hc',hd.col);
+      bt.setAttribute('aria-label',`${hd.n}: показать на поле`);bt.title=hd.n;bt.innerHTML=`<img src="${hd.ava}" alt=""><i></i><b hidden></b>`;
+      bt.onclick=e=>{e.stopPropagation();lookHunter(+bt.dataset.id);};el.appendChild(bt);}
+    bt.style.left=o.x+'px';bt.style.top=o.y+'px';bt.style.setProperty('--ha',o.a+'deg');
+    const db=bt.querySelector('b');if(db){db.hidden=o.d==null;if(o.d!=null)db.textContent=o.d;}
+  }
+  have.forEach(x=>x.remove());
+};
 
 // --- размер: холст 3D лежит ровно поверх области поля
 let rectKey='';
@@ -1062,8 +1103,10 @@ function place(){
   const box=document.getElementById('box');if(!box)return;
   const b=box.getBoundingClientRect(),k=[b.left,b.top,b.width,b.height].map(Math.round).join(',');
   if(k===rectKey)return;rectKey=k;
-  Object.assign(cv.style,{left:b.left+'px',top:b.top+'px',width:b.width+'px',height:b.height+'px'});
-  R.setSize(Math.max(1,b.width),Math.max(1,b.height),false);cam.aspect=b.width/Math.max(1,b.height);cam.fov=b.width<b.height?55:45;cam.updateProjectionMatrix();
+  // холст — внутри рамки поля (рамка 1px + внутренняя линия 4px), чтобы контур рамки был виден со всех сторон
+  const IN=5,w=Math.max(1,b.width-IN*2),h=Math.max(1,b.height-IN*2);
+  Object.assign(cv.style,{left:(b.left+IN)+'px',top:(b.top+IN)+'px',width:w+'px',height:h+'px',borderRadius:'2px'});
+  R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?55:45;cam.updateProjectionMatrix();
 }
 addEventListener('resize',()=>{rectKey='';});
 
@@ -1155,17 +1198,20 @@ function frame(){
   TL_POOL.forEach((l,i)=>{const o=near[i];if(!o){l.intensity=0;return;}l.position.copy(o.pos);l.intensity=1.2*flick(now,o.ph*7)/.78;});
   // камера
   let fx,fz;
-  const fp=focusI>=0&&now<focusUntil?S.players[focusI]:cur;
-  if(zoom===0||zoom===false){fx=0;fz=0;}
-  else if(fp){if(fp.mode==='room'){fx=0;fz=0;}else{[fx,fz]=cellXZ(fp.r,fp.c);}}
+  const peeking=(focusI>=0||focusXZ)&&now<focusUntil;
+  if(!peeking&&peekBack){tAz=peekBack.tAz;tEl=peekBack.tEl;distMul=peekBack.distMul;peekBack=null;focusI=-1;focusXZ=null;}
+  const fp=peeking&&focusI>=0?S.players[focusI]:cur;
+  if(peeking&&focusXZ){[fx,fz]=focusXZ;}
+  else if((zoom===0||zoom===false)&&!peeking){fx=0;fz=0;}
+  else if(fp){if(fp.mode==='room'||fp.r==null){fx=0;fz=0;}else{[fx,fz]=cellXZ(fp.r,fp.c);}}
   if(now>userUntil){/* камера сама держит ходящего героя */}
   tgt.x+=((fx||0)-tgt.x)*Math.min(1,dt*3);tgt.z+=((fz||0)-tgt.z)*Math.min(1,dt*3);
-  const ov=zoom===0||zoom===false;
+  const ov=(zoom===0||zoom===false)&&!peeking;
   if(ov!==ovw){ovw=ov;if(ov){tAz=0;tEl=1.2;}else{tAz=.55;tEl=.95;}}
   // как в 2D: в обзоре тьма мягче, вблизи — гуще, и свет факелов виден ярче
   hemi.intensity+=((ov?.8:.42)-hemi.intensity)*.08;
   az+=(tAz-az)*.1;el+=(tEl-el)*.1;
-  const want=zoomDist()*distMul;dist+=(want-dist)*Math.min(1,dt*4);
+  const want=(peeking&&(zoom===0||zoom===false)?12:zoomDist())*distMul;dist+=(want-dist)*Math.min(1,dt*4);
   cam.position.set(tgt.x+Math.sin(az)*Math.cos(el)*dist,Math.sin(el)*dist,tgt.z+Math.cos(az)*Math.cos(el)*dist);cam.lookAt(tgt.x,0,tgt.z);
   moon.position.set(tgt.x-8,14,tgt.z+6);moon.target.position.set(tgt.x,0,tgt.z);
   // камера сдвинулась (пан/зум/вращение/следование) — полный FPS; фигурки «лицом к игроку» поворачиваются — тень пересчитаем один раз, когда камера остановится
@@ -1175,6 +1221,7 @@ function frame(){
   // тени: только при реальных изменениях; редкий пересчёт (1.5 с) — лишь когда рядом со светом героя дышит дракон или крутится предмет
   if(shadowDirty||(rareShadow&&now-lastShadow>1500)||(camMovedAt>lastShadow&&now-camMovedAt>200)){R.shadowMap.needsUpdate=true;shadowDirty=false;lastShadow=now;}
   R.render(SC,cam);
+  if(S.rules==='hunt'&&now-hedgeAt>120){hedgeAt=now;huntEdge();}
   // если телефон не тянет (кадр дольше ~30 мс два секунды подряд) — сначала меньше пикселей, потом без теней
   // автодеградация: при полном FPS — интервал между подряд идущими кадрами (отражает и GPU), в простое — время работы кадра;
   // пропуски кадров троттлинга в замер не попадают, ложного срабатывания нет
