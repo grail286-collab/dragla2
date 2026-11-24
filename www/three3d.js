@@ -1094,7 +1094,8 @@ function frame(){
   const cur=P();
   S.players.forEach((p,i)=>{
     let T=tokens.get(i);if(!T||T.G!==S){if(T)SC.remove(T.g);T=heroToken(p);T.G=S;tokens.set(i,T);}
-    const vis=p.mode!=='dead'&&p.mode!=='home';T.g.visible=vis;if(!vis)return;
+    const down=p.mode==='dead'&&S.rules==='descent'&&p.r!=null;   // «Спуск»: герой без сил лежит на поле, пока его не поднимут
+    const vis=(p.mode!=='dead'||down)&&p.mode!=='home';T.g.visible=vis;if(!vis)return;
     let x,z;if(p.mode==='room'){[x,z]=roomSpot(i);}else{[x,z]=cellXZ(p.r,p.c);}
     if(T.x===null||Math.hypot(x-T.x,z-T.z)>3){T.x=x;T.z=z;}
     {const dx=x-T.x,dz=z-T.z;if(Math.hypot(dx,dz)>.03)T.hdT=Math.atan2(dx,dz);   // смотрит туда, куда идёт
@@ -1108,7 +1109,8 @@ function frame(){
     T.lt.castShadow=p===cur;
     T.halo.material.opacity=p===cur?.55+Math.sin(t*4)*.25:0;
     const face=Math.atan2(cam.position.x-T.g.position.x,cam.position.z-T.g.position.z);T.stand.quaternion.copy(cam.quaternion);   // портрет всегда лицом к игроку, как в 2D
-    if(T.fig)T.fig.rotation.y=T.hd??face;
+    if(T.fig){T.fig.rotation.y=T.hd??face;T.fig.rotation.x=down?-1.35:0;}
+    if(down){T.lt.intensity*=.25;T.halo.material.opacity=0;}
   });
   // где сейчас свет героя с тенью: рядом с ним вращающиеся предметы и дышащий дракон требуют редкого пересчёта тени
   let curLt=null,rareShadow=false;{const T=tokens.get(S.cur);if(T&&T.g.visible)curLt=T.g.position;}
