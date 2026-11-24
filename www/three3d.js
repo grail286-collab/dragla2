@@ -956,6 +956,8 @@ function fireFx(now,dt,aw){
 }
 // --- фишки героев: подставка в цвет игрока, портрет, факел в руке
 const tokens=new Map();
+// для автотестов: сколько фишек героев сейчас на сцене
+window.dbg3d={heroes:()=>[...tokens.values()].filter(T=>SC.children.includes(T.g)).length,tokens:()=>tokens.size,groups:()=>[...tokens.values()].map(T=>T.g),inScene:g=>SC.children.includes(g)};
 function heroToken(p){
   const g=new THREE.Group(),colr=new THREE.Color(pcol(p));
   const base=new THREE.Mesh(new THREE.CylinderGeometry(.28,.32,.09,24),new THREE.MeshStandardMaterial({color:0x1b1f2e,metalness:.6,roughness:.4}));base.position.y=.05;base.castShadow=true;g.add(base);
@@ -1044,6 +1046,10 @@ lookHunter=function(id){if(!S)return;const h=(S.hunters||[]).find(x=>x.id===id);
   if(!peekBack||now>=focusUntil)peekBack={tAz,tEl,distMul};
   focusI=-2;focusXZ=cellXZ(h.r,h.c);focusUntil=now+5000;userUntil=0;activeUntil=now+400;};
 follow=function(){focusI=-1;focusXZ=null;userUntil=0;};
+// «Спуск»: камера к клетке (монстр идёт к отряду) на ms, потом возвращается к ходящему герою
+lookCell=function(r,c,ms){if(!S)return;const now=performance.now();
+  if(!peekBack||now>=focusUntil)peekBack={tAz,tEl,distMul};
+  focusI=-2;focusXZ=cellXZ(r,c);focusUntil=now+(ms||2000);userUntil=0;activeUntil=now+(ms||2000);};
 
 // касание: луч до плоскости пола -> клетка -> то же, что клик по 2D-клетке
 const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-.05),hit=new THREE.Vector3();
@@ -1133,7 +1139,8 @@ function frame(){
   B.anim=B.anim.filter(a=>{const k=Math.min(1,(now-a.t0)/450);
     if(k>=1){hideRock(a.i);return false;}
     rockAt(a.i,a.r,a.c,k);return true;});
-  // герои
+  // герои: фишки прошлой партии убираем (новая игра с меньшим числом героев не должна показывать «лишних»)
+  tokens.forEach((T,i)=>{if(T.G!==S||i>=S.players.length){SC.remove(T.g);tokens.delete(i);}});
   const cur=P();
   S.players.forEach((p,i)=>{
     let T=tokens.get(i);if(!T||T.G!==S){if(T)SC.remove(T.g);T=heroToken(p);T.G=S;tokens.set(i,T);}

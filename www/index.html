@@ -581,22 +581,24 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   border:1px solid var(--hc);color:#fff;font:700 11px/16px var(--body);text-align:center}
 @media (prefers-reduced-motion:reduce){.die.spin,.sheet{animation:none}*{transition:none!important}}
 /* «Спуск»: фазы раунда и очки действий */
-.apbar{display:flex;flex-direction:column;gap:6px;padding:6px 8px;border:1px solid var(--frame-in);border-radius:10px;background:linear-gradient(180deg,rgba(15,34,71,.92),rgba(8,20,48,.92))}
-.apph{display:flex;gap:4px;align-items:stretch}
-.apph span{flex:1 1 0;min-width:0;padding:3px 4px;border-radius:6px;border:1px solid var(--frame-in);font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.apph span.on{color:#241a06;background:linear-gradient(180deg,#f7dc8e,#d7a845);border-color:var(--gold)}
-.apph span.on.mon{color:#fff;background:linear-gradient(180deg,#e0523a,#8c2318);border-color:var(--fire)}
-.apph span.on.env{color:#fff;background:linear-gradient(180deg,#4f7fc0,#203f74);border-color:var(--glow)}
-.apst{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12.5px;color:var(--ink)}
-.apst b{color:var(--gold);font-weight:800}
-.apst .pip{display:inline-block;width:9px;height:9px;margin:0 1px;border-radius:50%;background:var(--gold);box-shadow:0 0 4px rgba(236,198,106,.7);vertical-align:middle}
-.apst .pip.off{background:#2a3555;box-shadow:none}
-.apst .used{opacity:.45;text-decoration:line-through}
-.apacts{display:flex;flex-wrap:wrap;gap:4px}
-.apacts button{flex:1 1 auto;min-height:30px;padding:3px 8px;font-size:12.5px;font-weight:700;border-radius:15px;border:1px solid var(--frame-in);background:rgba(10,23,51,.92);color:var(--ink)}
-.apacts button:disabled{opacity:.38;cursor:default}
-.apacts button.end{border-color:var(--gold);color:var(--gold)}
-.apacts button.end.hot{background:linear-gradient(180deg,#f7dc8e,#d7a845);color:#241a06}
+.dphase{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;display:flex;align-items:center;gap:8px;
+  padding:5px 14px 6px;border-radius:16px;border:1px solid var(--gold);background:rgba(8,16,38,.82);box-shadow:0 6px 16px rgba(0,0,0,.55);
+  font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.dphase i{font-style:normal;font-family:var(--body);font-size:9px;letter-spacing:2px;opacity:.85}
+.dphase.mon{border-color:var(--fire);color:#ffb3a3;background:rgba(48,10,8,.85)}
+.dphase.env{border-color:#b07cff;color:#d9c3ff;background:rgba(28,10,48,.85)}
+.dphase.pop{animation:dphPop .5s ease-out}
+@keyframes dphPop{0%{transform:translateX(-50%) scale(.8);opacity:0}60%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1)}}
+.apchip{pointer-events:none;padding:3px 9px;border-radius:12px;border:1px solid var(--frame-in);background:rgba(10,23,51,.92);font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.45)}
+.apchip b{color:var(--gold)}.apchip .used{opacity:.4}
+.rpskip.hot{color:#241a06;background:linear-gradient(180deg,#f7dc8e,#d7a845);border-color:var(--gold)}
+.dask{position:absolute;left:8px;width:calc(100% - 190px);max-width:400px;box-sizing:border-box;bottom:10px;z-index:10;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;
+  border:1px solid var(--gold);border-radius:12px;background:rgba(10,22,50,.95);box-shadow:0 10px 24px rgba(0,0,0,.6);animation:rpIn .2s ease-out}
+.dask .dq{flex:1 1 140px;min-width:0;font-size:14px;font-weight:700;color:var(--ink);line-height:1.2}
+.dask .dq small{display:block;font-weight:500;font-size:11.5px;color:var(--muted);margin-top:2px}
+.dask button{min-height:34px;padding:4px 16px;font-size:14px;font-weight:800;border-radius:17px}
+.dask .dq{flex-basis:100%}
+.dask button{flex:1 1 0}
 .hex.dim{opacity:.4}
 </style>
 
@@ -604,8 +606,11 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   <div class="top" id="top"></div>
   <div class="srow" id="srow" hidden><div class="mgoal" id="mgoal" hidden></div><div class="wake" id="wake" hidden></div><div class="tmr" id="tmr" hidden></div></div>
   <div class="boardslot">
+  <div class="dphase" id="dphase" hidden></div>
+  <div class="dask" id="dask" hidden><div class="dq" id="daskQ"></div><button type="button" class="primary" id="daskYes">Да</button><button type="button" id="daskNo">Нет</button></div>
   <div class="board frame" id="box"><div class="stage" id="stage"><canvas id="board" aria-label="Игровое поле 21 на 21"></canvas><canvas id="dark" aria-hidden="true"></canvas><canvas id="fog" aria-hidden="true"></canvas><canvas id="fx" aria-hidden="true"></canvas></div></div>
   <div class="diehud" id="diehud" hidden>
+    <div class="apchip" id="apchip" hidden></div>
     <div class="dieacts" id="dieacts">
       <button type="button" class="rpskip rphunt" id="rpHide" hidden>Затаиться</button>
       <button type="button" class="rpskip rphunt" id="rpCloak" hidden>❖ Плащ</button>
@@ -618,7 +623,6 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   <div class="hedge" id="hedge"></div>
   <div class="bottom frame">
     <div class="ribbon" id="who"><span class="whoname" id="whoName"></span><span class="whohint" id="whoHint"></span></div>
-    <div class="apbar" id="apbar" hidden></div>
     <div class="msg" id="msg" hidden></div>
     <div class="bar">
       <div class="hexes" aria-label="Снаряжение героя">
@@ -1741,7 +1745,7 @@ function doAct(a,d){
     case'potion':return drinkAct();
     case'bag':return useScrollBag(d);
     case'claim':return claimVictory(P());
-    case'dact':return descAction(d.k);
+    case'dact':return descAction(d.k,d);
     case'dend':return descEndTurn();
     case'tp':if(S.phase==='tp'&&S.tp&&S.tp.spots.some(([r,c])=>r===d.r&&c===d.c))S.tp.res([d.r,d.c]);return;
   }
@@ -1755,7 +1759,8 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=16;   // 16: зелье до броска, зелье скорости из инвентаря, вопрос перед выходом из подземелья   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
+const NET_PROTO=17;   // 17: «Спуск» — переход в открытый зал за шаги, передача вещей из инвентаря
+// было: const NET_PROTO=16;   // 16: зелье до броска, зелье скорости из инвентаря, вопрос перед выходом из подземелья   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
 const NET={ws:null,id:null,token:null,room:null,queue:[],lastSeq:0,sent:false,drops:[],connecting:null,
   onRoom:null,onStart:null,onError:null,pendingStart:null,stuck:0,lost:0};
 try{NET.token=sessionStorage.getItem('dragon-net-token');}catch(e){}
@@ -2353,7 +2358,7 @@ async function move(o){
   if(S.mission&&missionCheck()){busy=false;nextTurn();return;}
   if(coopOn()&&alive(p)&&x.ev==='trap'){x.visited=true;await wait(180);await descCellTrap(p,x);}   // ловушка остаётся взведённой, пока её не обезвредят
   else if(coopOn()&&alive(p)&&(x.ev==='merchP'||x.ev==='merchW')){if(!x.visited){x.visited=true;addLog(`${p.name} нашёл грибного торговца.`);}
-    if(isLocal(p)&&!p.cpu)toast('Грибной торговец! Купить — кнопка «Грибы» (1 действие).',3200);}
+    if(isLocal(p)&&!p.cpu)toast('Грибной торговец! Пока стоишь рядом, он предложит товар (покупка — 1 действие).',3200);}
   else if(!x.visited&&alive(p)){x.visited=true;if(x.ev){await wait(180);await resolve(x.ev,p);}}
   if(coopOn()&&alive(p))descSpot(p);
   if(COOP()&&alive(p)&&cell(p.r,p.c).stairs&&cell(p.r,p.c).ev!=='boss'){await descend(p);busy=false;nextTurn();return;}
@@ -2519,6 +2524,8 @@ async function bossesAct(){
       S.monObj=b;S.monCell=[r,c];S.modalOwner=h;try{await resolve('monster',h);}finally{S.monObj=null;S.monCell=null;S.modalOwner=null;}bossHitFx(b,h,hp0);}
   }
   boardDirty=true;render();}
+const MON_STEP=430,MON_LOOK=280;   // шаг монстра на экране (анимация шага в 3D — 450 мс) и пауза, пока камера доедет
+function lookCell(r,c,ms){}        // 3D (three3d.js) переопределяет: камера к клетке на ms
 async function monstersAct(){
   await bossesAct();
   const list=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++){const x=cell(r,c);if(x.rev&&x.ev==='monster'&&!x.visited&&x.mon!==7)list.push([r,c]);}
@@ -2530,14 +2537,15 @@ async function monstersAct(){
     for(let st=0;st<(MSPD[mi]||1);st++){
       const pth=heroPath(r,c,40);if(!pth)break;
       if(pth.dist===1){   // герой рядом — нападение; монстр остаётся на своей клетке
-        const h=pth.hero;addLog(`${m.n} нападает на ${h.name}!`);toast(`${m.n} нападает на ${h.name}!`,2200);
+        const h=pth.hero;lookCell(r,c,2500);addLog(`${m.n} нападает на ${h.name}!`);toast(`${m.n} нападает на ${h.name}!`,2200);
         S.monFix=mi;S.monCell=[r,c];S.modalOwner=h;
         try{await resolve('monster',h);}finally{S.monFix=null;S.monCell=null;S.modalOwner=null;}
         break;}
       const [nr,nc]=pth.step,t=cell(nr,nc);
       if(t.ev||t.stairs||S.players.some(q=>alive(q)&&q.r===nr&&q.c===nc))break;   // дорогу загораживает вещь или другой монстр
+      if(st===0){lookCell(r,c,2500);await wait(MON_LOOK);}   // камера к монстру, потом он идёт шаг за шагом (ожидание — только показ, на ход партии не влияет)
       Object.assign(t,{ev:'monster',mon:mi,awake:true,visited:false,hp:x.hp,hpMax:x.hpMax,from:[r,c]});Object.assign(x,{ev:null,mon:null,awake:false,hp:null,hpMax:null});
-      r=nr;c=nc;x=t;render();if(st+1<(MSPD[mi]||1))await wait(380);
+      r=nr;c=nc;x=t;boardDirty=true;render();lookCell(r,c,2500);await wait(MON_STEP);
     }
   }
   boardDirty=true;render();
@@ -2556,25 +2564,25 @@ async function descend(p){
   buildPills();render();follow();
 }
 /* ---------- «Спуск»: три фазы раунда и очки действий ----------
-   Раунд: 1) фаза героев — каждый по очереди тратит очки действий (ОД); 2) фаза монстров — твари идут к отряду и нападают;
-   3) фаза окружения — взведённые ловушки могут сработать снова, из темноты выползают новые монстры.
+   Раунд: 1) фаза искателей — каждый по очереди тратит очки действий (ОД); 2) фаза монстров — твари идут к отряду и нападают;
+   3) фаза злодеяния — взведённые ловушки могут сработать снова, из темноты выползают новые монстры.
    ОД героя = скорость + 2. Скорость — бросок d4 в начале хода (с зельем скорости, ожогом, трупным ядом), у героев нет своей
-   характеристики скорости. Скорость тратится на шаги (1 клетка = 1 очко), «+2» — это 1 атака (бой с монстром) и 1 действие:
-   обезвредить ловушку, перейти в соседний зал, открыть дверь в соседний зал, поднять союзника без сил,
-   сменить оружие или передать вещь союзнику, купить у грибного торговца. Всё случайное — через общий RNG партии,
-   поэтому в сетевой игре фазы у всех телефонов идут одинаково. */
+   характеристики скорости. Скорость тратится на шаги (1 клетка = 1 очко, в том числе в соседний уже открытый зал),
+   «+2» — это 1 атака (бой с монстром) и 1 действие: открыть дверь в неоткрытый зал, обезвредить ловушку,
+   поднять соратника без сил, сменить оружие или передать вещь соратнику (в инвентаре), купить у грибного торговца.
+   Вопросы «Да/Нет» видит только ходящий игрок: «Да» уходит обычным действием партии, поэтому в сетевой игре всё одинаково. */
 const DESC_ENV={cellTrap:.5,roomTrap:.2,spawn:.3,spawnDeep:.05,spot:.35};
-const DPH={hero:'Фаза 1 · Герои',mon:'Фаза 2 · Монстры',env:'Фаза 3 · Окружение'};
+const DPH={hero:'Фаза искателей',mon:'Фаза монстров',env:'Фаза злодеяния'};
 const isFoe=t=>!!t&&t.rev&&((t.ev==='monster'&&!t.visited&&t.mon!==7)||t.ev==='boss');   // мимик притворяется сундуком — по нему не видно, что это бой
 const wpnOf=p=>p.silver&&(p.wpn==='silver'||!p.sword)?'silver':'sword';
-// чем платить за шаг на клетку o: 'mv' — очко скорости, 'atk' — атака, 'act' — действие; null — не хватает очков
+// чем платить за шаг на клетку o: 'mv' — очко скорости, 'atk' — атака; null — нельзя (не хватает очков или зал за дверью ещё не открыт)
 function descCost(p,o){
-  const t=cell(o.r,o.c);if(!t||!t.rev)return null;          // за закрытой дверью — неоткрытый зал: сначала «Открыть дверь»
+  const t=cell(o.r,o.c);if(!t||!t.rev)return null;          // за закрытой дверью — неоткрытый зал: сначала «Исследовать дальше?» (действие)
   if(isFoe(t))return p.ap.atk>0?'atk':null;
-  const a=roomAt(p.r,p.c),b=roomAt(o.r,o.c);
-  if(a&&b&&a!==b)return p.ap.act>0?'act':null;
   return p.moves>0?'mv':null;
 }
+// телепорт в «Спуске»: только на открытые клетки уже исследованных залов (не в стену, не на монстра, не на лестницу)
+function descTpOk(r,c){const x=cell(r,c);return !!(roomAt(r,c)&&x.rev&&!x.block&&!isFoe(x)&&!x.stairs&&!(x.ev==='monster'));}
 const cheb=(r1,c1,r2,c2)=>Math.max(Math.abs(r1-r2),Math.abs(c1-c2));
 const nearP=(p,r,c)=>cheb(p.r,p.c,r,c)<=1&&roomAt(r,c)===roomAt(p.r,p.c)&&!cell(r,c).block;   // та же клетка или соседняя в том же зале
 function isGate(r,c){const R=Math.floor(r/RS),Cc=Math.floor(c/RS),rm=S.rooms[rkey(R,Cc)];if(!rm)return false;
@@ -2583,7 +2591,7 @@ function descTraps(p){
   const out=[];
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=p.r+dr,c=p.c+dc;if(!inB(r,c)||!nearP(p,r,c))continue;const x=cell(r,c);
     if(x.ev==='trap'&&x.visited)out.push({r,c});}
-  const rm=roomAt(p.r,p.c);if(rm&&rm.trap!=null&&rm.trapDone&&!rm.disarmed)out.push({room:true});
+  const rm=roomAt(p.r,p.c);if(rm&&rm.trap!=null&&rm.trapDone&&!rm.disarmed)out.push({room:1});
   return out;}
 function descDoor(p){
   const x=cell(p.r,p.c);if(!x.rev)return null;
@@ -2592,43 +2600,32 @@ function descDoor(p){
   return null;}
 const descDown=p=>S.players.filter(q=>q!==p&&q.mode==='dead'&&q.r!=null&&nearP(p,q.r,q.c));
 const descAllies=p=>S.players.filter(q=>q!==p&&alive(q)&&nearP(p,q.r,q.c));
-function giveList(p){
-  const out=[];
-  for(const q of descAllies(p)){
-    if(p.potions>0)out.push({q,k:'potion',t:`✚ Зелье здоровья → ${q.name}`});
-    if(p.sword&&!q.sword)out.push({q,k:'sword',t:`† Меч → ${q.name}`});
-    if(p.silver&&!q.silver)out.push({q,k:'silver',t:`† Серебряный клинок → ${q.name}`});
-    if(p.shield&&!q.shield)out.push({q,k:'shield',t:`⛨ Щит → ${q.name}`});
-    if(p.luck>0&&!(q.luck>0))out.push({q,k:'luck',t:`☘ Амулет удачи → ${q.name}`});
-    if(p.hasteP>0)out.push({q,k:'haste',t:`» Зелье скорости → ${q.name}`});
-    [...new Set(p.scrolls||[])].forEach(id=>out.push({q,k:'scroll',id,t:`§ «${SCROLLS[id].n}» → ${q.name}`}));
-  }
-  return out;}
 function descMerch(p){
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=p.r+dr,c=p.c+dc;if(!inB(r,c)||!nearP(p,r,c))continue;const x=cell(r,c);
     if(x.ev==='merchP'||x.ev==='merchW')return {r,c,kind:x.ev==='merchP'?'P':'W'};}
   return null;}
-// список действий и можно ли их сделать сейчас
+// передача вещей: что есть у героя и может ли соратник это взять
+const GIVE_N={potion:'зелье здоровья',sword:'меч',silver:'серебряный клинок',shield:'щит',luck:'амулет удачи',haste:'зелье скорости',scroll:'свиток'};
+function hasItem(p,k,id){return k==='potion'?p.potions>0:k==='haste'?p.hasteP>0:k==='luck'?p.luck>0:k==='scroll'?(p.scrolls||[]).includes(id):!!p[k];}
+function canTake(q,k){return k==='sword'?!q.sword:k==='silver'?!q.silver:k==='shield'?!q.shield:k==='luck'?!(q.luck>0):true;}
+const giveTo=(p,k,id)=>descAllies(p).filter(q=>hasItem(p,k,id)&&canTake(q,k));
+const anyGive=p=>descAllies(p).length>0&&['potion','sword','silver','shield','luck','haste'].some(k=>giveTo(p,k).length)||(p.scrolls||[]).some(id=>giveTo(p,'scroll',id).length);
+// действия, которые можно сделать сейчас (для вопросов, ИИ и решения «ход окончен»)
 function descActs(p){
   const has=!!(p&&p.ap&&p.ap.act>0&&alive(p));
   return [
-    {k:'disarm',t:'⚠ Ловушка',full:'Обезвредить ловушку',ok:has&&descTraps(p).length>0},
-    {k:'door',t:'🚪 Дверь',full:'Открыть дверь в соседний зал',ok:has&&!!descDoor(p)},
-    {k:'revive',t:'✚ Поднять',full:'Поднять союзника',ok:has&&descDown(p).length>0},
-    {k:'gear',t:'🎒 Снаряжение',full:'Сменить оружие или передать вещь',ok:has&&((p.sword&&p.silver)||giveList(p).length>0)},
-    {k:'shop',t:'🍄 Грибы',full:'Купить у грибного торговца',ok:has&&!!descMerch(p)}];
+    {k:'revive',ok:has&&descDown(p).length>0},
+    {k:'disarm',ok:has&&descTraps(p).length>0},
+    {k:'door',ok:has&&!!descDoor(p)},
+    {k:'shop',ok:has&&!!descMerch(p)},
+    {k:'give',ok:has&&anyGive(p)},
+    {k:'wpn',ok:has&&!!(p.sword&&p.silver)}];
 }
-const descLeft=p=>options(p).length>0||descActs(p).some(a=>a.ok);
+const descLeft=p=>options(p).length>0||descActs(p).some(a=>a.ok&&a.k!=='wpn');
 function descMsg(p){
-  const a=p.ap,bits=[`Шагов ${p.moves}`,a.atk?'атака есть':'атака потрачена',a.act?'действие есть':'действие потрачено'];
-  const hint=[];
-  if(descDoor(p)&&a.act)hint.push('здесь дверь в неоткрытый зал');
-  if(descTraps(p).length&&a.act)hint.push('рядом взведённая ловушка');
-  if(descDown(p).length&&a.act)hint.push('рядом союзник без сил');
-  if(descMerch(p)&&a.act)hint.push('рядом грибной торговец');
-  return `${DPH.hero}. ${bits.join(' · ')}.${hint.length?' '+hint.join(', ')+'.':''}`;
+  const a=p.ap;return `${DPH.hero}. Шагов ${p.moves} · ${a.atk?'атака есть':'атака потрачена'} · ${a.act?'действие есть':'действие потрачено'}.`;
 }
-// после шага или действия: делать больше нечего — ход сам переходит дальше, иначе ждём «Конец хода»
+// после шага или действия: делать больше нечего — ход сам переходит дальше, иначе ждём «Завершить ход»
 function descAfter(p){
   busy=false;
   if(S.over||P()!==p)return;
@@ -2640,41 +2637,33 @@ function descEndTurn(){
   const p=P();addLog(`${p.name} завершает ход.`);p.moves=0;
   S.phase='event';render();nextTurn();
 }
-// ловушка на клетке: номер ловушки закрепляется за клеткой; после срабатывания она остаётся взведённой
 async function descCellTrap(p,x){
   if(x.trap==null)x.trap=rnd(TRAPS.length);
   S.trapFix=x.trap;S.modalOwner=p;
   try{await resolve('trap',p);}finally{S.trapFix=null;S.modalOwner=null;}
   boardDirty=true;
 }
-// герой замечает скрытую ловушку на соседней клетке своего зала (35%) — она становится видна и взведена
 function descSpot(p){
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const r=p.r+dr,c=p.c+dc;if(!inB(r,c)||!nearP(p,r,c))continue;const x=cell(r,c);
     if(x.ev==='trap'&&!x.visited&&RNG()<DESC_ENV.spot){x.visited=true;if(x.trap==null)x.trap=rnd(TRAPS.length);boardDirty=true;
-      addLog(`${p.name} заметил ловушку «${TRAPS[x.trap].n}». Её можно обезвредить (действие).`);if(isLocal(p)&&!p.cpu)toast(`Ты заметил ловушку «${TRAPS[x.trap].n}» — её можно обезвредить (действие).`,3000);}}
+      addLog(`${p.name} заметил ловушку «${TRAPS[x.trap].n}».`);}}
 }
-async function descAction(k){
+// действие героя (приходит через act('dact') — в сетевой игре у всех в одном порядке). d — цель, выбранная игроком
+async function descAction(k,d={}){
   if(!S||busy||S.phase!=='move'||!coopOn())return;
-  const p=P();if(!p.ap||p.ap.act<1)return;
-  const a=descActs(p).find(x=>x.k===k);if(!a||!a.ok)return;
-  busy=true;
+  const p=P();if(!p.ap||p.ap.act<1||!alive(p))return;
+  busy=true;let did=false;
   try{
-    if(k==='door'){const d=descDoor(p);p.ap.act--;sfx('door');
-      revealRoomAt(d.r,d.c,OPP[d.d]);boardFull=true;
-      addLog(`${p.name} открывает дверь в соседний зал (действие).`);render();follow();await wait(350);}
-    else if(k==='revive'){const list=descDown(p);let q=list[0];
-      if(list.length>1){const v=await modal({icon:'✚',tone:'good',title:'Поднять союзника',sub:'Действие',text:'Кого поднять на ноги?',
-        buttons:[...list.map(x=>({label:x.name,cls:'primary',value:S.players.indexOf(x)})),{label:'Отмена',value:-1}]});
-        q=S.players[v];}
-      if(q&&q.mode==='dead'){p.ap.act--;q.mode='out';q.hp=1;q.stun=0;newLeg(q);q.trail=[[q.r,q.c]];sfx('potion');
+    if(k==='door'){const dd=descDoor(p);if(!dd)return;p.ap.act--;did=true;sfx('door');
+      revealRoomAt(dd.r,dd.c,OPP[dd.d]);boardFull=true;
+      addLog(`${p.name} открывает дверь в соседний зал (действие). Войти можно за обычные шаги.`);render();follow();await wait(350);}
+    else if(k==='revive'){const q=S.players[d.q]||descDown(p)[0];
+      if(q&&q.mode==='dead'&&descDown(p).includes(q)){p.ap.act--;did=true;q.mode='out';q.hp=1;q.stun=0;newLeg(q);q.trail=[[q.r,q.c]];sfx('potion');
         addLog(`${p.name} поднимает ${q.name} на ноги: 1 ♥ (действие).`);render();
-        await modal({icon:'✚',tone:'good',iconImg:q.portrait!=null?PORTRAITS[q.portrait]:null,title:`${q.name} снова в строю`,sub:`Помог ${p.name}`,text:`${p.name} поднимает союзника на ноги. ${q.name} встаёт с 1 ♥ и ходит в свою очередь.`});}}
-    else if(k==='disarm'){const list=descTraps(p);let t=list[0];
-      if(list.length>1){const nm=x=>x.room?`Ловушка зала «${TRAPS[roomAt(p.r,p.c).trap].n}»`:`«${TRAPS[cell(x.r,x.c).trap??0].n}» ${x.r===p.r&&x.c===p.c?'под ногами':'рядом'}`;
-        const v=await modal({icon:'⚠',tone:'fire',title:'Обезвредить ловушку',sub:'Действие',text:'Какую ловушку обезвредить?',
-          buttons:[...list.map((x,i)=>({label:nm(x),cls:'primary',value:i})),{label:'Отмена',value:-1}]});
-        t=list[v];}
-      if(t){p.ap.act--;
+        await modal({icon:'✚',tone:'good',iconImg:q.portrait!=null?PORTRAITS[q.portrait]:null,title:`${q.name} снова в строю`,sub:`Помог ${p.name}`,text:`${p.name} поднимает соратника на ноги. ${q.name} встаёт с 1 ♥ и ходит в свою очередь.`});}}
+    else if(k==='disarm'){const list=descTraps(p);
+      const t=list.find(x=>d.room?x.room:(x.r===d.r&&x.c===d.c))||list[0];
+      if(t){p.ap.act--;did=true;
         const x=t.room?null:cell(t.r,t.c);if(x&&x.trap==null)x.trap=rnd(TRAPS.length);
         const tr=TRAPS[t.room?roomAt(p.r,p.c).trap:x.trap],b=(p.luck>0?3:0)+curseB(p),dc=Math.max(5,tr.dc-2);
         await modal({icon:'⚠',tone:'fire',img:tr.img,title:`Обезвредить: ${tr.n}`,sub:`Действие · ${p.name}`,
@@ -2685,53 +2674,100 @@ async function descAction(k){
             else s2=`Механизм щёлкнул раньше времени: ${harm(p,tr)}.`;
             addLog(`${p.name} обезвреживает «${tr.n}»: ${s2}`);return s2;}}});
         if(p.hp<=0&&p.mode!=='dead')await die(p,'','☠','Без сил');}}
-    else if(k==='gear'){
-      const btns=[];
-      if(p.sword&&p.silver)btns.push({label:wpnOf(p)==='silver'?'Взять меч (+2 в бою)':'Взять серебряный клинок (+5 против нежити)',cls:'primary',value:'w'});
-      const gl=giveList(p);gl.forEach((g,i)=>btns.push({label:g.t,value:'g'+i}));
-      btns.push({label:'Отмена',value:'no'});
-      const v=await modal({icon:'🎒',tone:'gold',title:'Снаряжение',sub:'Действие',text:`${p.sword&&p.silver?`В руке: ${wpnOf(p)==='silver'?'серебряный клинок':'меч'}. `:''}Сменить оружие или передать вещь союзнику рядом — это 1 действие.`,buttons:btns});
-      if(v==='w'){p.ap.act--;p.wpn=wpnOf(p)==='silver'?'sword':'silver';sfx('sword');addLog(`${p.name} берёт в руку ${p.wpn==='silver'?'серебряный клинок':'меч'} (действие).`);}
-      else if(typeof v==='string'&&v[0]==='g'){const g=gl[+v.slice(1)];if(g){const q=g.q;p.ap.act--;
-        if(g.k==='potion'){p.potions--;q.potions=(q.potions||0)+1;}
-        else if(g.k==='sword'){p.sword=false;q.sword=true;}
-        else if(g.k==='silver'){p.silver=false;q.silver=true;}
-        else if(g.k==='shield'){p.shield=false;q.shield=true;}
-        else if(g.k==='luck'){q.luck=p.luck;p.luck=0;}
-        else if(g.k==='haste'){p.hasteP--;q.hasteP=(q.hasteP||0)+1;}
-        else if(g.k==='scroll'){const i=p.scrolls.indexOf(g.id);if(i>=0){p.scrolls.splice(i,1);q.scrolls=q.scrolls||[];q.scrolls.push(g.id);}}
-        sfx('coins');addLog(`${p.name} передаёт ${q.name}: ${g.t.replace(/ → .*$/,'').replace(/^\S+ /,'')} (действие).`);}}
-      render();}
-    else if(k==='shop'){const m=descMerch(p),g0=p.gold;
+    else if(k==='wpn'){if(p.sword&&p.silver){p.ap.act--;did=true;p.wpn=wpnOf(p)==='silver'?'sword':'silver';sfx('sword');
+      addLog(`${p.name} берёт в руку ${p.wpn==='silver'?'серебряный клинок':'меч'} (действие).`);toast(`${p.name}: в руке ${p.wpn==='silver'?'серебряный клинок':'меч'}`,2000);render();}}
+    else if(k==='give'){const q=S.players[d.q],it=d.it,id=d.id;
+      if(q&&GIVE_N[it]&&giveTo(p,it,id).includes(q)){p.ap.act--;did=true;
+        if(it==='potion'){p.potions--;q.potions=(q.potions||0)+1;}
+        else if(it==='haste'){p.hasteP--;q.hasteP=(q.hasteP||0)+1;}
+        else if(it==='luck'){q.luck=p.luck;p.luck=0;}
+        else if(it==='scroll'){const i=p.scrolls.indexOf(id);p.scrolls.splice(i,1);q.scrolls=q.scrolls||[];q.scrolls.push(id);}
+        else{p[it]=false;q[it]=true;if(it==='sword'||it==='silver')p.wpn=null;}
+        sfx('coins');const nm=it==='scroll'?`свиток «${SCROLLS[id].n}»`:GIVE_N[it];
+        addLog(`${p.name} передаёт ${q.name}: ${nm} (действие).`);toast(`${p.name} → ${q.name}: ${nm}`,2200);render();}}
+    else if(k==='shop'){const m=descMerch(p);if(!m)return;const g0=p.gold;
       await merchant(p,m.kind);
-      if(p.gold<g0){p.ap.act--;addLog(`${p.name}: покупка у грибов — действие потрачено.`);}}
+      if(p.gold<g0){p.ap.act--;did=true;addLog(`${p.name}: покупка у грибов — действие потрачено.`);}}
   }finally{busy=false;}
+  if(p.cpu&&!did)(p.cpuNo=p.cpuNo||{})[S.turnNo+':'+k]=1;
   descAfter(p);
 }
-// фазы 2 и 3 — после того как сходили все герои
+// ИИ (и герой, за которого доигрывает таймер): решает сам, по правилам без случайности — одинаково на всех телефонах
+function cpuDescPick(p){
+  const no=k=>p.cpuNo&&p.cpuNo[S.turnNo+':'+k];
+  const a=Object.fromEntries(descActs(p).map(x=>[x.k,x.ok]));
+  if(a.revive&&!no('revive'))return {k:'revive',q:S.players.indexOf(descDown(p)[0])};
+  if(a.disarm&&!no('disarm')){const t=descTraps(p)[0];return t.room?{k:'disarm',room:1}:{k:'disarm',r:t.r,c:t.c};}
+  if(a.door&&!no('door')&&!options(p).some(o=>isFoe(cell(o.r,o.c))))return {k:'door'};
+  if(a.shop&&!no('shop')&&p.gold>=60)return {k:'shop'};
+  return null;
+}
+// ---------- вопросы «Да / Нет» ходящему игроку (только на его телефоне) ----------
+const DASK={key:'',turn:-1,no:new Set()};
+function daskCand(p){
+  const out=[];
+  descDown(p).forEach(q=>out.push({key:'revive'+S.players.indexOf(q),q:'Помочь соратнику?',sub:`${q.name} без сил — поднять с 1 ♥ (действие)`,d:{k:'revive',q:S.players.indexOf(q)}}));
+  descTraps(p).forEach(t=>{const tr=TRAPS[t.room?roomAt(p.r,p.c).trap:cell(t.r,t.c).trap??0];
+    out.push({key:t.room?'trapR':'trap'+t.r+','+t.c,q:'Обезвредить ловушку?',sub:`«${tr?tr.n:'ловушка'}» — d20, действие`,d:t.room?{k:'disarm',room:1}:{k:'disarm',r:t.r,c:t.c}});});
+  const dd=descDoor(p);if(dd)out.push({key:'door'+dd.r+','+dd.c,q:'Исследовать дальше?',sub:'Открыть дверь в неизведанный зал (действие)',d:{k:'door'}});
+  const m=descMerch(p);if(m)out.push({key:'shop'+m.r+','+m.c,q:m.kind==='P'?'Заглянуть к Мухомору-зельевару?':'Поторговать с Боровиком-старьёвщиком?',sub:'Покупка — действие (если ничего не купишь, оно не тратится)',d:{k:'shop'}});
+  return out;
+}
+function paintAsk(p){
+  const el=$('dask');if(!el)return;
+  if(DASK.turn!==S.turnNo){DASK.turn=S.turnNo;DASK.no.clear();}
+  const ok=coopOn()&&!S.over&&S.phase==='move'&&(S.dph||'hero')==='hero'&&p&&p.ap&&p.ap.act>0&&alive(p)&&isLocal(p)&&!p.cpu&&!lockedTurn()&&
+    !busy&&!rolling&&$('modal').hidden&&$('mainmenu').hidden&&!(S.online&&(NET.sent||NET.queue.length));
+  const c=ok?daskCand(p).find(x=>!DASK.no.has(x.key)):null;
+  if(!c){if(!el.hidden){el.hidden=true;DASK.key='';}return;}
+  if(DASK.key!==c.key||el.hidden){DASK.key=c.key;DASK.cur=c;$('daskQ').innerHTML=`${esc(c.q)}<small>${esc(c.sub)}</small>`;el.hidden=false;}
+}
+$('daskYes').onclick=()=>{const c=DASK.cur;$('dask').hidden=true;DASK.key='';if(!c)return;DASK.no.add(c.key);act('dact',c.d);};
+$('daskNo').onclick=()=>{const c=DASK.cur;$('dask').hidden=true;DASK.key='';if(c)DASK.no.add(c.key);if(S)render();};
+// инвентарь: «Передать» соратнику рядом и «Взять в руку»
+function whyDesc(p){
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(S.phase!=='move'||!p.ap)return 'после броска d4';
+  if(p.ap.act<1)return 'действие уже потрачено';
+  return '';
+}
+function invGive(p,k,id){
+  const al=descAllies(p);if(!al.length)return null;   // кнопка — только когда соратник стоит рядом
+  const can=al.filter(q=>canTake(q,k));
+  return {kind:'give',id:k+(id?':'+id:''),label:'Передать',why:whyDesc(p)||(can.length?'':'у соратника уже есть')};
+}
+async function invGiveDo(p,kid){
+  const [k,id]=kid.split(':'),list=giveTo(p,k,id);if(!list.length)return;
+  let q=list[0];
+  if(list.length>1){const v=await modal({local:true,icon:'🎒',tone:'gold',title:'Кому передать?',sub:GIVE_N[k],text:'Передача — 1 действие.',
+    buttons:[...list.map(x=>({label:x.name,cls:'primary',value:S.players.indexOf(x)})),{label:'Отмена',value:-1}]});
+    q=S.players[v];if(!q)return;}
+  act('dact',{k:'give',q:S.players.indexOf(q),it:k,id:id||null});
+}
+// фазы 2 и 3 — после того как сходили все искатели
 async function descPhases(){
   const was=busy;busy=true;
   try{
-    S.dph='mon';render();toast(`${DPH.mon}: твари идут к отряду`,1800);await wait(900);
+    S.dph='mon';render();await wait(700);
     await monstersAct();
     if(S.over||!S.players.some(alive))return;
-    S.dph='env';render();toast(`${DPH.env}: ловушки и новые монстры`,1800);await wait(900);
+    follow();
+    S.dph='env';render();await wait(800);
     await envPhase();
-  }finally{S.dph='hero';busy=was;if(!S.over)render();}
+  }finally{S.dph='hero';busy=was;if(!S.over){follow();render();}}
 }
 async function envPhase(){
   const deep=Math.min(4,S.depth-1);let news=0;
-  // ловушки: стоишь на взведённой — 50%; в зале со взведённой ловушкой зала — 20% (+2% за уровень глубины)
   for(const q of S.players.filter(alive)){
     if(!alive(q)||S.over)continue;
     const x=cell(q.r,q.c),rm=roomAt(q.r,q.c);
-    if(x.ev==='trap'&&x.visited){if(RNG()<DESC_ENV.cellTrap){news++;addLog(`Фаза окружения: ловушка под ногами ${q.name} срабатывает снова!`);await descCellTrap(q,x);}}
+    if(x.ev==='trap'&&x.visited){if(RNG()<DESC_ENV.cellTrap){news++;addLog(`Фаза злодеяния: ловушка под ногами ${q.name} срабатывает снова!`);await descCellTrap(q,x);}}
     else if(rm&&rm.trap!=null&&rm.trapDone&&!rm.disarmed&&RNG()<DESC_ENV.roomTrap+deep*.02){news++;
-      addLog(`Фаза окружения: ловушка зала «${TRAPS[rm.trap].n}» срабатывает снова — под ударом ${q.name}.`);
+      addLog(`Фаза злодеяния: ловушка зала «${TRAPS[rm.trap].n}» срабатывает снова — под ударом ${q.name}.`);
       S.trapFix=rm.trap;S.modalOwner=q;try{await resolve('trap',q);}finally{S.trapFix=null;S.modalOwner=null;}}
   }
   if(S.over||!S.players.some(alive))return;
-  // новые монстры: шанс 30% (+5% за уровень глубины), не больше 3 + уровень тварей на поле; не ближе 2 клеток к герою и не в проходе
   let n=0;for(let r=0;r<N;r++)for(let c=0;c<N;c++){const x=cell(r,c);if(x.rev&&(x.ev==='monster'||x.ev==='boss'))n++;}
   if(n<3+S.depth&&RNG()<DESC_ENV.spawn+deep*DESC_ENV.spawnDeep){
     const spots=[];
@@ -2742,36 +2778,32 @@ async function envPhase(){
         spots.push([r,c]);}}
     if(spots.length){const [r,c]=spots[Math.floor(RNG()*spots.length)],x=cell(r,c),mi=pickMon(null);
       Object.assign(x,{ev:'monster',mon:mi,visited:false,awake:false,from:null});x.hpMax=monHp(mi);x.hp=x.hpMax;news++;
-      addLog(`Фаза окружения: из темноты выползает ${MONSTERS[mi].n}.`);toast(`Из темноты выползает ${MONSTERS[mi].n}!`,2200);boardDirty=true;boardFull=true;}
+      lookCell(r,c,2200);
+      addLog(`Фаза злодеяния: из темноты выползает ${MONSTERS[mi].n}.`);toast(`Из темноты выползает ${MONSTERS[mi].n}!`,2200);boardDirty=true;boardFull=true;render();await wait(900);}
   }
-  if(!news)addLog('Фаза окружения: в подземелье тихо.');
+  if(!news)addLog('Фаза злодеяния: в подземелье тихо.');
   render();
 }
-// панель «Спуска»: фаза раунда, очки действий текущего героя, кнопки действий и «Конец хода»
-let apHtml='';
+// над полем — фаза раунда; у кубика — очки действий и «Пропустить ход» / «Завершить ход»; внизу экрана — вопросы «Да / Нет»
+let dphKey='';
 function paintAP(){
-  const el=$('apbar');if(!el||!S)return;
+  if(!S)return;
+  const ph=$('dphase'),chip=$('apchip'),sk=$('rpSkip');
   const on=coopOn()&&!S.over&&S.phase!=='intro'&&$('mainmenu').hidden;
-  if(el.hidden===on){el.hidden=!on;apHtml='';try{size();}catch(e){}}
-  {const p=P(),two=on&&p&&p.sword&&p.silver;$('hSword').classList.toggle('dim',!!two&&wpnOf(p)!=='sword');$('hSilver').classList.toggle('dim',!!two&&wpnOf(p)!=='silver');}
-  if(!on)return;
-  const p=P(),ph=S.dph||'hero';
-  const phase=`<div class="apph">${['hero','mon','env'].map(k=>`<span class="${k}${k===ph?' on':''}">${DPH[k]}</span>`).join('')}</div>`;
-  let st='',btn='';
-  if(ph==='hero'&&p){
-    if(S.phase==='roll')st=`<b>${esc(p.name)}</b> бросает d4 — это скорость. Очки действий = скорость + 2 (1 атака + 1 действие).`;
-    else if(p.ap){const a=p.ap,pips=Array.from({length:a.mv0},(x,i)=>`<i class="pip${i<p.moves?'':' off'}"></i>`).join('');
-      st=`<span>ОД <b>${p.moves+a.atk+a.act}</b>/${a.mv0+2}</span><span>Шаги ${pips} <b>${p.moves}</b></span><span class="${a.atk?'':'used'}">⚔ Атака <b>${a.atk}</b></span><span class="${a.act?'':'used'}">✋ Действие <b>${a.act}</b></span>`;
-      const mine=isLocal(p)&&!p.cpu&&!lockedTurn()&&S.phase==='move';
-      const acts=descActs(p);
-      btn=`<div class="apacts">${acts.map(x=>`<button type="button" data-dk="${x.k}" title="${x.full}" ${mine&&x.ok?'':'disabled'}>${x.t}</button>`).join('')}<button type="button" class="end${mine&&!options(p).length?' hot':''}" data-dk="end" ${mine?'':'disabled'}>⏭ Конец хода</button></div>`;}
-    else st=`Ходит <b>${esc(p.name)}</b>`;
-  }else st=ph==='mon'?'Монстры, заметившие отряд, идут к ближайшему герою и нападают.':'Взведённые ловушки могут сработать снова; из темноты выползают новые твари.';
-  const html=phase+`<div class="apst">${st}</div>`+btn;
-  if(html!==apHtml){el.innerHTML=html;apHtml=html;}
+  const p=P();
+  {const two=on&&p&&p.sword&&p.silver;$('hSword').classList.toggle('dim',!!two&&wpnOf(p)!=='sword');$('hSilver').classList.toggle('dim',!!two&&wpnOf(p)!=='silver');}
+  if(!on){if(!ph.hidden)ph.hidden=true;dphKey='';chip.hidden=true;$('dask').hidden=true;if(sk.textContent!=='Пропустить ход'){sk.textContent='Пропустить ход';sk.classList.remove('hot');}return;}
+  const k=S.dph||'hero';
+  if(dphKey!==k){dphKey=k;ph.className='dphase '+k;ph.innerHTML=`${DPH[k]} <i>${['hero','mon','env'].map(x=>x===k?'●':'○').join('')}</i>`;ph.hidden=false;void ph.offsetWidth;ph.classList.add('pop');}
+  const mv=k==='hero'&&S.phase==='move'&&p&&p.ap;
+  if(mv){const a=p.ap,h=`ОД <b>${p.moves+a.atk+a.act}</b>/${a.mv0+2} · шаги <b>${p.moves}</b> · <span class="${a.atk?'':'used'}">⚔${a.atk}</span> · <span class="${a.act?'':'used'}">✋${a.act}</span>`;
+    if(chip.innerHTML!==h)chip.innerHTML=h;chip.hidden=false;}
+  else chip.hidden=true;
+  const mine=mv&&isLocal(p)&&!p.cpu&&!lockedTurn();
+  if(mv){sk.textContent='Завершить ход';sk.hidden=!mine;sk.classList.toggle('hot',!!mine&&!options(p).length);}
+  else{if(sk.textContent!=='Пропустить ход'){sk.textContent='Пропустить ход';sk.classList.remove('hot');}}
+  paintAsk(p);
 }
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#apbar button[data-dk]');if(!b||b.disabled||!S)return;
-  const k=b.dataset.dk;if(k==='end')act('dend');else act('dact',{k});});
 /* ---------- встреча героев на одной клетке: d20 против d20, победитель забирает 25% мешка ---------- */
 const pairKey=(a,b)=>{const i=S.players.indexOf(a),j=S.players.indexOf(b);return i<j?i+'-'+j:j+'-'+i;};
 function rivalsHere(p){if(COOP())return [];S.met=S.met||{};return S.players.filter(q=>q!==p&&alive(q)&&q.r===p.r&&q.c===p.c&&!S.met[pairKey(p,q)]);}
@@ -3340,7 +3372,7 @@ async function die(p,text,icon,title,img){
   buzz([200,80,300]);
   if(coopOn()&&(p.mode==='out'||p.mode==='back')){   // «Спуск»: 0 ♥ — герой без сил; союзник рядом может поднять его (действие)
     p.hp=0;p.mode='dead';p.stun=0;addLog(`${p.name}: без сил (0 ♥).`);render();
-    await modal({icon:'✚',tone:'fire',img,title:'Без сил',sub:p.name,text:`Сердца кончились — ${p.name} падает без сил. Золото и вещи остаются при нём.\n\nСоюзник на соседней клетке может поднять героя: «Поднять» — 1 действие, герой встанет с 1 ♥. Иначе он встанет в строй на следующем уровне.`});
+    await modal({icon:'✚',tone:'fire',img,title:'Без сил',sub:p.name,text:`Сердца кончились — ${p.name} падает без сил. Золото и вещи остаются при нём.\n\nСоюзник на соседней клетке может поднять героя: на вопрос «Помочь соратнику?» — «Да» (1 действие), герой встанет с 1 ♥. Иначе он встанет в строй на следующем уровне.`});
     return;}
   // погиб в подземелье — мешок остаётся на клетке (в логове золото забирает дракон, в бездне — бездна)
   if((p.mode==='out'||p.mode==='back')&&p.gold>0&&walkable(p.r,p.c)){
@@ -3597,6 +3629,7 @@ async function cpuTurn(){
     if(me.hasteP>0&&!(me.haste>0)){toast(`${me.name} пьёт зелье скорости.`,1800);useHaste();$('rollpop').hidden=true;await wait(700);if(!mine())return;}
     showRollPop(me);await wait(700);await rollD4();await wait(700);}
   while(mine()&&S.phase==='move'&&!busy){
+    if(coopOn()&&me.ap&&me.ap.act>0){const k=cpuDescPick(me);if(k){await descAction(k.k,k);await wait(700);continue;}}
     const o=cpuChoose(me);if(!o)break;
     await move(o);
     if(!mine()||S.phase!=='move')break;
@@ -3923,7 +3956,7 @@ async function voidTeleport(p,m,rad){
 // клетки в радиусе 3 (по шагам), куда можно встать: не логово и не пропасть
 function tpSpots(p){
   const out=[];if(p.mode!=='out'&&p.mode!=='back')return out;
-  for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){const k=Math.abs(dr)+Math.abs(dc),r=p.r+dr,c=p.c+dc;if(k&&k<=3&&walkable(r,c)&&!(cell(r,c).block))out.push([r,c]);}
+  for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){const k=Math.abs(dr)+Math.abs(dc),r=p.r+dr,c=p.c+dc;if(k&&k<=3&&walkable(r,c)&&!(cell(r,c).block)&&(!coopOn()||descTpOk(r,c)))out.push([r,c]);}
   return out;
 }
 function cpuTpPick(p,spots){
@@ -3949,7 +3982,9 @@ async function teleportTo(p,[r,c],show){
   for(const q of rivalsHere(p)){await wait(150);await duel(p,q);}
   for(const h of huntersHere(p)){if(!alive(p))break;await wait(150);await hunterFight(p,h,false);}
   if(x.stash&&alive(p))await stashAt(p);
-  if(!x.visited&&alive(p)){x.visited=true;if(x.ev){await wait(180);await resolve(x.ev,p);}}
+  if(coopOn()&&alive(p)&&x.ev==='trap'){x.visited=true;await wait(180);await descCellTrap(p,x);}
+  else if(coopOn()&&(x.ev==='merchP'||x.ev==='merchW'))x.visited=true;
+  else if(!x.visited&&alive(p)){x.visited=true;if(x.ev){await wait(180);await resolve(x.ev,p);}}
   if(S.phase==='move')S.msg=hereMsg(p);render();
 }
 // компьютер: иногда читает свиток против лидера
@@ -4900,13 +4935,16 @@ function invDo(kind,id){
   else if(kind==='ghost')act('ghost');
   else if(kind==='haste')act('haste');
   else if(kind==='scroll'&&id)act('bag',{id});
+  else if(kind==='wpn')act('dact',{k:'wpn'});
+  else if(kind==='give')invGiveDo(p,id);
 }
 function csRow(ico,cls,name,desc,cnt,act){
   const mid=cnt==null||cnt===''?'':`<span class="cscnt">×${cnt}</span>`;
   let right=mid;
-  if(act){
-    const why=act.why||'',dis=why?' disabled':'';
-    right=`<div class="csacts">${mid}<button type="button" class="csact"${dis} data-kind="${act.kind}" data-id="${esc(act.id||'')}"${why?` title="${esc(why)}"`:''}>${esc(act.label)}</button>${why?`<span class="cswhy">${esc(why)}</span>`:''}</div>`;
+  const acts=(Array.isArray(act)?act:[act]).filter(Boolean);act=acts[0]||null;
+  if(acts.length){
+    const why=acts.map(a=>a.why||'').find(Boolean)||'';
+    right=`<div class="csacts">${mid}${acts.map(a=>`<button type="button" class="csact"${a.why?' disabled':''} data-kind="${a.kind}" data-id="${esc(a.id||'')}"${a.why?` title="${esc(a.why)}"`:''}>${esc(a.label)}</button>`).join('')}${why?`<span class="cswhy">${esc(why)}</span>`:''}</div>`;
   }
   return `<div class="csrow${act?' hasact':''}"><span class="csico ${cls||''}">${ico}</span><div><b>${esc(name)}</b><small>${esc(desc)}</small></div>${right}</div>`;
 }
@@ -4950,25 +4988,27 @@ function paintCharSheet(){
   const bag=p.mode==='dead'&&!COOP()?'<span>мешок потерян</span>':`<span class="coin" title="Золото в мешке"><b>${p.gold}</b></span>`;
   $('csStats').innerHTML=`${hearts}${bag}${tro}`;
   const gear=[],cons=[],scs=[],arts=[],fx=[];
-  if(p.sword)gear.push(csRow('†','g','Старый меч','+2 в бою (сталь не берёт призраков и им подобных)'));
-  if(p.silver)gear.push(csRow('†','s','Серебряный клинок','+5 против нежити вместо меча'));
-  if(p.shield)gear.push(csRow('⛨','y','Щит с драконом','Один раз примет удар в бою и расколется'));
-  if(p.luck>0)gear.push(csRow('☘','g','Амулет удачи','+3 к проверкам в бою, ловушках и к прыжку через пропасть',p.luck));
+  const dco=coopOn()&&inv,two=dco&&p.sword&&p.silver,inHand=two?wpnOf(p):null;
+  const gv=k=>dco?invGive(p,k):null,wp=k=>two&&inHand!==k?{kind:'wpn',id:k,label:'Взять в руку',why:whyDesc(p)}:null;
+  if(p.sword)gear.push(csRow('†','g','Старый меч'+(inHand==='sword'?' · в руке':''),'+2 в бою (сталь не берёт призраков и им подобных)',null,[wp('sword'),gv('sword')]));
+  if(p.silver)gear.push(csRow('†','s','Серебряный клинок'+(inHand==='silver'?' · в руке':''),two?'+5 против нежити, 0 против живых — когда в руке':'+5 против нежити вместо меча',null,[wp('silver'),gv('silver')]));
+  if(p.shield)gear.push(csRow('⛨','y','Щит с драконом','Один раз примет удар в бою и расколется',null,gv('shield')));
+  if(p.luck>0)gear.push(csRow('☘','g','Амулет удачи','+3 к проверкам в бою, ловушках и к прыжку через пропасть',p.luck,gv('luck')));
   if(p.mantle)gear.push(csRow('♨','g','Огнестойкая мантия','Спасёт от пламени дракона в логове: останется 1 ♥, часть золота сгорит'));
   if(p.rope)gear.push(csRow('➰',p.ropeWorn?'f':'y',p.ropeWorn?'Гнилая верёвка':'Верёвка с крюком',p.ropeWorn?'Переход через пропасть без проверки, но рвётся в 70% случаев':'Переход через пропасть без проверки'));
   if(p.pick)gear.push(csRow('⚒','y','Кирка','Один раз пробьёт стену из тупика'));
   if(p.key>0)gear.push(csRow('⚷','y','Медный ключ','Откроет потайную дверь без проверки',p.key));
   const actOn=inv;  // действия только в инвентаре текущего локального героя; чужой лист — только чтение
-  if(p.potions>0)cons.push(csRow('✚','g','Зелье здоровья','Восстанавливает 1 ♥ (редко выдыхается или оказывается отравой)',p.potions,actOn?{kind:'potion',label:'Выпить',why:whyPotion(p)}:null));
+  if(p.potions>0)cons.push(csRow('✚','g','Зелье здоровья','Восстанавливает 1 ♥ (редко выдыхается или оказывается отравой)',p.potions,[actOn?{kind:'potion',label:'Выпить',why:whyPotion(p)}:null,gv('potion')]));
   if(p.bombs>0)cons.push(csRow('✹','s','Сонная бомба','В логове усыпляет дракона на несколько поисков без риска',p.bombs));
-  if(p.hasteP>0)cons.push(csRow('»','g','Зелье скорости','Перед броском: 3 хода +1 шаг к броску d4',p.hasteP,actOn?{kind:'haste',label:'Выпить',why:whyHaste(p)}:null));
+  if(p.hasteP>0)cons.push(csRow('»','g','Зелье скорости','Перед броском: 3 хода +1 шаг к броску d4',p.hasteP,[actOn?{kind:'haste',label:'Выпить',why:whyHaste(p)}:null,gv('haste')]));
   if(p.cloak>0)cons.push(csRow('❖','s','Плащ-невидимка','Накинуть перед броском: 3 хода охотники тебя не видят',p.cloak,actOn?{kind:'cloak',label:'Накинуть',why:whyCloak(p)}:null));
   if(p.ghostP>0)cons.push(csRow('≋','s','Зелье призрачного шага','Перед броском: этот ход проходишь сквозь стены',p.ghostP,actOn?{kind:'ghost',label:'Выпить',why:whyGhost(p)}:null));
   const bagSc=p.scrolls||[];
   const scCnt={};bagSc.forEach(id=>scCnt[id]=(scCnt[id]||0)+1);
   Object.keys(scCnt).forEach(id=>{
     const sc=SCROLLS[id];if(!sc)return;
-    const act=actOn?{kind:'scroll',id,label:sc.artifact?'Использовать':'Прочитать',why:whyScroll(p,id)}:null;
+    const act=[actOn?{kind:'scroll',id,label:sc.artifact?'Использовать':'Прочитать',why:whyScroll(p,id)}:null,dco?invGive(p,'scroll',id):null];
     const row=csRow(sc.icon,sc.tone==='fire'?'f':sc.tone==='good'?'g':sc.tone==='gold'?'y':'s',sc.n,sc.d,scCnt[id],act);
     if(sc.artifact)arts.push(row);else scs.push(row);
   });
@@ -5118,7 +5158,7 @@ function paintWho(){
     nameEl=$('whoName');hintEl=$('whoHint');
   }
   const p=P();
-  const title=S.over?'Экспедиция окончена':S.phase==='intro'?'Экспедиция начинается':'Ходит '+(p?p.name:'');
+  const title=S.over?'Экспедиция окончена':S.phase==='intro'?'Экспедиция начинается':coopOn()&&S.dph==='mon'?'Ходят монстры':coopOn()&&S.dph==='env'?'Подземелье оживает':'Ходит '+(p?p.name:'');
   nameEl.textContent=title;if(hintEl)hintEl.textContent='';
   who.style.setProperty('--pc',S.over||S.phase==='intro'?css('--gold'):css(p?p.color:'--gold'));
   paintMovedie(p);
@@ -5180,7 +5220,7 @@ async function useScrollBag(d={}){
 };
 $('rollcard').onclick=()=>{if(S&&!lockedTurn())act('roll');};
 $('movedie').onclick=()=>{if(S&&!lockedTurn())act('roll');};
-$('rpSkip').onclick=()=>askSkip();
+$('rpSkip').onclick=()=>{if(S&&coopOn()&&S.phase==='move'){act('dend');return;}askSkip();};
 $('rpHide').onclick=()=>askHide();
 $('rpCloak').onclick=()=>act('cloak');$('rpGhost').onclick=()=>act('ghost');
 // кнопка масштаба по кругу: всё поле → крупно → ещё крупнее (×1,5) → снова всё поле
@@ -5212,7 +5252,7 @@ const RULES=`<ul>
 <li>Встреча: если герой встал на клетку с соперником, они бросают d20 против d20 — победитель забирает 25% мешка проигравшего, а проигравший пропускает ход и затем ещё 1 ход получает −3 ко всем проверкам (итог броска не ниже 1). Каждая пара героев встречается так раз за игру. Знак ⚔ на карточке — соперник, чья добыча может стать твоей.</li>
 <li>В логове бьётся сердце: чем выше риск разбудить дракона, тем громче и чаще стук, сильнее дрожит экран и вибрирует телефон.</li>
 <li>Свитки лежат в сумке свитков (кнопка §). Каждый начинает с одним случайным свитком, ещё их находят в подземелье. В свой ход можно прочитать один свиток — до броска, во время шагов или в логове; после прочтения он исчезает. Сглаз и Призыв зверя наносят урон без броска, Заговор на неудачу делает все проверки цели равными 1 на 2 её хода, Клеймо изгнанника работает только на героя, идущего к логову.</li>
-<li>Если все остальные герои погибли, последний сразу побеждает: можно забрать победу или доиграть, чтобы собрать больше. Но погибнешь — победа сгорит.</li><li><b>«Спуск».</b> Раунд идёт в три фазы. 1) <b>Герои</b>: каждый по очереди тратит очки действий (ОД). 2) <b>Монстры</b>: твари, заметившие отряд, идут к ближайшему герою и нападают. 3) <b>Окружение</b>: взведённая ловушка под героем срабатывает снова с шансом 50%, ловушка зала — 20%; из темноты может выползти новый монстр.</li><li>ОД = скорость + 2. Скорость — бросок d4 в начале хода: столько клеток можно пройти. Ещё 1 <b>атака</b> (бой с монстром) и 1 <b>действие</b>: обезвредить ловушку, перейти в соседний зал, открыть дверь в неоткрытый зал, поднять союзника без сил, сменить оружие или передать вещь союзнику рядом, купить у грибного торговца. Когда делать больше нечего, ход переходит сам; иначе нажми «Конец хода».</li><li>В «Спуске» и в игре по сети у каждого свой герой: занятый портрет выбрать нельзя.</li></ul>`;
+<li>Если все остальные герои погибли, последний сразу побеждает: можно забрать победу или доиграть, чтобы собрать больше. Но погибнешь — победа сгорит.</li><li><b>«Спуск».</b> Раунд идёт в три фазы. 1) <b>Фаза искателей</b>: каждый по очереди тратит очки действий (ОД). 2) <b>Фаза монстров</b>: твари, заметившие отряд, идут к ближайшему герою и нападают. 3) <b>Фаза злодеяния</b>: взведённая ловушка под героем срабатывает снова с шансом 50%, ловушка зала — 20%; из темноты может выползти новый монстр. Телепорт в «Спуске» переносит только в уже открытые залы.</li><li>ОД = скорость + 2. Скорость — бросок d4 в начале хода: столько клеток можно пройти. Ещё 1 <b>атака</b> (бой с монстром) и 1 <b>действие</b>: открыть дверь в неоткрытый зал, обезвредить ловушку, поднять соратника без сил, сменить оружие или передать вещь соратнику рядом (в инвентаре), купить у грибного торговца. В уже открытый зал (и в только что открытый) проходишь за обычные шаги. Когда герой подходит к двери, ловушке, торговцу или павшему соратнику, всплывает вопрос «Да / Нет». Когда делать больше нечего, ход переходит сам; иначе нажми «Завершить ход».</li><li>В «Спуске» и в игре по сети у каждого свой герой: занятый портрет выбрать нельзя.</li></ul>`;
 const PRIVACY=`<div class="scrolls" style="font-size:14px">
 <p style="margin:0 0 8px">Редакция от 25 октября 2026 года.</p>
 <p><b>Мы не собираем личные данные.</b> Регистрация не нужна, игра не просит имя, телефон или почту и не получает доступ к контактам, фото, камере, микрофону и местоположению. Данные игроков не продаются и не передаются рекламодателям.</p>
