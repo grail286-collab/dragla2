@@ -1607,7 +1607,8 @@ function introCamera(){
     const set=(k,x,y)=>{st.style.transform=`translate(${x}px,${y}px) scale(${k})`;};
     introOn=true;bx.style.overflow='hidden';st.style.transformOrigin='0 0';st.style.willChange='transform';
     $('who').innerHTML='<span class="whoname" id="whoName">Экспедиция начинается</span><span class="whohint" id="whoHint"></span>';$('who').style.setProperty('--pc',css('--gold'));
-    toast('Логово дракона — в центре подземелья. Набери золота и вернись живым!',3200);
+    // в «Спуске» логова нет — подсказка о его цели: найти лестницу вниз
+    toast(COOP()?'Найдите лестницу вниз — встал на неё один, спускается весь отряд.':'Логово дракона — в центре подземелья. Набери золота и вернись живым!',3200);
     const t0=performance.now();let ended=false;
     const finish=()=>{if(ended)return;ended=true;introOn=false;introSkipAt=performance.now();
       document.removeEventListener('pointerdown',skip,true);
@@ -1759,7 +1760,8 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=17;   // 17: «Спуск» — переход в открытый зал за шаги, передача вещей из инвентаря
+const NET_PROTO=18;   // 18: «Спуск» — ловушки срабатывают 1 раз, обезвредить можно 4 вида, монстры обходят вещи, появление только в залах без героев
+// было: 17: «Спуск» — переход в открытый зал за шаги, передача вещей из инвентаря
 // было: const NET_PROTO=16;   // 16: зелье до броска, зелье скорости из инвентаря, вопрос перед выходом из подземелья   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
 const NET={ws:null,id:null,token:null,room:null,queue:[],lastSeq:0,sent:false,drops:[],connecting:null,
   onRoom:null,onStart:null,onError:null,pendingStart:null,stuck:0,lost:0};
@@ -2356,7 +2358,7 @@ async function move(o){
   const x=cell(p.r,p.c);
   if(x.stash&&alive(p)){await wait(150);await stashAt(p);}
   if(S.mission&&missionCheck()){busy=false;nextTurn();return;}
-  if(coopOn()&&alive(p)&&x.ev==='trap'){x.visited=true;await wait(180);await descCellTrap(p,x);}   // ловушка остаётся взведённой, пока её не обезвредят
+  if(coopOn()&&alive(p)&&x.ev==='trap'){x.visited=true;await wait(180);await descCellTrap(p,x);}   // ловушка на клетке срабатывает 1 раз и исчезает
   else if(coopOn()&&alive(p)&&(x.ev==='merchP'||x.ev==='merchW')){if(!x.visited){x.visited=true;addLog(`${p.name} нашёл грибного торговца.`);}
     if(isLocal(p)&&!p.cpu)toast('Грибной торговец! Пока стоишь рядом, он предложит товар (покупка — 1 действие).',3200);}
   else if(!x.visited&&alive(p)){x.visited=true;if(x.ev){await wait(180);await resolve(x.ev,p);}}
@@ -2469,10 +2471,24 @@ function revealRoomAt(r,c,from){if(!inB(r,c))return;const R=Math.floor(r/RS),Cc=
   // откуда вошли: если клетка — середина стороны, вход с этой стороны
   let f=null;if(from)for(const d of ['U','R','D','L']){const [gr,gc]=roomGate(R,Cc,d);if(gr===r&&gc===c&&d===from)f=d;}
   genRoom(R,Cc,f||null,false);boardDirty=true;}
-// ловушка зала срабатывает, когда в него первым входит кто-то из отряда, — проверку проходят все по очереди
-async function roomTrapCheck(p){const rm=roomAt(p.r,p.c);if(!rm||rm.trap==null||rm.trapDone)return;rm.trapDone=true;
-  const tr=TRAPS[rm.trap];addLog(`${p.name} входит в зал — срабатывает ловушка «${tr.n}». Проверку проходит весь отряд.`);
-  S.trapFix=rm.trap;
+// Ловушки «Спуска» срабатывают не больше 1 раза. Обезвредить можно только 4 вида (TRAP_DIS): сеть под потолком,
+// шипы из стены, отравленные дротики, ядовитый газ. Остальные обезвредить нельзя.
+// Ловушка зала: когда в зал первым входит кто-то из отряда —
+//  · необезвреживаемая срабатывает сразу (проверку проходит весь отряд) и больше не опасна;
+//  · обезвреживаемую герой замечает: до конца раунда её можно обезвредить (действие, вопрос «Обезвредить ловушку?»).
+//    Не обезвредили — она срабатывает 1 раз в фазе злодеяния этого раунда (проверка — весь отряд). Провал обезвреживания —
+//    срабатывает сразу на того, кто разбирал, и больше не опасна.
+const TRAP_DIS=new Set([0,1,2,5]);   // индексы в TRAPS: сеть под потолком, шипы из стены, отравленные дротики, ядовитый газ
+const trapDis=i=>TRAP_DIS.has(i);
+async function roomTrapCheck(p){const rm=roomAt(p.r,p.c);if(!rm||rm.trap==null||rm.trapDone||rm.trapSeen)return;
+  const tr=TRAPS[rm.trap];
+  if(trapDis(rm.trap)){rm.trapSeen=true;sfx('trap');
+    addLog(`${p.name} входит в зал и замечает ловушку «${tr.n}». Её можно обезвредить до конца раунда (действие), иначе в фазе злодеяния она сработает.`);
+    if(isLocal(p)&&!p.cpu)toast(`Ловушка «${tr.n}»! Обезвредь её до фазы злодеяния (действие).`,3200);render();return;}
+  rm.trapDone=true;
+  addLog(`${p.name} входит в зал — срабатывает ловушка «${tr.n}». Проверку проходит весь отряд.`);
+  await roomTrapFire(rm);}
+async function roomTrapFire(rm){rm.trapDone=true;S.trapFix=rm.trap;
   try{for(const q of S.players.filter(alive)){S.modalOwner=q;await resolve('trap',q);}}finally{S.trapFix=null;S.modalOwner=null;}}
 // начало уровня: отряд в центральном зале
 function coopStart(){
@@ -2498,16 +2514,20 @@ function bossOf(x){const b=BOSSES[x.boss||0],tier=Math.floor((S.depth-1)/BOSSES.
 function monHp(i){const m=MONSTERS[i]||{dc:12};return (m.dc<=10?2:m.dc<=12?3:m.dc<=14?4:5)+Math.floor((S.depth-1)/2);}
 const MSPD={0:2,4:2,8:2,9:2};
 const passOpen=(r,c,d)=>{const a=cell(r,c),r2=r+D[d][0],c2=c+D[d][1];if(!inB(r2,c2))return false;const b=cell(r2,c2);return a.rev&&b.rev&&a.arrows.includes(d)&&b.arrows.includes(OPP[d]);};
-function heroPath(r,c,limit){   // шаг к ближайшему живому герою по открытым проходам
+// clear — путь в обход занятых клеток (вещь, ловушка, торговец, другой монстр, лестница, павший герой):
+// раньше путь шёл «сквозь» вещь, а шаг на неё запрещён — монстр вставал перед вещью и замирал навсегда
+function monFree(r,c){const t=cell(r,c);return !t.ev&&!t.stairs&&!t.block&&!S.players.some(q=>q.mode==='dead'&&q.r===r&&q.c===c);}
+function heroPath(r,c,limit,clear){   // шаг к ближайшему живому герою по открытым проходам
   const heroes=new Map();S.players.forEach(q=>{if(alive(q))heroes.set(q.r*N+q.c,q);});
   const prev=new Map([[r*N+c,null]]),q=[[r,c,0]];
+  const bad=(a2,b2)=>clear&&!heroes.has(a2*N+b2)&&!monFree(a2,b2);
   for(let i=0;i<q.length;i++){const [a,b,dd]=q[i];const h=heroes.get(a*N+b);
     if(h&&i>0){let k=a*N+b;while(prev.get(k)!==r*N+c)k=prev.get(k);return {step:[Math.floor(k/N),k%N],hero:h,dist:dd};}
     if(dd>=limit)continue;
-    for(const d of ['U','R','D','L']){if(!passOpen(a,b,d))continue;const a2=a+D[d][0],b2=b+D[d][1],k2=a2*N+b2;if(prev.has(k2))continue;prev.set(k2,a*N+b);q.push([a2,b2,dd+1]);}
+    for(const d of ['U','R','D','L']){if(!passOpen(a,b,d))continue;const a2=a+D[d][0],b2=b+D[d][1],k2=a2*N+b2;if(prev.has(k2)||bad(a2,b2))continue;prev.set(k2,a*N+b);q.push([a2,b2,dd+1]);}
     for(const [d1,d2] of [['U','L'],['U','R'],['D','L'],['D','R']]){   // по диагонали — как герои: обе клетки сбоку свободны, угол не срезать
       if(!passOpen(a,b,d1)||!passOpen(a,b,d2)||!passOpen(a+D[d1][0],b+D[d1][1],d2)||!passOpen(a+D[d2][0],b+D[d2][1],d1))continue;
-      const a2=a+D[d1][0]+D[d2][0],b2=b+D[d1][1]+D[d2][1],k2=a2*N+b2;if(prev.has(k2))continue;prev.set(k2,a*N+b);q.push([a2,b2,dd+1]);}}
+      const a2=a+D[d1][0]+D[d2][0],b2=b+D[d1][1]+D[d2][1],k2=a2*N+b2;if(prev.has(k2)||bad(a2,b2))continue;prev.set(k2,a*N+b);q.push([a2,b2,dd+1]);}}
   return null;}
 function bossHitFx(b,h,hp0){if(b.stunHit&&alive(h)&&h.hp<hp0){h.stun=Math.max(h.stun||0,1);addLog(`Яд сковал героя ${h.name}: он пропустит ход.`);}}
 async function bossesAct(){
@@ -2535,16 +2555,18 @@ async function monstersAct(){
     if(x.hpMax==null){x.hpMax=monHp(mi);x.hp=x.hpMax;}
     if(!x.awake){const sees=S.players.some(q=>alive(q)&&roomAt(q.r,q.c)===rm)||heroPath(r,c,5);if(!sees)continue;x.awake=true;addLog(`${m.n} заметил отряд и идёт навстречу!`);}
     for(let st=0;st<(MSPD[mi]||1);st++){
-      const pth=heroPath(r,c,40);if(!pth)break;
+      const pth=heroPath(r,c,40,true)||heroPath(r,c,40,false);if(!pth)break;   // сначала в обход препятствий; если обхода нет — напрямик
       if(pth.dist===1){   // герой рядом — нападение; монстр остаётся на своей клетке
         const h=pth.hero;lookCell(r,c,2500);addLog(`${m.n} нападает на ${h.name}!`);toast(`${m.n} нападает на ${h.name}!`,2200);
         S.monFix=mi;S.monCell=[r,c];S.modalOwner=h;
         try{await resolve('monster',h);}finally{S.monFix=null;S.monCell=null;S.modalOwner=null;}
         break;}
       const [nr,nc]=pth.step,t=cell(nr,nc);
-      if(t.ev||t.stairs||S.players.some(q=>alive(q)&&q.r===nr&&q.c===nc))break;   // дорогу загораживает вещь или другой монстр
+      if(t.ev==='monster'||t.ev==='boss'||t.stairs||t.block||S.players.some(q=>q.r===nr&&q.c===nc&&(alive(q)||q.mode==='dead')))break;   // дорогу загораживает другой монстр (обойти негде)
+      const under=t.ev?{ev:t.ev,visited:t.visited,trap:t.trap}:null;   // обхода нет, на пути вещь/ловушка/торговец — монстр отпихивает её на свою клетку
       if(st===0){lookCell(r,c,2500);await wait(MON_LOOK);}   // камера к монстру, потом он идёт шаг за шагом (ожидание — только показ, на ход партии не влияет)
-      Object.assign(t,{ev:'monster',mon:mi,awake:true,visited:false,hp:x.hp,hpMax:x.hpMax,from:[r,c]});Object.assign(x,{ev:null,mon:null,awake:false,hp:null,hpMax:null});
+      Object.assign(t,{ev:'monster',mon:mi,awake:true,visited:false,hp:x.hp,hpMax:x.hpMax,from:[r,c],trap:null});Object.assign(x,{ev:null,mon:null,awake:false,hp:null,hpMax:null});
+      if(under){Object.assign(x,under,{from:null});boardFull=true;}
       r=nr;c=nc;x=t;boardDirty=true;render();lookCell(r,c,2500);await wait(MON_STEP);
     }
   }
@@ -2565,13 +2587,13 @@ async function descend(p){
 }
 /* ---------- «Спуск»: три фазы раунда и очки действий ----------
    Раунд: 1) фаза искателей — каждый по очереди тратит очки действий (ОД); 2) фаза монстров — твари идут к отряду и нападают;
-   3) фаза злодеяния — взведённые ловушки могут сработать снова, из темноты выползают новые монстры.
+   3) фаза злодеяния — срабатывают замеченные, но не обезвреженные ловушки залов (1 раз), в открытых залах без героев появляются монстры.
    ОД героя = скорость + 2. Скорость — бросок d4 в начале хода (с зельем скорости, ожогом, трупным ядом), у героев нет своей
    характеристики скорости. Скорость тратится на шаги (1 клетка = 1 очко, в том числе в соседний уже открытый зал),
    «+2» — это 1 атака (бой с монстром) и 1 действие: открыть дверь в неоткрытый зал, обезвредить ловушку,
    поднять соратника без сил, сменить оружие или передать вещь соратнику (в инвентаре), купить у грибного торговца.
    Вопросы «Да/Нет» видит только ходящий игрок: «Да» уходит обычным действием партии, поэтому в сетевой игре всё одинаково. */
-const DESC_ENV={cellTrap:.5,roomTrap:.2,spawn:.3,spawnDeep:.05,spot:.35};
+const DESC_ENV={spawn:.3,spawnDeep:.05,spot:.35};
 const DPH={hero:'Фаза искателей',mon:'Фаза монстров',env:'Фаза злодеяния'};
 const isFoe=t=>!!t&&t.rev&&((t.ev==='monster'&&!t.visited&&t.mon!==7)||t.ev==='boss');   // мимик притворяется сундуком — по нему не видно, что это бой
 const wpnOf=p=>p.silver&&(p.wpn==='silver'||!p.sword)?'silver':'sword';
@@ -2590,8 +2612,8 @@ function isGate(r,c){const R=Math.floor(r/RS),Cc=Math.floor(c/RS),rm=S.rooms[rke
 function descTraps(p){
   const out=[];
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=p.r+dr,c=p.c+dc;if(!inB(r,c)||!nearP(p,r,c))continue;const x=cell(r,c);
-    if(x.ev==='trap'&&x.visited)out.push({r,c});}
-  const rm=roomAt(p.r,p.c);if(rm&&rm.trap!=null&&rm.trapDone&&!rm.disarmed)out.push({room:1});
+    if(x.ev==='trap'&&x.visited&&x.trap!=null&&trapDis(x.trap))out.push({r,c});}   // замеченная, ещё не сработавшая, из 4 обезвреживаемых
+  const rm=roomAt(p.r,p.c);if(rm&&rm.trap!=null&&rm.trapSeen&&!rm.trapDone&&!rm.disarmed)out.push({room:1});
   return out;}
 function descDoor(p){
   const x=cell(p.r,p.c);if(!x.rev)return null;
@@ -2637,16 +2659,15 @@ function descEndTurn(){
   const p=P();addLog(`${p.name} завершает ход.`);p.moves=0;
   S.phase='event';render();nextTurn();
 }
-async function descCellTrap(p,x){
+async function descCellTrap(p,x){   // наступил на ловушку: срабатывает 1 раз и больше не опасна
   if(x.trap==null)x.trap=rnd(TRAPS.length);
   S.trapFix=x.trap;S.modalOwner=p;
-  try{await resolve('trap',p);}finally{S.trapFix=null;S.modalOwner=null;}
-  boardDirty=true;
+  try{await resolve('trap',p);}finally{S.trapFix=null;S.modalOwner=null;x.ev=null;x.trap=null;boardDirty=true;boardFull=true;}
 }
 function descSpot(p){
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const r=p.r+dr,c=p.c+dc;if(!inB(r,c)||!nearP(p,r,c))continue;const x=cell(r,c);
     if(x.ev==='trap'&&!x.visited&&RNG()<DESC_ENV.spot){x.visited=true;if(x.trap==null)x.trap=rnd(TRAPS.length);boardDirty=true;
-      addLog(`${p.name} заметил ловушку «${TRAPS[x.trap].n}».`);}}
+      addLog(`${p.name} заметил ловушку «${TRAPS[x.trap].n}»${trapDis(x.trap)?' — её можно обезвредить (действие)':' — обезвредить её нельзя, лучше обойти'}.`);}}
 }
 // действие героя (приходит через act('dact') — в сетевой игре у всех в одном порядке). d — цель, выбранная игроком
 async function descAction(k,d={}){
@@ -2670,8 +2691,10 @@ async function descAction(k,d={}){
           text:`Осторожно разобрать механизм. Обезвредить легче, чем увернуться: сложность ${dc}.\n\nПровал — ловушка срабатывает на тебя: ${[tr.dmg?`−${tr.dmg} ♥`:'',tr.steal?`сгорит ${tr.steal*100}% золота`:'',tr.skip?'пропуск хода':''].filter(Boolean).join(', ')}.`,
           roll:{dc,bonus:b,bonusText:[p.luck>0?'амулет':'',curseB(p)?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
             if(p.luck>0)p.luck--;let s2;
-            if(win){sfx('success');if(t.room)roomAt(p.r,p.c).disarmed=true;else{x.ev=null;x.trap=null;}boardDirty=true;boardFull=true;s2='Готово: ловушка больше не опасна.';}
-            else s2=`Механизм щёлкнул раньше времени: ${harm(p,tr)}.`;
+            if(t.room){const rm=roomAt(p.r,p.c);rm.trapDone=true;if(win)rm.disarmed=true;}else{x.ev=null;x.trap=null;}   // так или иначе ловушка больше не опасна
+            boardDirty=true;boardFull=true;
+            if(win){sfx('success');s2='Готово: ловушка больше не опасна.';}
+            else s2=`Механизм щёлкнул раньше времени: ${harm(p,tr)}. Ловушка сработала и больше не опасна.`;
             addLog(`${p.name} обезвреживает «${tr.n}»: ${s2}`);return s2;}}});
         if(p.hp<=0&&p.mode!=='dead')await die(p,'','☠','Без сил');}}
     else if(k==='wpn'){if(p.sword&&p.silver){p.ap.act--;did=true;p.wpn=wpnOf(p)==='silver'?'sword':'silver';sfx('sword');
@@ -2759,22 +2782,21 @@ async function descPhases(){
 }
 async function envPhase(){
   const deep=Math.min(4,S.depth-1);let news=0;
-  for(const q of S.players.filter(alive)){
-    if(!alive(q)||S.over)continue;
-    const x=cell(q.r,q.c),rm=roomAt(q.r,q.c);
-    if(x.ev==='trap'&&x.visited){if(RNG()<DESC_ENV.cellTrap){news++;addLog(`Фаза злодеяния: ловушка под ногами ${q.name} срабатывает снова!`);await descCellTrap(q,x);}}
-    else if(rm&&rm.trap!=null&&rm.trapDone&&!rm.disarmed&&RNG()<DESC_ENV.roomTrap+deep*.02){news++;
-      addLog(`Фаза злодеяния: ловушка зала «${TRAPS[rm.trap].n}» срабатывает снова — под ударом ${q.name}.`);
-      S.trapFix=rm.trap;S.modalOwner=q;try{await resolve('trap',q);}finally{S.trapFix=null;S.modalOwner=null;}}
-  }
+  // замеченные и не обезвреженные ловушки залов срабатывают 1 раз (повторных срабатываний больше нет)
+  for(const k of Object.keys(S.rooms)){const rm=S.rooms[k];if(S.over||!S.players.some(alive))break;
+    if(rm.trap==null||!rm.trapSeen||rm.trapDone)continue;news++;
+    const [R,Cc]=k.split(',').map(Number);lookCell(R*RS+1,Cc*RS+1,2200);
+    addLog(`Фаза злодеяния: ловушку «${TRAPS[rm.trap].n}» не обезвредили — она срабатывает! Проверку проходит весь отряд.`);
+    await roomTrapFire(rm);}
   if(S.over||!S.players.some(alive))return;
   let n=0;for(let r=0;r<N;r++)for(let c=0;c<N;c++){const x=cell(r,c);if(x.rev&&(x.ev==='monster'||x.ev==='boss'))n++;}
   if(n<3+S.depth&&RNG()<DESC_ENV.spawn+deep*DESC_ENV.spawnDeep){
     const spots=[];
-    for(const k in S.rooms){const [R,Cc]=k.split(',').map(Number);
+    // только в открытых залах, где сейчас нет ни одного героя (и павшего тоже); подходящих залов нет — никто не появляется
+    for(const k of Object.keys(S.rooms)){const [R,Cc]=k.split(',').map(Number);
+      if(S.players.some(q=>q.r!=null&&(alive(q)||q.mode==='dead')&&Math.floor(q.r/RS)===R&&Math.floor(q.c/RS)===Cc))continue;
       for(let i=0;i<RS;i++)for(let j=0;j<RS;j++){const r=R*RS+i,c=Cc*RS+j,x=cell(r,c);
         if(!x.rev||x.block||x.ev||x.stairs||x.stash||isGate(r,c))continue;
-        if(S.players.some(q=>q.r!=null&&(alive(q)||q.mode==='dead')&&cheb(q.r,q.c,r,c)<2))continue;
         spots.push([r,c]);}}
     if(spots.length){const [r,c]=spots[Math.floor(RNG()*spots.length)],x=cell(r,c),mi=pickMon(null);
       Object.assign(x,{ev:'monster',mon:mi,visited:false,awake:false,from:null});x.hpMax=monHp(mi);x.hp=x.hpMax;news++;
@@ -3050,8 +3072,8 @@ async function resolve(ev,p){
       if(p.voidTp){const rad=p.voidTp;p.voidTp=0;if(!coop&&p.hp>0&&alive(p))await voidTeleport(p,m,rad);}
       if(coop){
         if(mx.hp<=0){Object.assign(mx,{ev:null,mon:null,hp:null,hpMax:null,awake:false,visited:true});}
-        else{mx.awake=true;
-          if(mc[0]===p.r&&mc[1]===p.c&&alive(p)){   // герой наступил на живого монстра — его отбрасывает назад, ход окончен
+        else{mx.awake=true;mx.visited=false;   // живой монстр продолжает ходить (раньше после поражения героя клетка оставалась «посещённой» и монстр замирал)
+          if(mc[0]===p.r&&mc[1]===p.c&&(alive(p)||p.mode==='dead')){   // герой наступил на живого монстра — его отбрасывает назад, ход окончен
             const back=p.stack.pop();if(back){p.r=back[0];p.c=back[1];if(p.trail.length>1)p.trail.pop();}
             mx.visited=false;if(!p.ap)p.moves=0;addLog(`${p.name} отступает. ${m.n} остаётся на месте.`);}}
         boardDirty=true;}
@@ -3982,6 +4004,7 @@ async function teleportTo(p,[r,c],show){
   for(const q of rivalsHere(p)){await wait(150);await duel(p,q);}
   for(const h of huntersHere(p)){if(!alive(p))break;await wait(150);await hunterFight(p,h,false);}
   if(x.stash&&alive(p))await stashAt(p);
+  if(coopOn()&&alive(p))await roomTrapCheck(p);
   if(coopOn()&&alive(p)&&x.ev==='trap'){x.visited=true;await wait(180);await descCellTrap(p,x);}
   else if(coopOn()&&(x.ev==='merchP'||x.ev==='merchW'))x.visited=true;
   else if(!x.visited&&alive(p)){x.visited=true;if(x.ev){await wait(180);await resolve(x.ev,p);}}
@@ -5252,7 +5275,7 @@ const RULES=`<ul>
 <li>Встреча: если герой встал на клетку с соперником, они бросают d20 против d20 — победитель забирает 25% мешка проигравшего, а проигравший пропускает ход и затем ещё 1 ход получает −3 ко всем проверкам (итог броска не ниже 1). Каждая пара героев встречается так раз за игру. Знак ⚔ на карточке — соперник, чья добыча может стать твоей.</li>
 <li>В логове бьётся сердце: чем выше риск разбудить дракона, тем громче и чаще стук, сильнее дрожит экран и вибрирует телефон.</li>
 <li>Свитки лежат в сумке свитков (кнопка §). Каждый начинает с одним случайным свитком, ещё их находят в подземелье. В свой ход можно прочитать один свиток — до броска, во время шагов или в логове; после прочтения он исчезает. Сглаз и Призыв зверя наносят урон без броска, Заговор на неудачу делает все проверки цели равными 1 на 2 её хода, Клеймо изгнанника работает только на героя, идущего к логову.</li>
-<li>Если все остальные герои погибли, последний сразу побеждает: можно забрать победу или доиграть, чтобы собрать больше. Но погибнешь — победа сгорит.</li><li><b>«Спуск».</b> Раунд идёт в три фазы. 1) <b>Фаза искателей</b>: каждый по очереди тратит очки действий (ОД). 2) <b>Фаза монстров</b>: твари, заметившие отряд, идут к ближайшему герою и нападают. 3) <b>Фаза злодеяния</b>: взведённая ловушка под героем срабатывает снова с шансом 50%, ловушка зала — 20%; из темноты может выползти новый монстр. Телепорт в «Спуске» переносит только в уже открытые залы.</li><li>ОД = скорость + 2. Скорость — бросок d4 в начале хода: столько клеток можно пройти. Ещё 1 <b>атака</b> (бой с монстром) и 1 <b>действие</b>: открыть дверь в неоткрытый зал, обезвредить ловушку, поднять соратника без сил, сменить оружие или передать вещь соратнику рядом (в инвентаре), купить у грибного торговца. В уже открытый зал (и в только что открытый) проходишь за обычные шаги. Когда герой подходит к двери, ловушке, торговцу или павшему соратнику, всплывает вопрос «Да / Нет». Когда делать больше нечего, ход переходит сам; иначе нажми «Завершить ход».</li><li>В «Спуске» и в игре по сети у каждого свой герой: занятый портрет выбрать нельзя.</li></ul>`;
+<li>Если все остальные герои погибли, последний сразу побеждает: можно забрать победу или доиграть, чтобы собрать больше. Но погибнешь — победа сгорит.</li><li><b>«Спуск».</b> Раунд идёт в три фазы. 1) <b>Фаза искателей</b>: каждый по очереди тратит очки действий (ОД). 2) <b>Фаза монстров</b>: твари, заметившие отряд, идут к ближайшему герою и нападают. 3) <b>Фаза злодеяния</b>: срабатывает замеченная, но не обезвреженная ловушка зала; в открытом зале, где нет героев, может появиться новый монстр. Телепорт в «Спуске» переносит только в уже открытые залы.</li><li><b>Ловушки «Спуска»</b> срабатывают не больше одного раза. Обезвредить (действие, d20) можно только <b>сетку под потолком, шипы из стены, отравленные дротики и ядовитый газ</b>: успех — ловушка не сработает, провал — она срабатывает на того, кто её разбирал. Такую ловушку зала герой замечает, войдя в зал; если до фазы злодеяния её никто не обезвредил, она срабатывает на весь отряд. Остальные ловушки обезвредить нельзя: ловушка зала срабатывает, как только в зал входит первый герой (проверку проходит весь отряд), скрытая ловушка на клетке — когда на неё наступают. Скрытую ловушку рядом иногда удаётся заметить заранее и обойти.</li><li>ОД = скорость + 2. Скорость — бросок d4 в начале хода: столько клеток можно пройти. Ещё 1 <b>атака</b> (бой с монстром) и 1 <b>действие</b>: открыть дверь в неоткрытый зал, обезвредить ловушку, поднять соратника без сил, сменить оружие или передать вещь соратнику рядом (в инвентаре), купить у грибного торговца. В уже открытый зал (и в только что открытый) проходишь за обычные шаги. Когда герой подходит к двери, ловушке, торговцу или павшему соратнику, всплывает вопрос «Да / Нет». Когда делать больше нечего, ход переходит сам; иначе нажми «Завершить ход».</li><li>В «Спуске» и в игре по сети у каждого свой герой: занятый портрет выбрать нельзя.</li></ul>`;
 const PRIVACY=`<div class="scrolls" style="font-size:14px">
 <p style="margin:0 0 8px">Редакция от 25 октября 2026 года.</p>
 <p><b>Мы не собираем личные данные.</b> Регистрация не нужна, игра не просит имя, телефон или почту и не получает доступ к контактам, фото, камере, микрофону и местоположению. Данные игроков не продаются и не передаются рекламодателям.</p>
