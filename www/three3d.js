@@ -618,7 +618,7 @@ const monBaseMat=new THREE.MeshStandardMaterial({color:0x140a12,metalness:.5,rou
 const monRimGeo=new THREE.TorusGeometry(.275,.014,6,32);monRimGeo._shared=true;
 const bossRimMat=new THREE.MeshBasicMaterial({color:0xffc94a,toneMapped:false});
 // модели боссов: пока — увеличенные модели обычных монстров; когда будут свои, достаточно поменять ключ (models/<ключ>.json/.jpg)
-const BOSS3=[['mon_rat',.95],['mon_skeleton',1.05],['mon_spider',1.05],['mon_imp',1.0],['mon_minotaur',1.15]];
+const BOSS3=[['mon_troll',1.1],['mon_rat',.95],['mon_skeleton',1.05],['mon_spider',1.05],['mon_imp',1.0],['mon_minotaur',1.15]];
 const monRimMat=new THREE.MeshBasicMaterial({color:0xe0523a,toneMapped:false});
 const coinGeo=new THREE.CylinderGeometry(.045,.045,.012,10);coinGeo._shared=true;
 const coinMat=new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:.75,roughness:.3,emissive:0x3a2600});
@@ -849,53 +849,67 @@ function makePoly(kind){const look=DICE_LOOK[kind],src=kind==='d4'?new THREE.Tet
   return {grp,faces};}
 
 // --- 3D-кубики броска: d4 в окне хода и d20 в проверках — вместо плоских картинок
-const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},cur=null,host=null,st={mode:'idle',t0:0,q0:new THREE.Quaternion(),qT:new THREE.Quaternion(),w:new THREE.Vector3()};
+// Несколько кубиков сразу (у крысюка и в схватке героев их два): один общий рендерер рисует каждый кубик
+// по очереди и копирует картинку в его собственный холст. Если WebGL нет — остаются плоские 2D-кубики.
+const dice3d=(()=>{let R3=null,sc,cam3,cvs,dice={},slots=[],rs=0;
   const css=`body.three .rp-die::before,body.three .rp-die::after{display:none}body.three .rp-die>b,body.three .rp-die>small{visibility:hidden}
     body.three .rp-die.rolling,body.three .rollcard.ready .rp-die,body.three .rollpop.done .rp-die{animation:none}
     body.three .die.d3{background:none!important;color:transparent!important;text-shadow:none!important;position:relative;animation:none!important}
     .dice3d{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:2}`;
   function init(){if(R3)return true;try{const s2=document.createElement('style');s2.textContent=css;document.head.appendChild(s2);
-      cvs=document.createElement('canvas');cvs.className='dice3d';
-      R3=new THREE.WebGLRenderer({canvas:cvs,alpha:true,antialias:true});R3.setPixelRatio(Math.min(devicePixelRatio,2));R3.outputEncoding=THREE.sRGBEncoding;
+      cvs=document.createElement('canvas');
+      R3=new THREE.WebGLRenderer({canvas:cvs,alpha:true,antialias:true});R3.setPixelRatio(1);R3.outputEncoding=THREE.sRGBEncoding;
       sc=new THREE.Scene();cam3=new THREE.PerspectiveCamera(30,1,.1,20);cam3.position.set(0,.55,4.6);cam3.lookAt(0,0,0);
       sc.add(new THREE.HemisphereLight(0xfff0d0,0x301018,1.05));const dl=new THREE.DirectionalLight(0xffffff,1.2);dl.position.set(2,4,4);sc.add(dl);
       ['d4','d20'].forEach(k=>{const d=makePoly(k);d.grp.visible=false;sc.add(d.grp);dice[k]=d;});return true;}catch(e){R3=null;return false;}}
-  const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.12,0,0));
-  function roll(kind,val){const d=dice[kind];st.mode='tumble';st.t0=performance.now();st.val=val;
-    st.w.set(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(16+Math.random()*6);
-    if(val>=1&&val<=d.faces.length)st.qT.copy(tilt).multiply(d.faces[val-1]);}
-  function settle(kind,val){const d=dice[kind];if(!(val>=1&&val<=d.faces.length))return;st.qT.copy(tilt).multiply(d.faces[val-1]);st.q0.copy(d.grp.quaternion);st.mode='settle';st.t0=performance.now();}
-  // какое поле с кубиком сейчас на экране
-  function findHost(){const pop=document.getElementById('rollpop');
-    if(pop&&!pop.hidden){const el=document.getElementById('rpDie');if(el&&el.offsetParent)return {el,kind:'d4',size:90,dist:4.5};}
-    for(const el of document.querySelectorAll('.die'))if(el.offsetParent&&el.getBoundingClientRect().width>0)return {el,kind:'d20',size:80,dist:4.9};
-    return null;}
-  let lastD4='?',d4Rolling=false;
+  const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.12,0,0)),eul=new THREE.Euler(),qa=new THREE.Quaternion(),va=new THREE.Vector3();
+  function mkSlot(h){const c=document.createElement('canvas');c.className='dice3d';const px=Math.round(h.size*Math.min(devicePixelRatio||1,2));
+    c.width=c.height=px;c.style.width=c.style.height=h.size+'px';
+    const s={el:h.el,kind:h.kind,dist:h.dist,px,cvs:c,ctx:c.getContext('2d'),q:new THREE.Quaternion(),y:0,k:1,mode:'idle',t0:0,
+      q0:new THREE.Quaternion(),qT:new THREE.Quaternion(),w:new THREE.Vector3(),val:0,d4Rolling:false,ph:slots.length*1.7};
+    if(h.kind==='d20')h.el.classList.add('d3');h.el.appendChild(c);return s;}
+  function roll(s,val){const d=dice[s.kind];s.mode='tumble';s.t0=performance.now();s.val=val;
+    s.w.set(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(16+Math.random()*6);
+    if(val>=1&&val<=d.faces.length)s.qT.copy(tilt).multiply(d.faces[val-1]);}
+  function settle(s,val){const d=dice[s.kind];if(!(val>=1&&val<=d.faces.length))return;s.qT.copy(tilt).multiply(d.faces[val-1]);s.q0.copy(s.q);s.mode='settle';s.t0=performance.now();}
+  // какие поля с кубиками сейчас на экране (окно хода — d4; проверки, бой, кости с крысюком — d20)
+  function findHosts(){const out=[],pop=document.getElementById('rollpop');
+    if(pop&&!pop.hidden){const el=document.getElementById('rpDie');if(el&&el.offsetParent)out.push({el,kind:'d4',size:90,dist:4.5});}
+    for(const el of document.querySelectorAll('.die')){if(out.length>=4)break;if(el.offsetParent&&el.getBoundingClientRect().width>0)out.push({el,kind:'d20',size:80,dist:4.9});}
+    return out;}
+  function step(s,now){const t=now/1000;
+    if(s.kind==='d4'){const rl=s.el.classList.contains('rolling'),v=parseInt((document.getElementById('rpVal')||{}).textContent);
+      if(rl&&!s.d4Rolling)roll(s);if(!rl&&s.d4Rolling&&v>=1)settle(s,v);
+      if(!rl&&!(v>=1)&&s.mode!=='idle')s.mode='idle';s.d4Rolling=rl;}
+    if(s.mode==='idle'){eul.set(.5+Math.sin(t*.9+s.ph)*.15,t*.9+s.ph,.2);s.q.setFromEuler(eul);s.y=Math.sin(t*2.2+s.ph)*.05;s.k=1;}
+    else if(s.mode==='tumble'){const ang=s.w.length()/60;if(ang>0){qa.setFromAxisAngle(va.copy(s.w).normalize(),ang);s.q.premultiply(qa);}
+      s.w.multiplyScalar(.985);s.y=Math.abs(Math.sin((now-s.t0)/90))*.18;
+      if(s.kind==='d20'&&now-s.t0>520)settle(s,s.val);}
+    else if(s.mode==='settle'){const k=Math.min(1,(now-s.t0)/300),e=1-Math.pow(1-k,3);THREE.Quaternion.slerp(s.q0,s.qT,s.q,e);
+      s.y=(1-e)*.12;s.k=1+Math.sin(k*Math.PI)*.12;if(k>=1)s.mode='still';}}
+  function draw(s){const d=dice[s.kind].grp;Object.keys(dice).forEach(k=>dice[k].grp.visible=k===s.kind);
+    d.quaternion.copy(s.q);d.position.y=s.y;d.scale.setScalar(s.k);
+    if(rs!==s.px){R3.setSize(s.px,s.px,false);rs=s.px;}
+    cam3.position.set(0,s.dist*.12,s.dist);cam3.lookAt(0,0,0);R3.render(sc,cam3);
+    s.ctx.clearRect(0,0,s.px,s.px);s.ctx.drawImage(cvs,0,0,s.px,s.px);}
   function tick(){requestAnimationFrame(tick);if(!R3)return;
-    const h=findHost();
-    if(!h){if(host){if(host.el)host.el.classList.remove('d3');cvs.remove();host=null;}return;}
-    if(host&&host.el===h.el&&cvs.parentNode!==h.el)h.el.appendChild(cvs);   // игра переписала текст кубика — холст вернуть
-    if(!host||host.el!==h.el){if(host&&host.el)host.el.classList.remove('d3');if(h.kind==='d20')h.el.classList.add('d3');h.el.appendChild(cvs);host=h;cur=h.kind;Object.keys(dice).forEach(k=>dice[k].grp.visible=k===cur);
-      cvs.style.width=cvs.style.height=h.size+'px';R3.setSize(h.size,h.size,false);cam3.position.set(0,h.dist*.12,h.dist);cam3.lookAt(0,0,0);st.mode='idle';
-      if(cur==='d20'){const v=parseInt(h.el.textContent);if(v>=1)settle('d20',v);}else{lastD4='?';d4Rolling=false;}}
-    const d=dice[cur].grp,now=performance.now(),t=now/1000;
-    // d4: крутится, пока в игре идёт бросок; останавливается на выпавшем числе
-    if(cur==='d4'){const rl=h.el.classList.contains('rolling'),v=parseInt(document.getElementById('rpVal').textContent);
-      if(rl&&!d4Rolling){roll('d4');}if(!rl&&d4Rolling&&v>=1)settle('d4',v);
-      if(!rl&&!(v>=1)&&st.mode!=='idle')st.mode='idle';d4Rolling=rl;}
-    if(st.mode==='idle'){d.rotation.set(.5+Math.sin(t*.9)*.15,t*.9,.2);d.position.y=Math.sin(t*2.2)*.05;}
-    else if(st.mode==='tumble'){const dt=1/60,ang=st.w.length()*dt;if(ang>0){const q=new THREE.Quaternion().setFromAxisAngle(st.w.clone().normalize(),ang);d.quaternion.premultiply(q);}
-      st.w.multiplyScalar(.985);d.position.y=Math.abs(Math.sin((now-st.t0)/90))*.18;
-      if(cur==='d20'&&now-st.t0>320)settle('d20',st.val);}
-    else if(st.mode==='settle'){const k=Math.min(1,(now-st.t0)/260),e=1-Math.pow(1-k,3);THREE.Quaternion.slerp(st.q0,st.qT,d.quaternion,e);
-      d.position.y=(1-e)*.12;d.scale.setScalar(1+Math.sin(k*Math.PI)*.12);if(k>=1)st.mode='still';}
-    R3.render(sc,cam3);}
+    const hs=findHosts();
+    slots=slots.filter(s=>{if(hs.some(h=>h.el===s.el&&h.kind===s.kind))return true;s.el.classList.remove('d3');s.cvs.remove();return false;});
+    if(!hs.length)return;
+    const now=performance.now();
+    for(const h of hs){let s=slots.find(x=>x.el===h.el);
+      if(!s){s=mkSlot(h);slots.push(s);
+        if(s.kind==='d20'){const v=parseInt(h.el.textContent);
+          // кубик только что появился уже с результатом (окно итогов): с анимацией броска, если он «крутится»
+          if(v>=1){if(h.el.classList.contains('spin')&&!h.el.__r3){h.el.__r3=1;roll(s,v);}else settle(s,v);}}}
+      else if(s.cvs.parentNode!==h.el)h.el.appendChild(s.cvs);   // игра переписала текст кубика — холст вернуть
+      step(s,now);draw(s);}}
   // d20: игра добавляет класс spin и сразу пишет выпавшее число — ловим это
   new MutationObserver(ms=>{for(const m of ms){const el=m.target;if(el.classList&&el.classList.contains('die')&&el.classList.contains('spin')&&init()){
-      const v=parseInt(el.textContent);if(host&&host.el===el&&v>=1)roll('d20',v);else el.__pend=v;}}})
+      const v=parseInt(el.textContent),s=slots.find(x=>x.el===el);el.__r3=1;if(s&&v>=1)roll(s,v);}}})
     .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   if(init())requestAnimationFrame(tick);
-  return {roll};})();
+  return {roll:(kind,v)=>{const s=slots.find(x=>x.kind===kind);if(s)roll(s,v);},slots:()=>slots.map(s=>({kind:s.kind,mode:s.mode,val:s.val,el:s.el}))};})();
 // --- экран загрузки: вращающийся золотой d20 и полоска
 const loader=(()=>{let el=null,r2=null,sc2,cam2,die,raf=0,total=1;
   const css=`#ld3d{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
@@ -957,7 +971,7 @@ function fireFx(now,dt,aw){
 // --- фишки героев: подставка в цвет игрока, портрет, факел в руке
 const tokens=new Map();
 // для автотестов: сколько фишек героев сейчас на сцене
-window.dbg3d={heroes:()=>[...tokens.values()].filter(T=>SC.children.includes(T.g)).length,tokens:()=>tokens.size,groups:()=>[...tokens.values()].map(T=>T.g),inScene:g=>SC.children.includes(g)};
+window.dbg3d={dice:()=>dice3d.slots(),heroes:()=>[...tokens.values()].filter(T=>SC.children.includes(T.g)).length,tokens:()=>tokens.size,groups:()=>[...tokens.values()].map(T=>T.g),inScene:g=>SC.children.includes(g)};
 function heroToken(p){
   const g=new THREE.Group(),colr=new THREE.Color(pcol(p));
   const base=new THREE.Mesh(new THREE.CylinderGeometry(.28,.32,.09,24),new THREE.MeshStandardMaterial({color:0x1b1f2e,metalness:.6,roughness:.4}));base.position.y=.05;base.castShadow=true;g.add(base);

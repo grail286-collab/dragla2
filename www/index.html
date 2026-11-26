@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-visual">
 <title>Логово дракона 3D</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
@@ -375,6 +375,9 @@ body.cpu-turn .rollcard{cursor:default}
 .camp .cm .st{flex:none;margin-left:auto;color:var(--gold);letter-spacing:1px;font-size:15px}.camp .cm .st i{font-style:normal;opacity:.25}
 .camp .cm.lock{opacity:.5}.camp .cm.lock .no{border-color:var(--muted);color:var(--muted)}
 .camp .cm.next{box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(236,198,106,.35)}
+.camp .cm.les.done .no{border-color:var(--good,#7fd07a);color:var(--good,#7fd07a)}.camp .cm .st em{font-style:normal;font-size:12px;letter-spacing:0;padding:2px 7px;border-radius:9px;border:1px solid var(--gold)}.camp .cm .st em.ok{border-color:var(--good,#7fd07a);color:var(--good,#7fd07a)}
+.lsteps{margin:0;padding-left:20px}.lsteps li{margin:3px 0}
+.lesdots{display:flex;justify-content:center;gap:6px;margin-top:12px}.lesdots i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;border:1.5px solid var(--muted);color:var(--muted)}.lesdots i.ok{border-color:var(--good,#7fd07a);color:var(--good,#7fd07a)}
 .camptot{margin-top:10px;text-align:center;color:var(--muted);font-size:13px}.camptot b{color:var(--gold)}
 .brief p{margin:0 0 10px}.brief .goal{border:1px solid var(--gold);border-radius:10px;padding:8px 12px;margin:4px 0 10px;background:rgba(236,198,106,.08)}
 .brief .goal b{color:var(--gold)}.brief .goal small{display:block;opacity:.8;margin-top:2px}
@@ -570,6 +573,27 @@ body.cpu-turn .rollcard{cursor:default}
 .hexes.many{gap:3px}.hexes.rows{flex-wrap:wrap;row-gap:1px;align-content:center}
 .hexes.many .hex .n{font-size:9px;line-height:11px;padding:0 3px}
 body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{display:none!important}
+.chatbtn,.chatfab{position:relative}.chatbtn .n,.chatfab .n{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--fire);color:#fff;font:800 11px/17px var(--body);padding:0 4px}
+.chatbtn .n:empty,.chatfab .n:empty{display:none}
+.chatfab{position:fixed;z-index:25;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);width:46px;height:46px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;font-size:20px}
+.chat{position:fixed;z-index:27;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px;left:8px;margin-left:auto;max-width:420px;height:min(360px,55vh);display:flex;flex-direction:column;
+  background:rgba(6,14,32,.96);border:1px solid var(--gold);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);overflow:hidden}
+.chathead{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid rgba(236,198,106,.25)}
+.chathead b{font:400 18px var(--display);color:var(--gold)}.chathead small{flex:1;min-width:0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chatx{width:34px;height:34px;min-height:0;padding:0;border-radius:50%;flex:none}
+.chatlog{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.chatlog .empty{color:var(--muted);font-size:13px;text-align:center;margin:auto 0}
+.cmsg{display:flex;gap:7px;align-items:flex-start;max-width:92%}.cmsg img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;border:1px solid var(--gold)}
+.cmsg .cb{background:rgba(255,255,255,.07);border-radius:10px;padding:4px 9px;min-width:0}.cmsg .cb b{display:block;font-size:12px}
+.cmsg .cb span{font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+.cmsg.me{align-self:flex-end;flex-direction:row-reverse}.cmsg.me .cb{background:rgba(236,198,106,.16)}
+.cmsg.sys{align-self:center;color:var(--muted);font-size:12px;font-style:italic}
+.chatform{display:flex;gap:6px;align-items:center;padding:7px;border-top:1px solid rgba(236,198,106,.25)}
+.chatform input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border-radius:8px}
+.chatform button{min-height:0;width:42px;height:40px;padding:0;flex:none}
+.chatcnt{font-size:11px;color:var(--muted);min-width:0}.chatcnt:empty{display:none}
+.chatpeek{position:fixed;z-index:26;right:10px;top:calc(env(safe-area-inset-top,0px) + 62px);max-width:min(300px,75vw);padding:7px 11px;border-radius:10px;background:rgba(6,14,32,.94);
+  border:1px solid var(--gold);font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5);overflow-wrap:anywhere}.chatpeek b{color:var(--gold);margin-right:5px}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:30;max-width:92vw;padding:8px 14px;border-radius:6px;background:rgba(6,14,32,.94);border:1px solid var(--frame);color:var(--ink);font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.5);pointer-events:none}
 .hedge{position:fixed;left:0;top:0;width:0;height:0;z-index:8;pointer-events:none}
 .hedge button{position:fixed;width:42px;height:42px;margin:-21px 0 0 -21px;padding:0;border-radius:50%;border:2px solid var(--hc);background:#050308;
@@ -619,8 +643,12 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   var img=el.querySelector('img'),rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   var IN=800,HOLD=1200,OUT=800,FADE=500,ts=[],done=false,started=false;
   function later(f,ms){ts.push(setTimeout(f,ms));}
-  function finish(){if(done)return;done=true;ts.forEach(clearTimeout);el.classList.add('out','gone');
-    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);window.SPLASH_DONE=true;try{window.dispatchEvent(new Event('splashdone'));}catch(e){}},rm?0:FADE);}
+  function kill(){if(el.parentNode)el.parentNode.removeChild(el);window.SPLASH_DONE=true;
+    try{window.dispatchEvent(new Event('splashdone'));}catch(e){}
+    // после заставки на экране обязательно должно быть меню (или идущая партия) — проверяем сейчас и ещё пару раз
+    [0,800,2500,6000].forEach(function(ms){setTimeout(function(){try{if(window.ensureMenu)window.ensureMenu();}catch(e){}},ms);});}
+  function finish(){if(done)return;done=true;ts.forEach(clearTimeout);el.classList.add('out');el.classList.add('gone');
+    setTimeout(kill,rm?0:FADE);setTimeout(kill,rm?50:FADE+1500);}   // второй вызов — на случай, если первый таймер «уснул»
   function run(){if(started||done)return;started=true;
     if(rm){img.style.opacity=1;later(finish,1200);return;}
     // отсчёт — от реального начала появления (первый кадр): пока под заставкой стартует игра, кадры могут задерживаться
@@ -630,6 +658,7 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
     later(finish,6000);}   // страховка: заставка не дольше 6 с
   // старт, когда логотип готов (он маленький), но не позже чем через 1 с
   if(img.complete&&img.naturalWidth)run();else{img.onload=run;img.onerror=finish;setTimeout(run,1000);}
+  setTimeout(finish,7000);   // общая страховка: заставка не может остаться на экране
   // пропуск по тапу; событие не гасим — разблокировка звука в игре работает как обычно
   el.addEventListener('click',finish);
   window.skipSplash=finish;
@@ -676,6 +705,7 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
       </div>
       <div class="tools">
         <button class="round scrollbtn invbtn" id="bScroll" title="Инвентарь" aria-label="Инвентарь"><span class="invico" aria-hidden="true">🎒</span><b class="n" id="nScroll"></b></button>
+        <button class="round chatbtn" id="bChat" title="Чат" aria-label="Чат" hidden><span aria-hidden="true">💬</span><b class="n" id="nChat"></b></button>
         <button class="round" id="bZoom" title="Масштаб" aria-label="Масштаб">⊕</button>
         <button class="round" id="bMenu" title="Меню" aria-label="Меню">☰</button>
       </div>
@@ -712,6 +742,13 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 <div class="coach" id="coach" hidden role="status"><div class="ci">?</div><div class="cb"><p id="coachText"></p>
   <div class="cr"><button type="button" class="primary" id="coachOk">Понятно</button><button type="button" class="off" id="coachOff">Выключить подсказки</button></div></div></div>
 <div class="toast" id="toast" hidden></div>
+<button type="button" class="chatfab" id="chatFab" hidden aria-label="Чат комнаты"><span aria-hidden="true">💬</span><b class="n" id="nChatFab"></b></button>
+<div class="chatpeek" id="chatPeek" hidden role="status"></div>
+<div class="chat" id="chat" hidden role="dialog" aria-label="Чат">
+  <div class="chathead"><b>Чат</b><small id="chatSub"></small><button type="button" class="chatx" id="chatX" aria-label="Закрыть чат">✕</button></div>
+  <div class="chatlog" id="chatLog" aria-live="polite"></div>
+  <form class="chatform" id="chatForm" autocomplete="off"><input id="chatIn" maxlength="200" enterkeyhint="send" autocomplete="off" placeholder="Сообщение…" aria-label="Сообщение"><span class="chatcnt" id="chatCnt"></span><button type="submit" class="primary" aria-label="Отправить">➤</button></form>
+</div>
 <div class="rollhint" id="rollhint" hidden>Тапните по кубику</div>
 <div class="rollpop" id="rollpop" hidden>
   <div class="rpwrap">
@@ -813,7 +850,7 @@ function reveal(r,c,mode,from){
   const x=cell(r,c);
   if(x.rev)return;
   x.rev=true;
-  if(!onEdge(r,c)&&RNG()<0.33){x.ev=pickW(S.evW||EVENTS);if(x.ev==='monster'&&SEE())x.mon=pickMon(r,c);}
+  if(!onEdge(r,c)&&RNG()<(S.evP??0.33)&&(S.evW||EVENTS).length){x.ev=pickW(S.evW||EVENTS);if(x.ev==='monster'&&SEE())x.mon=pickMon(r,c);}
   if(x.stairs){x.ev=null;x.mon=null;}
   const all=Object.keys(D).filter(k=>walkable(r+D[k][0],c+D[k][1]));
   const jump=jumpDir(r,c);
@@ -1028,10 +1065,11 @@ const MODES=[['cpu','Против ИИ','1 игрок'],['hot','На одном'
 async function askNames(){
   playMusic('intro');
   for(;;){
-    const m=campJump?'camp':await mainMenu(arenaPartyJump?'party':arenaJump?'arena':'');campJump=false;arenaJump=false;arenaPartyJump=false;
+    const m=campJump?'camp':lessonJump?'lessons':await mainMenu(arenaPartyJump?'party':arenaJump?'arena':'');campJump=false;lessonJump=false;arenaJump=false;arenaPartyJump=false;
     if(m==='resume')return{mode:'resume'};
     if(m==='train')return{mode:'train'};
     if(m==='camp'){const id=await campaignMenu();if(id)return{mode:'mission',id};continue;}
+    if(m==='lessons'){const id=await lessonMenu();if(id)return{mode:'lesson',id};continue;}
     const cfg=await setupGame(m,m==='descent'?null:arenaRules);
     if(cfg)return cfg;
     if(m!=='descent'){arenaJump=true;arenaPartyJump=true;}   // «← Назад» из настройки — к выбору типа партии (правила уже выбраны)
@@ -1144,14 +1182,14 @@ function mainMenu(startSub){
         `<div class="mmhead"><b>Тип партии</b><span class="mmrule">${partyRule.t}</span><small class="mmruled">${partyRule.d}</small></div>`+
         MODES.map(([k,t,d])=>`<button type="button" class="${k==='cpu'?'primary':''}" data-m="${k}"><i>${ico[k]}</i><span><b>${k==='hot'?'На одном устройстве':t}</b><small>${desc[k]}</small></span></button>`).join('')+
         `<button type="button" class="mmback" data-m="torules">← Назад</button>`:
-        (st&&sub!=='play'?`<button type="button" class="primary mmres" data-m="resume"><b>${st.mission?'Продолжить миссию':'Продолжить экспедицию'}</b><small>${st.mission?esc(missionById(st.mission)?.t||''):st.players.map(p=>esc(p.name)).join(', ')}</small></button>`:'')+
+        (st&&sub!=='play'?`<button type="button" class="primary mmres" data-m="resume"><b>${st.mission?(/^L\d/.test(st.mission)?'Продолжить урок':'Продолжить миссию'):'Продолжить экспедицию'}</b><small>${st.mission?esc(missionById(st.mission)?.t||''):st.players.map(p=>esc(p.name)).join(', ')}</small></button>`:'')+
         (sub==='play'?
           `<div class="mmhead"><b>Играть</b><small>Выбери, куда отправится отряд</small></div>`+
           `<button type="button" class="mmtut primary" data-m="camp"><i>♜</i><span><b>Приключение</b><small>Акт I · Тайный вход · ★ ${cs} из ${cTot}</small></span>${camp.seen?'':'<em>Новое</em>'}</button>`+
-          `<button type="button" class="mmtut" data-m="descent"><i>⇣</i><span><b>Спуск</b><small>Вместе: 1–4 героя ищут путь вглубь</small></span><em>Новое</em></button>`+
+          `<button type="button" class="mmtut" data-m="descent"><i>⇣</i><span><b>Спуск</b><small>Вместе: 1–4 героя ищут путь вглубь</small></span><em>BETA</em></button>`+
           `<button type="button" data-m="arena"><i>⚔</i><span><b>Арена дракона</b><small>Против ИИ, вдвоём или по сети</small></span></button>`+
           `<button type="button" class="mmback" data-m="back">← Назад</button>`:
-        `<button type="button" class="mmtut" data-m="tutor"><i>✦</i><span><b>Обучение</b><small>Как играть — за 2 минуты</small></span>${fresh?'<em>Новичку</em>':''}</button>`+
+        `<button type="button" class="mmtut" data-m="tutor"><i>✦</i><span><b>Обучение</b><small>${lesDoneN()?`Уроки: пройдено ${lesDoneN()} из ${LESSONS.length}`:`${LESSONS.length} уроков — от простого к сложному`}</small></span>${fresh?'<em>Новичку</em>':''}</button>`+
         `<button type="button" class="${!st?'primary':''}" data-m="play"><i>⚔</i><span><b>Играть</b><small>Приключение, Спуск или Арена дракона</small></span></button>`);
       // правила, громкость, сообщество и выход — только на самом первом экране меню; в подменю их нет
       const top=sub==='';
@@ -1172,10 +1210,7 @@ function mainMenu(startSub){
         if(b.dataset.m==='torules'){sub='arena';paint();return;}
         if(b.dataset.m==='rule'){arenaRules=b.dataset.rules;sub='party';paint();return;}
         if(b.dataset.m==='back'){sub='';paint();return;}
-        if(b.dataset.m==='tutor'){
-          const r=await tutorial('menu');
-          if(r==='train'){el.hidden=true;el.onclick=null;res('train');return;}
-          paint();return;}
+        if(b.dataset.m==='tutor'){el.hidden=true;el.onclick=null;res('lessons');return;}   // обучение — экран уроков
         if(b.dataset.m==='resume'){el.hidden=true;el.onclick=null;res('resume');return;}
         el.hidden=true;el.onclick=null;res(b.dataset.m);return;}
       const a=b.dataset.a;
@@ -1238,6 +1273,7 @@ async function newGame(){
   if(cfg.mode==='resume'){resumeSave();return;}
   if(cfg.mode==='train'){startTraining();return;}
   if(cfg.mode==='mission'){startMission(cfg.id);return;}
+  if(cfg.mode==='lesson'){startLesson(cfg.id);return;}
   if(cfg.mode==='net'){
     const st=await netLobby(cfg);
     if(!st){if(cfg.rules!=='descent'){arenaJump=true;arenaPartyJump=true;if(cfg.rules&&RULES_SET[cfg.rules])arenaRules=cfg.rules;}newGame();return;}
@@ -1315,14 +1351,14 @@ function tutorial(ctx){
     tutorOn=()=>close(null);
     const show=()=>{
       const s=TUT[i];
-      $('tStep').textContent=`Урок ${i+1} из ${TUT.length}`;$('tBar').style.width=(i+1)/TUT.length*100+'%';
+      $('tStep').textContent=`Шаг ${i+1} из ${TUT.length}`;$('tBar').style.width=(i+1)/TUT.length*100+'%';
       $('tSlide').className='tslide'+(dir<0?' back':'');void $('tSlide').offsetWidth;
       const hint={1:'Нажми на кубик',2:'Нажми на клетку в рамке',4:'Нажми на d20'}[i]||'';
       $('tSlide').innerHTML=`<div class="tvis">${s.v}</div><div class="tkick">${s.k}</div><h2 class="ttitle">${s.t}</h2><div class="ttext">${s.p}</div>${hint?`<div class="thint">${hint}</div>`:''}`;
       // последний урок: вместо «Дальше» — что делать после обучения
       $('tNav').hidden=!!s.end;$('tEnd').hidden=!s.end;
       $('tEnd').innerHTML=!s.end?'':ctx==='menu'?`<button type="button" class="primary" data-e="train">Тренировочная партия</button><div class="row"><button type="button" class="tprev" data-e="prev">← Назад</button><button type="button" data-e="menu">В главное меню</button></div>`
-        :`<div class="row"><button type="button" class="tprev" data-e="prev">← Назад</button><button type="button" class="primary" data-e="menu">Вернуться к игре</button></div>`;
+        :`<div class="row"><button type="button" class="tprev" data-e="prev">← Назад</button><button type="button" class="primary" data-e="menu">${ctx==='lessons'?'К урокам':'Вернуться к игре'}</button></div>`;
       $('tSlide').scrollTop=0;
       // для урока с плитками героя ставим после раскладки
       if(s.init)requestAnimationFrame(()=>s.init($('tSlide')));
@@ -1348,6 +1384,145 @@ function startTraining(){
   tipsSeen=new Set();tipsOn=true;saveTips();
   const cp=portrait===6?1:6;
   startGame([{seat:0,name,portrait},{seat:2,name:cpuNames([cp])[0],cpu:true,portrait:cp}],'small',{rules:'free'});
+}
+/* ---------- обучение: уроки-партии ----------
+   Семь коротких партий от простого к сложному. Каждая — обычная игра со своей целью (как миссия приключения),
+   подсказками по ходу и экраном «Урок пройден». Прогресс — на устройстве; открыты все уроки сразу. */
+const LES_KEY='dragon-lessons';
+let lessonJump=false;   // после урока «К урокам» — сразу на экран уроков, минуя главное меню
+const lesLoad=()=>{try{const v=JSON.parse(localStorage.getItem(LES_KEY)||'null');if(v&&typeof v==='object'&&v.done)return v;}catch(e){}return{done:{}};};
+const lesSave=v=>{try{localStorage.setItem(LES_KEY,JSON.stringify(v));}catch(e){}};
+const lesDoneN=()=>{const v=lesLoad();return LESSONS.filter(l=>v.done[l.id]).length;};
+const revN=()=>{let n=0;for(const row of S.cells)for(const x of row)if(x.rev)n++;return n;};
+const LES_ITEMS=['potion','haste','amulet','sword','scroll','map','shield','rope','bomb'];
+const lesItems=()=>LES_ITEMS.reduce((t,k)=>t+((S.evN||{})[k]||0),0);
+const lesOpened=()=>Math.max(0,revN()-(S.les0||0));
+const toLair=p=>p.mode==='out'?'иди к логову в центре':p.mode==='room'?'выбирайся из логова':`до края ${edgeDist(p.r,p.c)} ${plural(edgeDist(p.r,p.c),'клетка','клетки','клеток')}`;
+const LESSONS=[
+  {id:'L1',lesson:1,t:'Первые шаги',img:'img/story-corridor.jpg',goal:'Открой 6 новых плиток',learn:'Кубик d4 и ходьба по плиткам',
+    story:'Учебное подземелье: ни монстров, ни ловушек — только тёмные коридоры. Освойся с кубиком и ходьбой.',
+    steps:['Нажми на кубик <b>d4</b> — выпадет число шагов.','Нажимай на клетки в <b>золотой рамке</b> — герой идёт туда.','Каждая новая плитка открывает выходы-стрелки.'],
+    evP:0,ev:[],setup:()=>{S.les0=revN();},
+    check:()=>lesOpened()>=6?{win:true}:null,
+    stars:[{t:'Открой 6 новых плиток',prog:()=>`открыто ${Math.min(6,lesOpened())} из 6`}],
+    chip:()=>` · плиток ${Math.min(6,lesOpened())}/6`,
+    hints:[['l1roll','Твой ход начинается с броска. Нажми на <b>кубик d4</b> — выпавшее число покажет, сколько шагов сделает герой.',(p,ph)=>ph==='roll','roll'],
+      ['l1move','Клетки в <b>золотой рамке</b> — куда можно шагнуть. Нажми на одну — герой пойдёт. Шагов столько, сколько выпало на d4.',(p,ph)=>ph==='move'],
+      ['l1arrows','Стрелки на плитке — её <b>выходы</b>. В открытую плитку можно войти, только если у неё есть выход в твою сторону. ↩ — шаг назад по своему следу.',(p,ph)=>ph==='move'&&lesOpened()>=2]],
+    done:'Ты умеешь бросать d4 и ходить по плиткам. Дальше — находки!'},
+  {id:'L2',lesson:2,t:'Золото и сундуки',img:'img/item-chest.jpg',goal:'Собери 80 золотых',learn:'Находки: кошели и сундуки',
+    story:'В этих коридорах путники теряли кошели, а кто-то оставил сундуки. Монстров по-прежнему нет.',
+    steps:['Находки прячутся в новых плитках — открывай их больше.','Кошель — 15–40 золотых, сундук — 50–90.','Золото копится в мешке: счётчик на карточке героя вверху.'],
+    evP:.55,ev:[['gold',3],['chest',2]],
+    check:p=>p.gold>=80?{win:true}:null,
+    stars:[{t:'Собери 80 золотых',prog:(S,p)=>`в мешке ${p.gold} из 80`}],
+    chip:(S,p)=>` · ${p.gold}/80 зол.`,
+    hints:[['l2find','Находки прячутся в <b>новых плитках</b>. Открывай больше плиток — чаще попадутся кошели и сундуки.',(p,ph)=>ph==='roll','roll'],
+      ['l2bag','Золото в мешке! Сколько его — видно на <b>карточке героя</b> вверху. Нажми на карточку, чтобы открыть лист героя.',p=>p.gold>0]],
+    done:'Золото найдено. В настоящей игре побеждает тот, кто вынесет из подземелья больше всех.'},
+  {id:'L3',lesson:3,t:'Ловушка',img:'img/trap-spikes.jpg',goal:'Пройди через ловушку',learn:'Ловушки и проверка d20',
+    story:'Плиты в этом коридоре подозрительно шатаются. Где-то спрятана ловушка — найди её и останься в живых.',
+    steps:['Наступил на ловушку — бросай <b>d20</b>.','Выпало не меньше сложности — увернулся.','Провал — потеряешь ♥ (или пропустишь ход).'],
+    evP:.5,ev:[['trap',4],['gold',1]],trap:1,
+    check:p=>(S.evN||{}).trap&&alive(p)?{win:true}:null,
+    stars:[{t:'Пройди через ловушку',prog:()=>'ищи ловушку в новых плитках'}],
+    hints:[['l3look','Ловушки прячутся в <b>новых плитках</b>. Ищи — и будь готов бросить d20.',(p,ph)=>ph==='roll','roll']],
+    done:'Ловушка позади. Проверка d20: выпало не меньше сложности — успех. Амулет удачи ☘ прибавляет +3.'},
+  {id:'L4',lesson:4,t:'Первый бой',img:'img/mon-rat.jpg',goal:'Победи монстра',learn:'Бой с монстром, меч и сердца',
+    story:'В коридорах шуршит гигантская крыса. У тебя старый меч и зелье — самое время для первого боя.',
+    steps:['Монстр прячется в новой плитке.','Бой — бросок <b>d20</b> против сложности монстра. Меч † даёт +2.','Победа — трофей-золото. Поражение — −1 ♥, но можно искать снова.'],
+    evP:.5,ev:[['monster',4],['gold',1]],mon:0,setup:p=>{p.sword=true;p.potions=1;},
+    check:()=>S.kills>0?{win:true}:null,
+    stars:[{t:'Победи монстра',prog:()=>'ищи монстра в новых плитках'}],
+    hints:[['l4look','Где-то бродит <b>гигантская крыса</b>. Бой — бросок d20 против её сложности, старый меч † прибавит +2.',(p,ph)=>ph==='roll','roll'],
+      ['l4hurt','Крыса ранила героя: −1 ♥. Сердца — на карточке вверху. Зелёная кнопка <b>✚</b> внизу вылечит. Ищи крысу снова!',p=>p.hp<maxHP(p)]],
+    done:'Первая победа! Чем ближе к логову, тем сильнее монстры. Сердца кончатся — герой выбывает вместе с золотом.'},
+  {id:'L5',lesson:5,t:'Зелья и вещи',img:'img/item-potion.jpg',goal:'Вылечись зельем и найди 2 вещи',learn:'Зелья, предметы и инвентарь',
+    story:'Ты ранен после прошлой вылазки, но в сумке есть зелье здоровья. А в коридорах разбросаны полезные вещи.',
+    steps:['Нажми зелёную кнопку <b>✚</b> — зелье вернёт 1 ♥.','Найди 2 вещи: меч, амулет, зелья, свитки, карту…','Вещи — в шестиугольниках внизу, всё снаряжение — в инвентаре 🎒.'],
+    evP:.55,ev:[['potion',1.6],['haste',1.2],['amulet',1.2],['sword',1.2],['scroll',1.4],['map',.8],['gold',1]],
+    setup:p=>{p.hp=Math.max(1,maxHP(p)-1);p.potions=1;},
+    check:()=>S.drank&&lesItems()>=2?{win:true}:null,
+    stars:[{t:'Вылечись зельем и найди 2 вещи',prog:()=>`${S.drank?'зелье ✓':'выпей зелье ✚'} · вещей ${Math.min(2,lesItems())} из 2`}],
+    chip:()=>` · ${S.drank?'✚ ✓':'✚ —'} · вещи ${Math.min(2,lesItems())}/2`,
+    hints:[['l5potion','Герой ранен. Нажми зелёную кнопку <b>✚</b> внизу — зелье вернёт 1 ♥. Пить можно в свой ход, до броска или во время шагов.',p=>!S.drank&&p.potions>0],
+      ['l5inv','Найденные вещи загораются в <b>шестиугольниках</b> внизу. Всё снаряжение — в инвентаре: нажми 🎒.',()=>lesItems()>=1]],
+    done:'Ты знаешь, как лечиться и где лежат вещи. Свитки из сумки используют до броска или во время шагов.'},
+  {id:'L6',lesson:6,t:'Логово дракона',img:'img/lair.jpg',goal:'Побывай в логове и выберись к краю',learn:'Логово, добыча и путь назад',
+    story:'Пора к главной цели. В центре подземелья спит дракон на горе золота. Доберись до логова, возьми добычу и вернись к краю карты.',
+    steps:['Логово — в центре. С верёвкой ➰ пропасть у логова не страшна.','В логове каждый поиск даёт золото, но риск разбудить дракона растёт.','С добычей дойди до <b>любой клетки на краю</b> — это выход.'],
+    evP:.25,ev:[['gold',2],['potion',1.5],['amulet',1]],setup:p=>{p.rope=true;p.ropeWorn=false;},
+    check:p=>p.mode==='home'?{win:true}:null,
+    stars:[{t:'Побывай в логове и выберись к краю',prog:(S,p)=>toLair(p)}],
+    hints:[['l6go','Логово — в <b>центре</b> карты. Иди к нему: шаги к центру открывают плитки с выходами в нужную сторону.',(p,ph)=>ph==='roll','roll'],
+      ['l6back','Добыча в мешке! Теперь дойди до <b>любой клетки на краю</b> подземелья — там выход.',p=>p.mode==='back']],
+    done:'Ты побывал в логове и вынес добычу. Помни: чем дольше ищешь в логове, тем вероятнее дракон проснётся.'},
+  {id:'L7',lesson:7,t:'Настоящая партия',img:'img/dragon-sleep.jpg',goal:'Выберись живым с добычей',learn:'Короткая партия против компьютера',
+    story:'Экзамен. Всё по-настоящему: соперник-компьютер, монстры, ловушки, находки и шкала сна дракона. Добудь золото и выберись живым.',
+    steps:['Шкала вверху — сон дракона: на 100% он проснётся.','Проснувшийся дракон выпускает пламя — беги к краю.','Цель — выбраться живым с золотом.'],
+    rules:'wake',cpu:1,
+    check:p=>p.mode==='home'?(p.gold>0?{win:true}:{win:false,why:'Ты выбрался, но без золота.'}):null,
+    stars:[{t:'Выберись живым с добычей',prog:(S,p)=>toLair(p)}],
+    hints:[['l7start','Теперь всё по-настоящему: соперник-компьютер, монстры и ловушки. Шкала вверху — <b>сон дракона</b>. Не мешкай!',(p,ph)=>ph==='roll','roll']],
+    done:'Обучение пройдено! Ты готов к Приключению, Спуску и Арене дракона.'},
+];
+const lessonById=id=>LESSONS.find(l=>l.id===id);
+const lesDots=st=>`<div class="lesdots">${LESSONS.map((l,i)=>`<i class="${st.done[l.id]?'ok':''}">${st.done[l.id]?'✓':i+1}</i>`).join('')}</div>`;
+// экран уроков: список с отметками, рекомендованный следующий подсвечен; все уроки открыты
+async function lessonMenu(){
+  for(;;){
+    const st=lesLoad(),next=LESSONS.findIndex(l=>!st.done[l.id]),n=lesDoneN();
+    const list=LESSONS.map((l,i)=>{const d=!!st.done[l.id];
+      return`<button type="button" class="cm les ${d?'done':''} ${i===next?'next':''}" data-id="${l.id}"><div class="no">${d?'✓':i+1}</div><span><b>${l.t}</b><small>${l.learn}</small></span><div class="st">${d?'<em class="ok">пройден</em>':i===next?'<em>дальше</em>':''}</div></button>`;}).join('');
+    const pick=await modal({local:true,icon:'✦',tone:'gold',title:'Обучение',sub:'Уроки от простого к сложному',
+      html:`<div class="camp">${list}</div><div class="camptot">Пройдено уроков: <b>${n}</b> из ${LESSONS.length}${n===LESSONS.length?' · ты готов к подземелью!':''}</div>`,
+      buttons:[{label:'Правила в картинках',value:'slides'},{label:'← В главное меню',cls:'mback',value:null}],noFocus:true,
+      onOpen:done=>{$('mtext').querySelectorAll('.cm.les').forEach(b=>b.onclick=()=>done(b.dataset.id));}});
+    if(pick==='slides'){await tutorial('lessons');continue;}
+    if(!pick)return null;
+    if(await lessonBrief(pick))return pick;
+  }
+}
+function lessonBrief(id){
+  const L=lessonById(id),i=LESSONS.indexOf(L);
+  return modal({local:true,icon:String(i+1),tone:'gold',img:L.img,title:L.t,sub:`Урок ${i+1} из ${LESSONS.length} · ${L.learn}`,
+    html:`<div class="brief"><p>${L.story}</p><div class="goal">◎ Задача: <b>${L.goal}</b></div><ol class="lsteps">${L.steps.map(x=>`<li>${x}</li>`).join('')}</ol></div>`,
+    buttons:[{label:'Начать урок',cls:'primary',value:true},{label:'← К урокам',cls:'mback',value:false}]});
+}
+function startLesson(id){
+  const L=lessonById(id);if(!L){newGame();return;}
+  const h=heroCfg(),cp=h.portrait===6?1:6;
+  const pl=[{seat:0,name:h.name,portrait:h.portrait}];
+  if(L.cpu)pl.push({seat:2,name:cpuNames([cp])[0],cpu:true,portrait:cp});
+  startGame(pl,'small',{rules:L.rules||'free'});
+  Object.assign(S,{mission:id,evW:L.ev||null,evP:L.evP,evN:{},kills:0,drank:0,lseen:[],kCaught:false,kLost:false,hurt:false,mst:null,
+    lesMon:L.mon??null,lesTrap:L.trap??null});
+  if(L.setup)L.setup(S.players[0]);
+  addLog(`Урок ${L.lesson} «${L.t}»: ${L.goal.toLowerCase()}.`);
+  toast(`Урок ${L.lesson}: ${L.goal}`,3500);
+  boardFull=true;render();
+}
+async function lessonEnd(r,L){
+  const p=S.players[0],i=LESSONS.indexOf(L),nx=LESSONS[i+1];
+  S.over=true;S.phase='over';busy=false;$('rollpop').hidden=true;stopHeart();clearSave();coachHide();
+  render();
+  let v;
+  if(r.win){
+    const st=lesLoad();st.done[L.id]=1;lesSave(st);try{localStorage.setItem(TUT_KEY,'done');}catch(e){}
+    sfx('escape');addLog(`Урок «${L.t}» пройден.`);
+    v=await modal({local:true,icon:'✓',tone:'good',img:L.img,title:'Урок пройден!',sub:`Урок ${i+1} из ${LESSONS.length} · ${L.t}`,
+      html:`<div class="brief"><p>${L.done}</p></div>${lesDots(st)}`,
+      buttons:[...(nx?[{label:'Следующий урок',cls:'primary',value:'next'}]:[]),{label:'К урокам',value:'list'},{label:'В меню',value:'menu',cls:nx?'':'primary'}]});
+  }else{
+    sfx('allLose');
+    v=await modal({local:true,icon:'↻',tone:'fire',img:L.img,title:'Урок не пройден',sub:`Урок ${i+1} · ${L.t}`,
+      text:`${r.why}\n\nНичего страшного — подземелье каждый раз новое. Попробуй ещё раз.`,
+      buttons:[{label:'Ещё раз',cls:'primary',value:'again'},{label:'К урокам',value:'list'},{label:'В меню',value:'menu'}]});
+  }
+  if(v==='next'&&nx){if(await lessonBrief(nx.id)){startLesson(nx.id);return;}v='list';}
+  if(v==='again'){startLesson(L.id);return;}
+  if(v==='list')lessonJump=true;
+  newGame();
 }
 /* ---------- приключение: Акт I «Тайный вход» ----------
    Миссия — обычная партия с особой подготовкой, своей целью и тремя звёздами.
@@ -1423,7 +1598,7 @@ const CAMP_ACT=[
     check:p=>p.mode==='home'?{win:true}:null,
     stars:[{t:'Выберись живым',prog:(S,p)=>p.mode==='out'?'сначала — в логово':p.mode==='room'?'выбирайся из логова':`до края ${edgeDist(p.r,p.c)} ${plural(edgeDist(p.r,p.c),'клетка','клетки','клеток')}`},{t:'Не потеряй ни одного ♥',hp:1},{t:'Не дольше 9 ходов',turns:9}]},
 ];
-const missionById=id=>CAMP_ACT.find(m=>m.id===id);
+const missionById=id=>CAMP_ACT.find(m=>m.id===id)||LESSONS.find(m=>m.id===id);   // уроки обучения тоже идут как миссии
 const campOpen=(v,i)=>i===0||(v.stars[CAMP_ACT[i-1].id]||0)>0;
 function heroCfg(){
   let name='',portrait=0;
@@ -1482,6 +1657,7 @@ function missionCheck(){
 }
 async function missionEnd(r){
   if(S.over)return;
+  {const L=missionById(S.mission);if(L&&L.lesson)return lessonEnd(r,L);}
   const m=missionById(S.mission),p=S.players[0],i=CAMP_ACT.indexOf(m);
   S.over=true;S.phase='over';busy=false;$('rollpop').hidden=true;stopHeart();clearSave();
   render();
@@ -1536,10 +1712,10 @@ const TIPS={
 };
 let coachCur=null,coachHid=0,coachTimer=0;
 function coachHide(){if(!coachCur)return;coachCur=null;$('coach').hidden=true;coachHid=Date.now();}
-function coachShow(key,still){
-  tipsSeen.add(key);saveTips();
+function coachShow(key,still,html){
+  if(!html){tipsSeen.add(key);saveTips();}
   coachCur={key,still};
-  $('coachText').innerHTML=TIPS[key];
+  $('coachText').innerHTML=html||TIPS[key];
   const c=$('coach');c.hidden=false;
   // не закрывать героя: подсказка сверху поля, если герой в нижней половине, иначе снизу
   const br=box.getBoundingClientRect(),cv=$('board').getBoundingClientRect(),p=P();
@@ -1551,10 +1727,15 @@ function coachCheck(){
   if(!S)return;
   const p=S.players[S.cur];
   if(coachCur&&(!p||S.over||!coachCur.still()))coachHide();
-  if(!tipsOn||coachCur||S.over||!p||!isLocal(p)||!alive(p)||introOn||!$('modal').hidden||!$('tutor').hidden)return;
+  const LES=S.mission&&!S.over?missionById(S.mission):null,lesH=LES&&LES.lesson&&LES.hints?LES.hints:null;
+  if(!(tipsOn||lesH)||coachCur||S.over||!p||!isLocal(p)||!alive(p)||introOn||!$('modal').hidden||!$('tutor').hidden)return;
   if(!['roll','move'].includes(S.phase))return;
   if(Date.now()-coachHid<1200){clearTimeout(coachTimer);coachTimer=setTimeout(()=>{if(S)coachCheck();},1300);return;}
   const turn=S.turnNo,ph=S.phase,onTurn=()=>S.turnNo===turn&&P()===p&&['roll','move'].includes(S.phase);
+  // урок обучения: свои подсказки по ходу партии — каждая один раз за урок, даже если подсказки выключены
+  if(lesH){S.lseen=S.lseen||[];for(const [k,html,cond,ph2] of lesH){if(S.lseen.includes(k))continue;
+    if(cond(p,ph)){S.lseen.push(k);coachShow(k,ph2==='roll'?()=>S.phase==='roll'&&P()===p:onTurn,html);return;}}}
+  if(!tipsOn||(lesH&&LES.lesson<7))return;   // в первых уроках — только подсказки урока, без лишнего
   const want=[
     ['fire',()=>S.awake,onTurn],
     ['roll',()=>ph==='roll'&&!rolling,()=>S.phase==='roll'&&P()===p],
@@ -1798,7 +1979,8 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=19;   // 19: «Спуск» — огр-босс 1-го этажа (6 боссов), огр и минотавр в рядовых только с 3-го этажа
+const NET_PROTO=20;   // 20: чат в сетевой партии (сообщения a:'chat' идут мимо очереди ходов)
+// было: const NET_PROTO=19;   // 19: «Спуск» — огр-босс 1-го этажа (6 боссов), огр и минотавр в рядовых только с 3-го этажа
 // было: const NET_PROTO=18;   // 18: «Спуск» — ловушки срабатывают 1 раз, обезвредить можно 4 вида, монстры обходят вещи, появление только в залах без героев
 // было: 17: «Спуск» — переход в открытый зал за шаги, передача вещей из инвентаря
 // было: const NET_PROTO=16;   // 16: зелье до броска, зелье скорости из инвентаря, вопрос перед выходом из подземелья   // 15: «Спуск» — фазы раунда и очки действий (правила изменились — старые клиенты в комнату не попадут)
@@ -1870,10 +2052,117 @@ function netMsg(m){
       if(NET.onStart)NET.onStart(m);
       else{NET.pendingStart=m;if(MODAL&&MODAL.local&&S&&S.online&&S.over)MODAL.close();}
       break;
-    case'input':if(m.seq<=NET.lastSeq)return;NET.lastSeq=m.seq;NET.queue.push(m);netPump();break;
+    case'input':if(m.seq<=NET.lastSeq)return;NET.lastSeq=m.seq;
+      if(m.d&&m.d.a==='chat'){chatGot({game:true,from:m.from,txt:m.d.txt,n:m.d.n});break;}   // чат — не ход: мимо очереди
+      NET.queue.push(m);netPump();break;
+    case'chat':chatGot({from:m.from,name:m.name,portrait:m.portrait,txt:m.txt,n:m.n});break;   // чат в лобби (нужна поддержка сервера)
     case'gone':if(S&&S.online&&!S.over)netAbandon('Ты слишком долго был без связи — партия для тебя окончена.');break;
   }
 }
+/* ---------- чат по сети ----------
+   В партии сообщение идёт по тому же каналу, что и ходы: {t:'input',d:{a:'chat',txt,n}} — сервер просто
+   пересылает его всем игрокам комнаты. На ходы оно не влияет: показывается сразу, мимо очереди lockstep.
+   В лобби комнаты — {t:'chat'}; работает, только если сервер это умеет (в описании комнаты есть chat).
+   Текст игроков выводится только через textContent. */
+const CHAT={list:[],seen:new Set(),unread:0,open:false,sent:[],last:'',lastAt:0,key:'',rate:{}};
+const CHAT_MAX=200;
+const chatClean=t=>String(t==null?'':t).replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,' ').replace(/\s+/g,' ').trim().slice(0,CHAT_MAX);
+function chatMode(){
+  const r=NET.room;if(!r)return null;
+  if(S&&S.online&&(r.playing||!S.over))return 'game';
+  if(r.chat&&!r.playing&&NET.onRoom)return 'lobby';
+  return null;
+}
+function chatLine(m){
+  const d=document.createElement('div');d.className='cmsg'+(m.mine?' me':'')+(m.sys?' sys':'');
+  if(m.sys){d.textContent=m.txt;return d;}
+  if(m.img){const im=document.createElement('img');im.alt='';im.src=m.img;d.appendChild(im);}
+  const b=document.createElement('div');b.className='cb';
+  const nm=document.createElement('b');nm.textContent=m.name;if(m.col)nm.style.color=m.col;
+  const tx=document.createElement('span');tx.textContent=m.txt;
+  b.append(nm,tx);d.appendChild(b);return d;
+}
+function chatPaint(){
+  const log=$('chatLog');log.textContent='';
+  if(!CHAT.list.length){const e=document.createElement('div');e.className='empty';e.textContent='Сообщений пока нет. Напиши первым!';log.appendChild(e);}
+  CHAT.list.forEach(m=>log.appendChild(chatLine(m)));
+  log.scrollTop=log.scrollHeight;
+}
+function chatPush(m){
+  CHAT.list.push(m);if(CHAT.list.length>80)CHAT.list.shift();
+  if(CHAT.open){const log=$('chatLog');const nearEnd=log.scrollHeight-log.scrollTop-log.clientHeight<60;
+    const e=log.querySelector('.empty');if(e)e.remove();log.appendChild(chatLine(m));while(log.children.length>80)log.firstChild.remove();
+    if(nearEnd||m.mine)log.scrollTop=log.scrollHeight;}
+}
+const chatNote=t=>chatPush({sys:true,txt:t});
+let chatPeekT=0;
+function chatGot(o){
+  const n=chatClean(o.n).slice(0,40);if(n){if(CHAT.seen.has(n))return;CHAT.seen.add(n);}
+  const txt=chatClean(o.txt);if(!txt)return;
+  chatSync();
+  let name,col='',img=null,mine=false;
+  if(o.game){const q=S&&S.players&&S.players[o.from];if(!q)return;name=q.name;col=pcol(q);img=q.portrait!=null?PORTRAITS[q.portrait]:null;mine=!!NET.id&&q.net===NET.id;}
+  else{const r=NET.room,sl=r&&r.slots&&r.slots[o.from];name=chatClean(o.name).slice(0,20)||'Герой';
+    const pi=+o.portrait;img=Number.isInteger(pi)&&pi>=0&&pi<PORTRAITS.length?PORTRAITS[pi]:null;mine=!!(sl&&sl.id===NET.id);
+    if(o.from>=0&&o.from<4)col=css(SEATS[o.from].color);}
+  // от чужого флуда: больше 8 сообщений за 10 секунд от одного игрока не показываем
+  const t=Date.now(),rk=String(o.from);CHAT.rate[rk]=(CHAT.rate[rk]||[]).filter(x=>t-x<10000);
+  if(!mine&&CHAT.rate[rk].length>=8)return;CHAT.rate[rk].push(t);
+  chatPush({name,col,img,txt,mine,t});
+  if(!CHAT.open&&!mine){CHAT.unread++;
+    const pk=$('chatPeek');pk.textContent='';const b=document.createElement('b');b.textContent=name+':';pk.append(b,document.createTextNode(txt.length>90?txt.slice(0,90)+'…':txt));
+    pk.hidden=false;clearTimeout(chatPeekT);chatPeekT=setTimeout(()=>{pk.hidden=true;},4500);
+    try{sfx('step');}catch(e){}}
+  chatSync();
+}
+function chatCount(){const n=$('chatIn').value.length;$('chatCnt').textContent=n>150?`${n}/${CHAT_MAX}`:'';}
+function chatSend(){
+  const inp=$('chatIn'),txt=chatClean(inp.value);if(!txt){inp.value='';chatCount();return;}
+  const mode=chatMode();if(!mode){chatNote('Чат сейчас недоступен.');return;}
+  const t=Date.now();CHAT.sent=CHAT.sent.filter(x=>t-x<15000);
+  if((CHAT.sent.length&&t-CHAT.sent[CHAT.sent.length-1]<1500)||CHAT.sent.length>=5){chatNote('Не так быстро — подожди пару секунд.');return;}
+  if(txt===CHAT.last&&t-CHAT.lastAt<10000){chatNote('Это сообщение только что отправлено.');return;}
+  const n='c'+Math.random().toString(36).slice(2,9)+t.toString(36);
+  const ok=mode==='game'?netSend({t:'input',d:{a:'chat',txt,n}}):netSend({t:'chat',txt,n});
+  if(!ok){chatNote('Нет связи с сервером — сообщение не ушло.');return;}
+  CHAT.sent.push(t);CHAT.last=txt;CHAT.lastAt=t;inp.value='';chatCount();
+}
+function chatPlace(){
+  const el=$('chat');if(el.hidden)return;
+  // экранная клавиатура: окно чата держится в видимой части экрана и не вылезает за неё
+  const vv=window.visualViewport,top=vv?vv.offsetTop:0,h=vv?vv.height:innerHeight;
+  el.style.top=`calc(env(safe-area-inset-top,0px) + ${Math.round(top+8)}px)`;
+  el.style.height=Math.max(150,Math.min(360,Math.round(innerHeight*.55),Math.round(h-16)))+'px';
+}
+function chatOpen(){
+  if(!chatMode())return;
+  CHAT.open=true;CHAT.unread=0;$('chatPeek').hidden=true;
+  const el=$('chat');el.hidden=false;
+  $('chatSub').textContent=chatMode()==='game'?'игроки партии':'комната '+(NET.room&&NET.room.code||'');
+  chatPaint();chatPlace();chatSync();
+  if(matchMedia('(pointer:fine)').matches)setTimeout(()=>$('chatIn').focus(),30);
+}
+function chatClose(){CHAT.open=false;const el=$('chat');el.hidden=true;try{$('chatIn').blur();}catch(e){}chatSync();}
+function chatSync(){
+  const mode=chatMode(),key=NET.room?NET.room.code:'';
+  if(key&&key!==CHAT.key){CHAT.key=key;CHAT.list=[];CHAT.unread=0;CHAT.rate={};}
+  if(!mode&&CHAT.open)chatClose();
+  const u=CHAT.unread?String(Math.min(CHAT.unread,99)):'';
+  const bc=$('bChat'),fb=$('chatFab');
+  if(bc){const on=mode==='game';if(bc.hidden===on)bc.hidden=!on;if($('nChat').textContent!==u)$('nChat').textContent=u;}
+  if(fb){const on=mode==='lobby';if(fb.hidden===on)fb.hidden=!on;if($('nChatFab').textContent!==u)$('nChatFab').textContent=u;}
+  if(!mode)$('chatPeek').hidden=true;
+}
+$('bChat').onclick=e=>{e.stopPropagation();CHAT.open?chatClose():chatOpen();};
+$('chatFab').onclick=e=>{e.stopPropagation();CHAT.open?chatClose():chatOpen();};
+$('chatPeek').onclick=()=>chatOpen();
+$('chatX').onclick=()=>chatClose();
+$('chatForm').onsubmit=e=>{e.preventDefault();chatSend();};
+$('chatIn').oninput=chatCount;
+['pointerdown','click','touchstart'].forEach(t=>$('chat').addEventListener(t,e=>e.stopPropagation()));
+if(window.visualViewport){visualViewport.addEventListener('resize',chatPlace);visualViewport.addEventListener('scroll',chatPlace);}
+addEventListener('resize',chatPlace);
+setInterval(chatSync,500);
 setInterval(()=>{netSend({t:'ping'});},10000);
 // соединение «молчит» больше 30 секунд — считаем его оборванным и переподключаемся
 setInterval(()=>{
@@ -2178,6 +2467,26 @@ function loadSave(){
     const st=JSON.parse(raw,(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__map)?new Map(v.__map):v);
     return st&&Array.isArray(st.players)&&Array.isArray(st.cells)?st:null;}catch(e){return null;}
 }
+// Страховка после заставки студии: если партия не идёт и на экране нет ни меню, ни окна, ни обучения —
+// показываем главное меню (раньше после заставки у игрока мог остаться пустой экран игры без меню).
+let menuWait=0,ngWait=0;   // сколько меню / запусков партии сейчас ждут (счётчики: newGame бывает вложенным)
+{const mm0=mainMenu;mainMenu=function(){menuWait++;return mm0.apply(this,arguments).finally(()=>{menuWait--;});};}
+{const ng0=newGame;newGame=function(){ngWait++;return Promise.resolve().then(()=>ng0.apply(this,arguments)).finally(()=>{ngWait--;});};}
+function ensureMenu(){
+  const sp=document.getElementById('splash');if(sp&&!sp.classList.contains('gone'))return;
+  const mm=$('mainmenu');if(!mm)return;
+  // ничего не должно остаться прозрачным/некликабельным
+  ['opacity','visibility','pointerEvents','display'].forEach(k=>{if(mm.style[k])mm.style[k]='';});
+  const app=document.querySelector('.app');if(app)['opacity','visibility','pointerEvents'].forEach(k=>{if(app.style[k])app.style[k]='';});
+  if(S&&!S.over)return;                                   // идёт партия
+  const shown=id=>{const e=document.getElementById(id);return !!(e&&!e.hidden&&getComputedStyle(e).display!=='none');};
+  if(shown('mainmenu')||shown('modal')||shown('tutor')||shown('charsheet')||shown('bye')||shown('ld3d'))return;
+  if(introOn||busy)return;
+  if(menuWait){mm.hidden=false;return;}                   // меню ждёт выбора, но спрятано — просто показать
+  if(ngWait)return;                                       // игрок между окнами настройки партии — не мешаем
+  newGame();                                              // меню не открыто вовсе (или запуск сорвался) — открыть
+}
+window.ensureMenu=ensureMenu;
 async function boot(){
   playMusic('intro');
   newGame();
@@ -3036,6 +3345,7 @@ function harm(p,h){
   return parts.join(', ');
 }
 async function resolve(ev,p){
+  if(S.mission){S.evN=S.evN||{};S.evN[ev]=(S.evN[ev]||0)+1;}   // уроки: что уже встретилось
   const good=(icon,title,text)=>{addLog(text);sfx(FIND_SFX[ev]);return modal({icon,tone:'good',img:ev==='key'?'img/key.jpg':`img/item-${ev}.jpg`,title,sub:'Находка',text,buttons:[{label:'Забрать',cls:'primary'}]});};
   const luckB=()=>p.luck>0?3:0,cuB=curseB(p);
   switch(ev){
@@ -3098,7 +3408,7 @@ async function resolve(ev,p){
         await modal({icon:'⛧',tone:'line',title:'Ты отказался',sub:'Демон исчезает',text:'«Мы ещё встретимся», — шипит демон и растворяется в дыму.'});}
       break;}
     case'monster':{
-      const mk=cell(p.r,p.c),m=S.monObj?S.monObj:S.monFix!=null?MONSTERS[S.monFix]:mk.mon!=null?MONSTERS[mk.mon]:MONSTERS[pickMon(p.r,p.c)];sfx('monster');
+      const mk=cell(p.r,p.c),m=S.monObj?S.monObj:S.monFix!=null?MONSTERS[S.monFix]:S.lesMon!=null?MONSTERS[S.lesMon]:mk.mon!=null?MONSTERS[mk.mon]:MONSTERS[pickMon(p.r,p.c)];sfx('monster');
       const coop=COOP(),mc=S.monCell||[p.r,p.c],mx=cell(mc[0],mc[1]);
       if(coop&&mx.hpMax==null){mx.hpMax=monHp(MONSTERS.indexOf(m));mx.hp=mx.hpMax;}
       const hpLine=coop?`\n\nЗдоровье: ${'♥'.repeat(mx.hp)}${'♡'.repeat(mx.hpMax-mx.hp)} (${mx.hp} из ${mx.hpMax}). Удар: 1 ♥ и ещё по 1 за каждые 3 очка сверх сложности; 20 на кубике — сразу наповал.`:'';
@@ -3113,7 +3423,7 @@ async function resolve(ev,p){
           let t;
           if(win&&coop){const dmg=r===20?mx.hp:Math.max(1,1+Math.floor(Math.max(0,r+b-dc)/3)-(m.armor||0));mx.hp=Math.max(0,mx.hp-dmg);
             if(mx.hp>0){sfx('success');t=`Удар: −${dmg} ♥ монстру. ${m.n} ещё держится — ${mx.hp} из ${mx.hpMax}. Добейте его!`;addLog(`${p.name} ранил: ${m.n} (${mx.hp}/${mx.hpMax}).`);return t;}}
-          if(win){sfx('kill');const g=between(m.loot);p.gold+=g;t=`${coop?(m.boss?'Босс повержен! Путь к лестнице свободен. ':'Монстр повержен! '):'Победа! '}Трофей: +${g} золотых.`+trophy(p,m.dc-8);
+          if(win){sfx('kill');S.kills=(S.kills||0)+1;const g=between(m.loot);p.gold+=g;t=`${coop?(m.boss?'Босс повержен! Путь к лестнице свободен. ':'Монстр повержен! '):'Победа! '}Трофей: +${g} золотых.`+trophy(p,m.dc-8);
             if(m.brew){p.potions++;t+=' В котле ведьмы нашлось зелье здоровья ✚.';}
             if(m.win)t+=' '+m.win;}
           else t=shieldSave(p)?`${m.n} бьёт изо всех сил — щит принял удар и раскололся. Ты цел!`:`${m.n} ${m.how||'ранил героя'}: ${harm(p,m)}.`;
@@ -3131,7 +3441,7 @@ async function resolve(ev,p){
       try{await resolve('monster',p);}finally{S.monObj=null;S.monCell=null;}
       bossHitFx(bossOf(x),p,hp0,br,bc);break;}
     case'trap':{
-      const tr=S.trapFix!=null?TRAPS[S.trapFix]:TRAPS[rnd(TRAPS.length)],b=luckB()+cuB;sfx('trap');
+      const tr=S.trapFix!=null?TRAPS[S.trapFix]:S.lesTrap!=null?TRAPS[S.lesTrap]:TRAPS[rnd(TRAPS.length)],b=luckB()+cuB;sfx('trap');
       const pen=[tr.dmg?`−${tr.dmg} ♥`:'',tr.steal?`сгорит ${tr.steal*100}% золота`:'',tr.skip?(tr.skip>1?`пропуск ${tr.skip} ходов`:'пропуск хода'):''].filter(Boolean).join(', ');
       await modal({icon:'⚠',tone:'fire',img:tr.img,title:tr.n,sub:S.trapFix!=null?`Ловушка · проверка: ${p.name}`:'Ловушка · ловкость',text:`${tr.d}\n\nПри провале: ${pen}.`,
         roll:{dc:tr.dc,bonus:b,bonusText:[luckB()?'амулет':'',cuB?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
@@ -4105,7 +4415,9 @@ async function drink(){
 }
 async function drinkAct(){
   const p=P(),wasRoll=S.phase==='roll';if(wasRoll&&rolling)return;
+  const hp0=p.hp;
   await drink();
+  if(p.hp>hp0)S.drank=(S.drank||0)+1;
   if(p.mode==='dead'&&P()===p&&!S.over){busy=false;nextTurn();return;}
   if(wasRoll&&S.phase==='roll'&&P()===p&&!S.over){render();showRollPop(p);}   // выпил до броска — кубик по-прежнему ждёт
 }
@@ -4878,6 +5190,7 @@ cv.addEventListener('click',e=>{
   if(o)act('move',{r:o.r,c:o.c,j:o.jump?1:0});
 });
 document.addEventListener('keydown',e=>{
+  if(e.target&&e.target.closest&&e.target.closest('#chat')){if(e.key==='Escape'){e.preventDefault();chatClose();}return;}   // пишут в чат — горячие клавиши игры молчат
   if($('charsheet')&&!$('charsheet').hidden&&e.key==='Escape'){e.preventDefault();closeCharSheet();return;}
   if(!$('modal').hidden){
     const tag=document.activeElement?.tagName;
@@ -5053,7 +5366,7 @@ function paintCharSheet(){
   $('csTitle').textContent=p.name+(p.cpu?' · ИИ':'');
   const st={out:COOP()?'ищет лестницу вниз':'идёт к логову',room:'в логове дракона',back:'возвращается с добычей',home:'выбрался из подземелья',dead:COOP()?'без сил — его можно поднять':'погиб'}[p.mode]||'';
   const inv=CS_MODE==='inv';
-  $('csSub').textContent=(inv?'Инвентарь':'Лист персонажа')+(st?' · '+st:'');
+  $('csSub').textContent=inv?'Инвентарь':'Лист персонажа'+(st?' · '+st:'');   // в инвентаре — без «куда идёт герой»
   const hp=Math.max(0,p.hp),cap=maxHP(p);
   const hearts=`<span class="hp">${'♥'.repeat(hp)}${'♡'.repeat(Math.max(0,cap-hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона">♥</span>`:''}</span> <span>${hp} из ${cap}</span>`;
   const tro=S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔ трофеи <b>${p.tro||0}</b></span>`:'';
@@ -5362,7 +5675,7 @@ $('bMenu').onclick=async()=>{
 function leaveToMenu(){
   stopHeart();coachHide();closeCharSheet();clearTimeout(peekTimer);peekTimer=null;
   if(S)S.over=true;busy=false;rolling=false;
-  campJump=false;arenaJump=false;arenaPartyJump=false;
+  campJump=false;lessonJump=false;arenaJump=false;arenaPartyJump=false;
   newGame();
 }
 // «Начать заново»: та же партия с теми же настройками (герои, режим, правила, размер карты; миссия — та же миссия)
@@ -5378,6 +5691,7 @@ function restartGame(){
 // Кнопка «Назад» Android: закрывает окно меню или открывает меню; на стартовом экране — выход
 let inMenu=false;
 window.onAndroidBack=function(){
+  if(CHAT.open){chatClose();return true;}
   if(tutorOn){tutorOn();return true;}
   if(!S)return false;
   if($('charsheet')&&!$('charsheet').hidden){closeCharSheet();return true;}
@@ -5391,6 +5705,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame();
 [...TRAPS,...MONSTERS].map(t=>t.img).concat(PORTRAITS).concat(['gold','chest','potion','haste','amulet','sword','map','bomb','gem','treasure','stone','scroll','cache','ghost','mantle'].map(k=>`img/item-${k}.jpg`),['img/dragon-sleep.jpg','img/dragon-awake.jpg','img/menu-bg.jpg'],'img/portal.jpg',['kobold','cultist','whelp'].map(k=>`img/mon-${k}.jpg`),['shield','pick','silver'].map(k=>`img/item-${k}.jpg`),'img/merchant-potions.jpg','img/merchant-arms.jpg','img/dead_hero_on_map.jpg','img/kobold-map.png','img/rock-black.jpg').forEach(u=>{const i=new Image();i.src=u;});
 new ResizeObserver(()=>{size();}).observe(box);
 size();boot();
+// страховки запуска: заставка не остаётся висеть; если загрузка 3D где-то зависла — через 25 с убрать экран загрузки и показать меню
+setTimeout(()=>{const sp=document.getElementById('splash');if(sp){sp.remove();window.SPLASH_DONE=true;}ensureMenu();},9000);
+setTimeout(()=>{if(document.getElementById('ld3d')&&window.__3d&&__3d.loader){try{__3d.loader.hide();}catch(e){}setTimeout(ensureMenu,600);}},25000);
 </script>
 <script src="lib/three.min.js"></script>
 <script src="assets.js"></script>
