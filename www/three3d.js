@@ -1018,6 +1018,10 @@ function hunterToken(h){
 const markGeo=new THREE.RingGeometry(.22,.32,32);markGeo.rotateX(-Math.PI/2);
 const markMat=new THREE.MeshBasicMaterial({color:0xecc66a,transparent:true,opacity:.85,depthWrite:false,toneMapped:false});
 const marks=[];for(let i=0;i<16;i++){const m=new THREE.Mesh(markGeo,markMat);m.visible=false;m.renderOrder=4;SC.add(m);marks.push(m);}
+// урок обучения: клетки из подсказки — расходящееся жёлтое кольцо (как пульс кубика-напоминания)
+const lesGeo=new THREE.RingGeometry(.36,.47,40);lesGeo.rotateX(-Math.PI/2);
+const lesMat=new THREE.MeshBasicMaterial({color:0xffd23a,transparent:true,opacity:.9,depthWrite:false,toneMapped:false});
+const lesMarks=[];for(let i=0;i<12;i++){const m=new THREE.Mesh(lesGeo,lesMat);m.visible=false;m.renderOrder=5;SC.add(m);lesMarks.push(m);}
 function targets(){
   if(!S||S.over||!$('modal').hidden||lockedTurn())return [];
   if(S.phase==='tp'&&S.tp)return S.tp.spots;
@@ -1196,6 +1200,9 @@ function frame(){
   // метки ходов
   const tg=targets();marks.forEach((m,i)=>{const q=tg[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?(S.rules==='descent'?.07:.03):blockTopY(q[0],q[1])+.025,z);m.scale.setScalar(1+Math.sin(t*5)*.08);}});
   markMat.opacity=.6+Math.sin(t*5)*.25;
+  {const lc=window.lessonCells?window.lessonCells():[],k=(t/1.25)%1;
+    lesMarks.forEach((m,i)=>{const q=lc[i];m.visible=!!q;if(q){const [x,z]=cellXZ(q[0],q[1]);m.position.set(x,(inRoom(q[0],q[1])?.24:cell(q[0],q[1]).rev?(S.rules==='descent'?.07:.03):blockTopY(q[0],q[1])+.025)+.012,z);m.scale.setScalar(1+k*.45);}});
+    lesMat.opacity=.95*(1-k);}
   glowTopMat.opacity=.7+Math.sin(t*2.4)*.3;glowSideMat.opacity=.05+Math.sin(t*2.4)*.03;
   // дракон: во сне дышит, проснувшись — смотрит и машет крыльями
   const L=B.lair,aw=!!S.awake;

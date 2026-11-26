@@ -573,6 +573,13 @@ body.cpu-turn .rollcard{cursor:default}
 .hexes.many{gap:3px}.hexes.rows{flex-wrap:wrap;row-gap:1px;align-content:center}
 .hexes.many .hex .n{font-size:9px;line-height:11px;padding:0 3px}
 body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{display:none!important}
+.lhl{animation:lhlPulse 1.25s ease-out infinite!important}
+.movedie.lhl{animation:dieNudge 1.25s ease-out infinite!important}
+.hex.lhl,.lhlf{animation:lhlHex 1.25s ease-out infinite!important}
+@keyframes lhlPulse{0%,100%{box-shadow:0 0 0 2px rgba(236,198,106,.75),0 0 8px 2px rgba(236,198,106,.45)}18%{box-shadow:0 0 0 3px var(--gold),0 0 18px 5px rgba(236,198,106,.95),0 0 36px 10px rgba(255,220,120,.55)}}
+@keyframes lhlHex{0%,100%{filter:brightness(1.15) drop-shadow(0 0 3px rgba(255,214,110,.8))}18%{filter:brightness(1.8) drop-shadow(0 0 6px rgba(255,214,110,1)) drop-shadow(0 0 12px rgba(236,198,106,.9))}}
+.hexes:has(.lhl){overflow:visible}
+@media (prefers-reduced-motion:reduce){.lhl{animation:none!important;box-shadow:0 0 0 3px var(--gold),0 0 18px 5px rgba(236,198,106,.8)!important}.hex.lhl,.lhlf{animation:none!important;filter:drop-shadow(0 0 8px rgba(255,214,110,1))!important}}
 .chatbtn,.chatfab{position:relative}.chatbtn .n,.chatfab .n{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--fire);color:#fff;font:800 11px/17px var(--body);padding:0 4px}
 .chatbtn .n:empty,.chatfab .n:empty{display:none}
 .chatfab{position:fixed;z-index:25;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);width:46px;height:46px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;font-size:20px}
@@ -1418,7 +1425,7 @@ const LESSONS=[
     stars:[{t:'Собери 80 золотых',prog:(S,p)=>`в мешке ${p.gold} из 80`}],
     chip:(S,p)=>` · ${p.gold}/80 зол.`,
     hints:[['l2find','Находки прячутся в <b>новых плитках</b>. Открывай больше плиток — чаще попадутся кошели и сундуки.',(p,ph)=>ph==='roll','roll'],
-      ['l2bag','Золото в мешке! Сколько его — видно на <b>карточке героя</b> вверху. Нажми на карточку, чтобы открыть лист героя.',p=>p.gold>0]],
+      ['l2bag','Золото в мешке! Сколько его — видно на <b>карточке героя</b> вверху (она подсвечена). Нажми на карточку — камера покажет героя на поле.',p=>p.gold>0]],
     done:'Золото найдено. В настоящей игре побеждает тот, кто вынесет из подземелья больше всех.'},
   {id:'L3',lesson:3,t:'Ловушка',img:'img/trap-spikes.jpg',goal:'Пройди через ловушку',learn:'Ловушки и проверка d20',
     story:'Плиты в этом коридоре подозрительно шатаются. Где-то спрятана ловушка — найди её и останься в живых.',
@@ -1466,6 +1473,39 @@ const LESSONS=[
     hints:[['l7start','Теперь всё по-настоящему: соперник-компьютер, монстры и ловушки. Шкала вверху — <b>сон дракона</b>. Не мешкай!',(p,ph)=>ph==='roll','roll']],
     done:'Обучение пройдено! Ты готов к Приключению, Спуску и Арене дракона.'},
 ];
+/* Подсветка в уроках: элемент управления, о котором говорит подсказка, пульсирует жёлтым (как кубик-напоминание).
+   Снимается, когда элементом воспользовались (нажатие или условие until), при новой подсказке и в конце урока.
+   cells — клетки поля, которые подсвечиваются жёлтыми кольцами (3D) или рамкой (2D). Вне уроков не работает. */
+let LHL=null;
+function lesHlClear(){if(!LHL)return;LHL.els.forEach(e=>{e.classList.remove('lhl');e.removeEventListener('click',lesHlClear,true);});LHL=null;boardDirty=true;}
+function lesHlSet(key,hl){
+  lesHlClear();
+  if(!hl||!S||!S.mission)return;
+  const els=[];(hl.sel||[]).forEach(q=>document.querySelectorAll(q).forEach(e=>{e.classList.add('lhl');e.addEventListener('click',lesHlClear,true);els.push(e);}));
+  LHL={key,els,cells:hl.cells||null,until:hl.until||null,t0:S.turnNo,mission:S.mission};boardDirty=true;
+}
+function lesHlTick(){if(LHL&&(!S||S.over||S.mission!==LHL.mission||(LHL.until&&LHL.until(LHL))))lesHlClear();}
+const lesMyMove=()=>S&&!S.over&&S.phase==='move'&&!busy&&P()===S.players[0]&&$('modal').hidden;
+const lesOpt=f=>()=>lesMyMove()?options(P()).filter(f||(()=>true)).map(o=>[o.r,o.c]):[];
+const lesBest=k=>()=>{if(!lesMyMove())return[];const o=options(P());if(!o.length)return[];const m=Math.min(...o.map(k));return o.filter(z=>k(z)===m).map(z=>[z.r,z.c]);};
+window.lessonCells=()=>{if(!LHL||!LHL.cells||!S||S.over)return[];try{return LHL.cells()||[];}catch(e){return[];}};
+const nextTurnOf=n=>L=>S.turnNo>L.t0+(n||0);
+const LES_HL={
+  L1:{l1roll:{sel:['#movedie'],until:()=>S.phase!=='roll'||rolling},
+      l1move:{cells:lesOpt(o=>!o.back),until:nextTurnOf(0)},
+      l1arrows:{cells:lesOpt(),until:nextTurnOf(0)}},
+  L2:{l2find:{cells:lesOpt(o=>!cell(o.r,o.c).rev),until:nextTurnOf(1)},
+      l2bag:{sel:['#pill0'],until:nextTurnOf(1)}},
+  L3:{l3look:{cells:lesOpt(o=>!cell(o.r,o.c).rev),until:()=>(S.evN||{}).trap>0}},
+  L4:{l4look:{cells:lesOpt(o=>!cell(o.r,o.c).rev),until:()=>(S.evN||{}).monster>0},
+      l4hurt:{sel:['#bPotion'],until:()=>S.drank>0||P().hp>=maxHP(P())}},
+  L5:{l5potion:{sel:['#bPotion'],until:()=>S.drank>0},
+      l5inv:{sel:['#bScroll','.hexes .hex:not(.empty):not([hidden])'],until:()=>!$('charsheet').hidden}},
+  L6:{l6go:{cells:lesBest(z=>dist(z.r,z.c)),until:()=>S.players[0].mode!=='out'},
+      l6back:{cells:lesBest(z=>edgeDist(z.r,z.c)),until:()=>S.players[0].mode==='home'}},
+  L7:{l7start:{sel:['#movedie','#wake'],until:nextTurnOf(0)}},
+};
+LESSONS.forEach(l=>{l.hl=LES_HL[l.id]||null;});
 const lessonById=id=>LESSONS.find(l=>l.id===id);
 const lesDots=st=>`<div class="lesdots">${LESSONS.map((l,i)=>`<i class="${st.done[l.id]?'ok':''}">${st.done[l.id]?'✓':i+1}</i>`).join('')}</div>`;
 // экран уроков: список с отметками, рекомендованный следующий подсвечен; все уроки открыты
@@ -1498,13 +1538,14 @@ function startLesson(id){
   Object.assign(S,{mission:id,evW:L.ev||null,evP:L.evP,evN:{},kills:0,drank:0,lseen:[],kCaught:false,kLost:false,hurt:false,mst:null,
     lesMon:L.mon??null,lesTrap:L.trap??null});
   if(L.setup)L.setup(S.players[0]);
+  lesHlClear();
   addLog(`Урок ${L.lesson} «${L.t}»: ${L.goal.toLowerCase()}.`);
   toast(`Урок ${L.lesson}: ${L.goal}`,3500);
   boardFull=true;render();
 }
 async function lessonEnd(r,L){
   const p=S.players[0],i=LESSONS.indexOf(L),nx=LESSONS[i+1];
-  S.over=true;S.phase='over';busy=false;$('rollpop').hidden=true;stopHeart();clearSave();coachHide();
+  S.over=true;S.phase='over';busy=false;$('rollpop').hidden=true;stopHeart();clearSave();coachHide();lesHlClear();
   render();
   let v;
   if(r.win){
@@ -1712,8 +1753,9 @@ const TIPS={
 };
 let coachCur=null,coachHid=0,coachTimer=0;
 function coachHide(){if(!coachCur)return;coachCur=null;$('coach').hidden=true;coachHid=Date.now();}
-function coachShow(key,still,html){
+function coachShow(key,still,html,hl){
   if(!html){tipsSeen.add(key);saveTips();}
+  if(html)lesHlSet(key,hl);   // урок: элемент, о котором подсказка, пульсирует жёлтым
   coachCur={key,still};
   $('coachText').innerHTML=html||TIPS[key];
   const c=$('coach');c.hidden=false;
@@ -1724,6 +1766,7 @@ function coachShow(key,still,html){
 }
 // Какую подсказку показать сейчас: вызывается из render()
 function coachCheck(){
+  lesHlTick();
   if(!S)return;
   const p=S.players[S.cur];
   if(coachCur&&(!p||S.over||!coachCur.still()))coachHide();
@@ -1734,7 +1777,7 @@ function coachCheck(){
   const turn=S.turnNo,ph=S.phase,onTurn=()=>S.turnNo===turn&&P()===p&&['roll','move'].includes(S.phase);
   // урок обучения: свои подсказки по ходу партии — каждая один раз за урок, даже если подсказки выключены
   if(lesH){S.lseen=S.lseen||[];for(const [k,html,cond,ph2] of lesH){if(S.lseen.includes(k))continue;
-    if(cond(p,ph)){S.lseen.push(k);coachShow(k,ph2==='roll'?()=>S.phase==='roll'&&P()===p:onTurn,html);return;}}}
+    if(cond(p,ph)){S.lseen.push(k);coachShow(k,ph2==='roll'?()=>S.phase==='roll'&&P()===p:onTurn,html,LES.hl&&LES.hl[k]);return;}}}
   if(!tipsOn||(lesH&&LES.lesson<7))return;   // в первых уроках — только подсказки урока, без лишнего
   const want=[
     ['fire',()=>S.awake,onTurn],
@@ -1979,7 +2022,8 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=20;   // 20: чат в сетевой партии (сообщения a:'chat' идут мимо очереди ходов)
+const NET_PROTO=21;   // 21: вопрос о выходе — один раз на попадание на край (после «Остаться» не повторяется в этом ходу)
+// было: const NET_PROTO=20;   // 20: чат в сетевой партии (сообщения a:'chat' идут мимо очереди ходов)
 // было: const NET_PROTO=19;   // 19: «Спуск» — огр-босс 1-го этажа (6 боссов), огр и минотавр в рядовых только с 3-го этажа
 // было: const NET_PROTO=18;   // 18: «Спуск» — ловушки срабатывают 1 раз, обезвредить можно 4 вида, монстры обходят вещи, появление только в залах без героев
 // было: 17: «Спуск» — переход в открытый зал за шаги, передача вещей из инвентаря
@@ -2522,7 +2566,7 @@ function startTurn(){
 }
 async function beginTurn(p){
   if(p.mode==='room'){S.phase='lair';S.msg='В логове дракона.';render();follow();lairTurn();return;}
-  if(canEscape(p)&&!p.cpu&&!COOP()){
+  if(wantLeave(p)&&!p.cpu&&!COOP()){
     S.phase='event';busy=true;render();follow();
     const out=await askLeave(p);busy=false;
     if(S.over||P()!==p)return;
@@ -2681,6 +2725,7 @@ async function move(o){
     if(!p.cpu)toast('Ты протиснулся сквозь завал — здесь теперь есть проход.',2600);
   }
   stepTo(p,o);
+  if(!onEdge(p.r,p.c))p.leaveNo=null;   // ушёл с края — следующее попадание на край снова спросит
   sfx('step');
   if(p.mode==='out'&&inRoom(p.r,p.c)){
     p.mode='room';p.searches=0;p.calm=0;p.gold+=100;newLeg(p);
@@ -2695,7 +2740,7 @@ async function move(o){
   }
   reveal(p.r,p.c,p.mode,OPP[o.d]);revealAhead(p.r,p.c,p.mode);
   if(p.mode==='out')p.trail.push([p.r,p.c]);
-  if(canEscape(p)&&await askLeave(p)){
+  if(wantLeave(p)&&await askLeave(p)){
     await escapeHero(p,'Герой выбрался из подземелья живым');
     busy=false;nextTurn();return;
   }
@@ -2723,6 +2768,9 @@ async function move(o){
 
 // выход из подземелья: с добычей — на любую клетку края; когда дракон проснулся — и не побывав в логове
 const canEscape=p=>(p.mode==='back'||(p.mode==='out'&&S.awake))&&onEdge(p.r,p.c);
+// Спрашивать о выходе: один раз на одно попадание на край. Ответил «Остаться» — до конца этого хода, пока герой
+// идёт по краю, вопрос не повторяется; сошёл с края и вернулся — спросим снова; в начале следующего хода — тоже.
+const wantLeave=p=>canEscape(p)&&p.leaveNo!==S.turnNo;
 // Герой у края подземелья: спросить, точно ли выбираться. Компьютер решает сам (выходит).
 // В сети окно общее: нажимает только тот, чей герой, остальные видят «Выбирает …».
 async function askLeave(p){
@@ -2731,7 +2779,7 @@ async function askLeave(p){
   const v=await modal({icon:'☀',tone:'good',title:'Выбраться наружу?',sub:`${p.name} · в мешке ${p.gold} золотых`,owner:p,
     text:'Точно хотите выбраться наружу? Может, ещё немного золота?',
     buttons:[{label:'Выбраться наружу',cls:'primary',value:'out'},{label:'Остаться в подземелье',value:'stay'}],cpuPick:()=>'out'});
-  if(v==='stay'){addLog(`${p.name} решил задержаться в подземелье.`);return false;}
+  if(v==='stay'){p.leaveNo=S.turnNo;addLog(`${p.name} решил задержаться в подземелье.`);return false;}
   return true;
 }
 async function escapeHero(p,lead){
@@ -3345,7 +3393,6 @@ function harm(p,h){
   return parts.join(', ');
 }
 async function resolve(ev,p){
-  if(S.mission){S.evN=S.evN||{};S.evN[ev]=(S.evN[ev]||0)+1;}   // уроки: что уже встретилось
   const good=(icon,title,text)=>{addLog(text);sfx(FIND_SFX[ev]);return modal({icon,tone:'good',img:ev==='key'?'img/key.jpg':`img/item-${ev}.jpg`,title,sub:'Находка',text,buttons:[{label:'Забрать',cls:'primary'}]});};
   const luckB=()=>p.luck>0?3:0,cuB=curseB(p);
   switch(ev){
@@ -3451,6 +3498,7 @@ async function resolve(ev,p){
           addLog(`${tr.n}: ${t}`);return t;}}});
       break;}
   }
+  if(S.mission){S.evN=S.evN||{};S.evN[ev]=(S.evN[ev]||0)+1;}   // уроки: что уже встретилось (считаем после находки — вещь уже в сумке)
   render();
   if(p.hp<=0&&p.mode!=='dead')await die(p,'Сердца кончились. Герой погиб в подземелье и выбывает из игры, золото потеряно.','💀','Погиб');
 }
@@ -4359,7 +4407,8 @@ async function teleportTo(p,[r,c],show){
   p.r=r;p.c=c;newLeg(p);if(p.mode==='out')p.trail.push([r,c]);boardFull=true;
   addLog(`${p.name} телепортировался.`);render();follow();
   await show({img:'img/portal.jpg',text:'Портал вспыхивает лиловым светом — и герой выходит из него на новом месте.'})
-  if(canEscape(p)&&await askLeave(p)){await escapeHero(p,'Телепорт вынес героя прямо к выходу из подземелья');return;}
+  p.leaveNo=null;   // телепорт — новое попадание на край
+  if(wantLeave(p)&&await askLeave(p)){await escapeHero(p,'Телепорт вынес героя прямо к выходу из подземелья');return;}
   for(const q of rivalsHere(p)){await wait(150);await duel(p,q);}
   for(const h of huntersHere(p)){if(!alive(p))break;await wait(150);await hunterFight(p,h,false);}
   if(x.stash&&alive(p))await stashAt(p);
@@ -5108,6 +5157,11 @@ function drawFx(t){
     if(o.jump){ctx.fillStyle=col.sleep;ctx.globalAlpha=.4+.5*pulse;ctx.font=`800 ${s*0.5}px ${col.body}`;ctx.fillText('⤴',x+s/2,y+s/2);ctx.globalAlpha=1;}
     if(o.pick){ctx.fillStyle=col.gold;ctx.globalAlpha=.5+.5*pulse;ctx.font=`800 ${s*0.46}px ${col.body}`;ctx.fillText('⚒',x+s/2,y+s/2);ctx.globalAlpha=1;}
   });
+  // урок: клетки, о которых говорит подсказка, — жёлтое пульсирующее кольцо (2D, если 3D нет)
+  if(LHL&&LHL.cells&&!document.body.classList.contains('three')){const k=(t%1250)/1250;
+    lessonCells().forEach(([r,c])=>{const x=c*s,y=r*s;fxMark(x-s*0.6,y-s*0.6,s*2.2,s*2.2);ctx.save();
+      ctx.strokeStyle='#ffd23a';ctx.shadowColor='#ffb020';ctx.shadowBlur=s*0.4;ctx.globalAlpha=Math.max(0,1-k);ctx.lineWidth=Math.max(2,s*0.09);
+      const g=s*(0.02+0.18*k);rrect(x-g,y-g,s+2*g,s+2*g,Math.max(3,s*0.2));ctx.stroke();ctx.restore();});}
   drawFlicker(t);
   if(huntOn())drawHunters(t,s);
   // фишки
