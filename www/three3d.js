@@ -596,12 +596,12 @@ function glyphSprite(ch,col){const key=ch+col;if(!glyphTex[key]){const k=96,c=do
 const KOB_TEX=tex('img/kobold-map.png'),DEAD_TEX=tex('img/dead_hero_on_map.jpg');
 // --- что видно на ещё не посещённой открытой плитке: монстры и вещи (ловушки, торговцы, демон, двери — сюрприз)
 // модель: [ключ, высота на поле]; монстры стоят лицом к игроку, вещи парят и медленно вращаются
-const EV3={chest:['mon_mimic',.5],potion:['it_potion',.36],haste:['it_haste',.36],amulet:['it_amulet',.34],sword:['it_sword',.5],silver:['it_silver',.5],
+const EV3={chest:['mon_mimic',.5],potion:['it_potion',.36],haste:['it_haste',.36],ghost:['it_elixir',.42],   /* зелье призрачного шага */amulet:['it_amulet',.34],sword:['it_sword',.5],silver:['it_silver',.5],
   map:['it_map',.36],bomb:['it_bomb',.36],rope:['it_rope',.3],stone:['it_stone',.34],key:['it_key',.4],pick:['it_pick',.5],gold:['it_gold',.4],cache:['it_gold',.46],shield:['it_shield',.42],scroll:['it_scroll',.4],kobold:['kobold',.6]};
 const EVIMG={cultist:'',whelp:'',ghost:'img/item-ghost.jpg',mantle:'img/item-mantle.jpg',cultist:'img/mon-cultist.jpg',whelp:'img/mon-whelp.jpg'};
 // модели монстров по порядку MONSTERS: крыса, слизень, гоблин, скелет, паук, шаман, призрак, мимик (= сундук), бес, вампир, тролль, зомби, ведьма, минотавр
-const MON3={11:['mon_zombie',.72],12:['mon_witch',.72],'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85],
-  14:['mon_shaman',.7,0xff8040],15:['mon_ghost',.74,0xa070ff]};   // ЗАГЛУШКИ: Огненный вождь и Пустотное тело — чужие модели с подкраской (3-й элемент — цвет)
+const MON3={2:['mon_goblin',.62],11:['mon_zombie',.72],12:['mon_witch',.72],'cultist':['mon_cultist',.62],'whelp':['mon_whelp',.6],0:['mon_rat',.5],6:['mon_ghost',.72],8:['mon_imp',.62],10:['mon_troll',.85],1:['mon_slime',.55],3:['mon_skeleton',.75],4:['mon_spider',.62],5:['mon_shaman',.62],7:['mon_mimic',.5],9:['mon_vampire',.78],13:['mon_minotaur',.85],
+  14:['mon_firechief',.78],15:['mon_void',.8]};   // свои модели: гоблин-воришка, Огненный вождь, Пустотное тело (3-й элемент, если есть, — цвет подкраски)
 // подкрашенная копия фигурки (готовится один раз на цвет и кешируется в FIG)
 const tintFig=(f,col)=>f['t'+col]||(f['t'+col]=(()=>{const g=f.mesh.clone(true);g.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.color.setHex(col);o.material.emissive.setHex(col);o.material.emissiveIntensity=.18;}});return g;})());
 const ITEM_EV=new Set(Object.keys(EV3).concat(['shield','scroll','ghost','mantle','gold','cache']).filter(k=>k!=='kobold'));
@@ -669,6 +669,12 @@ function addEvent(g,k,r,c){
   const src=ev==='monster'?MONSTERS[k.mon]&&MONSTERS[k.mon].img:EVIMG[ev];
   if(src){const sp=evIcon(src,ev==='monster'||BAD[ev]?'#e0523a':'#ecc66a');sp.position.y=.42;g.add(sp);}
 }
+// грибной торговец зельями (Мухомор): в «Спуске» виден в открытом зале сразу, в других режимах — когда его уже нашли
+function addMerchant(g,r,c){const f=FIG.merchP;if(!f.mesh){loadFig('merchP');return;}
+  const h=.66,m=f.mesh.clone();m.scale.setScalar(h);m.position.y=-(f.minY??-.5)*h;const w=new THREE.Group();w.add(m);
+  const i=r*N+c;let y=B.monYaw.get(i);
+  if(y==null){const q=P&&P();if(q&&q.r!=null){const [hx,hz]=cellXZ(q.r,q.c),[mx,mz]=cellXZ(r,c);y=Math.atan2(hx-mx,hz-mz);}else y=hsh(r,c,64)*Math.PI*2;B.monYaw.set(i,y);}
+  w.rotation.y=y;g.add(w);}
 function decoSig(k){const st=k.stash;return (k.rev?'':'h')+(k.stairs?'S':'')+(S.rules==='trophy'||S.rules==='descent'?'T':'')+(k.ev?(k.visited?'v':'u')+k.ev+(k.mon??'')+(k.hp!=null?'h'+k.hp+'/'+k.hpMax:''):'')+'|'+(st?st.kind+(st.zombie?'z':'')+(st.left!=null?st.left:''):'')+'|'+(k.scar||'');}
 // --- мусор на полу: камни, бочки, доски (место и набор постоянны для клетки, как декор в 2D)
 const woodMat=new THREE.MeshStandardMaterial({color:0x6b4a2a,roughness:.85});
@@ -704,6 +710,7 @@ function syncDeco(r,c){
   if(!k.rev)g.position.y=blockTopY(r,c);else addJunk(g,r,c);
   if((S.rules==='trophy'||S.rules==='descent')&&k.ev&&!k.visited&&!st0(k))addEvent(g,k,r,c);
   if(k.stairs)addStairs(g,k.ev==='boss');
+  if(k.ev==='merchP'&&k.rev&&(S.rules==='descent'||k.visited))addMerchant(g,r,c);
   if(k.visited&&k.ev){const sp=glyphSprite(GLYPH[k.ev]||'•',BAD[k.ev]?'#ff7a3d':k.ev==='bomb'?'#8fc4ff':'#ecc66a');sp.position.set(-.27,.32,-.27);g.add(sp);}
   const st=k.stash;
   if(st&&!FIG[st.kind==='kobold'?'kobold':'dead'].mesh)loadFig(st.kind==='kobold'?'kobold':'dead');
@@ -789,10 +796,12 @@ const FIG={male:{url:'models/hero_man',torch:[.378,.31,.052],mesh:null,wait:[]},
            female2:{url:'models/hero_w3',torch:[.306,.42,.153],mesh:null,wait:[]},
            female3:{url:'models/hero_w2',torch:[-.24,.33,.032],mesh:null,wait:[]},
            female:{url:'models/hero_woman',torch:[.161,.32,.275],mesh:null,wait:[]},
+           female4:{url:'models/hero_w4',torch:[.19,.41,.13],mesh:null,wait:[]},   // портрет 4 — светловолосая героиня в бирюзовом плаще
            dragon:{url:'models/sleepy_dragon',mesh:null,wait:[]},
            wake:{url:'models/wakeup_dragon',mesh:null,wait:[]},
            arch_whole:{key:'arch_whole',url:'models/arch_whole',mesh:null,wait:[]},arch_half:{key:'arch_half',url:'models/arch_half',mesh:null,wait:[]},arch_low:{key:'arch_low',url:'models/arch_low',mesh:null,wait:[]},
            dead:{url:'models/dead_hero',mesh:null,wait:[()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});}]},
+           merchP:{url:'models/merch_mushroom',mesh:null,wait:[decoReset]},   // Мухомор-зельевар (грибной торговец зельями)
            kobold:{url:'models/kobold',mesh:null,wait:[()=>{if(B)B.deco.forEach(d=>{if(d)d.sig='';});}]},
            eye:{url:'models/hunter_eye',mesh:null,wait:[]},hound:{url:'models/hunter_hound',mesh:null,wait:[]},reaper:{url:'models/hunter_reaper',mesh:null,wait:[]}};
 // размеры моделей охотников: масштаб, высота центра над подставкой, парит ли
@@ -815,7 +824,7 @@ function loadFig(key){const f=FIG[key];if(!f)return Promise.resolve();if(f.p)ret
   const t=TL.load(f.url+'.jpg',done,undefined,done);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.flipY=false;   // готова, когда пришла и текстура
   })).catch(e=>{console.warn('3D-фигурка не загрузилась',f.url,e);});
   return f.p;}
-const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':i===1?'female2':i===2?'female3':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
+const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':i===1?'female2':i===2?'female3':i===3?'female4':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
 // после старта партии — фоном, по одной: павший, проснувшийся дракон, охотники (только в режиме охоты), кобольд
 function bgLoad(){const q=['dead','wake',...(S&&S.rules==='hunt'?['hound','eye','reaper']:[]),'kobold'];
   const next=()=>{const k=q.shift();if(!k)return;loadFig(k).then(()=>setTimeout(next,300));};setTimeout(next,1500);}
