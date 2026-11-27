@@ -476,6 +476,69 @@ body.cpu-turn .rollcard{cursor:default}
 .mmtut{position:relative}
 .mmtut em{position:absolute;top:-8px;right:10px;font:800 10.5px var(--body);letter-spacing:.12em;text-transform:uppercase;font-style:normal;
   color:#241a06;background:var(--gold);border-radius:9px;padding:2px 8px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+/* ===== главное меню в стиле «драконьей арки» (чёрный фон, пиксельная арка, каменные кнопки) ===== */
+#mainmenu{background:#000;overflow-x:hidden}
+#mainmenu:not([hidden]){display:flex;flex-direction:column;align-items:center}
+#mainmenu .mmbg{display:none}
+#mainmenu .mmin{--aw:min(540px,calc(100vw*1.1),calc((100vh - 6px)*.6487));--ah:calc(var(--aw)*1.5416);
+  flex:none;width:var(--aw);max-width:none;min-height:var(--ah);margin:auto 0;
+  background:url(img/menu-arch.png) center top/100% auto no-repeat;image-rendering:pixelated;
+  padding:calc(var(--ah)*.232) calc(var(--aw)*.14) calc(var(--ah)*.03)}
+@supports (height:100dvh){#mainmenu .mmin{--aw:min(540px,calc(100vw*1.1),calc((100dvh - 6px)*.6487))}}
+#mainmenu .mmlogo,#mainmenu .mmkick{display:none}
+#mainmenu .mmtitle{margin:0;font-size:clamp(26px,calc(var(--aw)*.083),44px);line-height:1.02;color:#eaf3ff;
+  text-shadow:0 0 2px #000,0 2px 0 #000,0 0 14px rgba(70,150,255,.85),0 0 30px rgba(40,110,255,.55)}
+#mainmenu .mmslogan{margin-top:4px;font-size:clamp(14px,calc(var(--aw)*.04),20px);color:#8fc3ff;text-shadow:0 1px 0 #000,0 0 8px #000}
+#mainmenu .mmmid{margin:auto 0 0;padding:calc(var(--ah)*.022) 0 0}
+#mainmenu .mmfoot{margin-top:calc(var(--ah)*.018);font-size:11.5px;background:rgba(0,2,10,.55);border-radius:8px;padding:2px 10px;color:#9db4d8;text-shadow:0 1px 0 #000,0 0 6px #000,0 0 3px #000}
+#mainmenu .mmpriv{color:#9db4d8;text-shadow:0 1px 0 #000,0 0 6px #000}
+/* каменная планка: 9-slice, углы не тянутся; разная длина текста — за счёт средней части */
+#mainmenu .mmbtns button,#mainmenu .mmsmall button,#mainmenu .mmvk,#mainmenu .mmquit{
+  position:relative;border-style:solid;border-width:13px 17px;border-color:transparent;border-radius:0;
+  border-image:url(img/btn-stone.png) 40 46 fill / 13px 17px / 0 stretch;image-rendering:pixelated;
+  background:none;box-shadow:none;color:#e8f2ff;font-weight:800;
+  text-shadow:-1px -1px 0 #04081a,1px -1px 0 #04081a,-1px 1px 0 #04081a,1px 1px 0 #04081a,0 2px 3px #000;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.8));transition:filter .15s,transform .08s}
+#mainmenu .mmbtns button{min-height:clamp(52px,calc(var(--ah)*.088),64px);padding:0 6px;gap:10px}
+#mainmenu .mmbtns{gap:clamp(6px,calc(var(--ah)*.012),10px)}
+#mainmenu .mmbtns button i{color:#9fd0ff;font-size:22px;width:28px;text-shadow:0 0 8px rgba(80,170,255,.9),0 1px 0 #000}
+#mainmenu .mmbtns b{font-size:17px;color:#f2f7ff}
+#mainmenu .mmbtns small{font-size:12.5px;font-weight:600;opacity:1;color:#a9c8f0}
+#mainmenu .mmbtns button:hover:not(:disabled),#mainmenu .mmsmall button:hover,#mainmenu .mmvk:hover,#mainmenu .mmquit:hover{
+  border-color:transparent;box-shadow:none;filter:brightness(1.22) drop-shadow(0 0 6px rgba(70,160,255,.9)) drop-shadow(0 3px 4px rgba(0,0,0,.8))}
+#mainmenu .mmbtns button:active:not(:disabled),#mainmenu .mmsmall button:active,#mainmenu .mmvk:active,#mainmenu .mmquit:active{
+  transform:translateY(2px);filter:brightness(.92) drop-shadow(0 1px 2px rgba(0,0,0,.8))}
+#mainmenu button:focus-visible{outline:2px solid #6fb6ff;outline-offset:3px}
+/* главная кнопка (primary): золотой текст и мягкое пульсирующее свечение */
+#mainmenu .mmbtns button.primary{color:#ffe7a3;animation:mmPrim 2.4s ease-in-out infinite}
+#mainmenu .mmbtns button.primary b{color:#ffe08a}
+#mainmenu .mmbtns button.primary small{color:#f1d9a0}
+#mainmenu .mmbtns button.primary i{color:#ffd56a;text-shadow:0 0 8px rgba(255,200,90,.9),0 1px 0 #000}
+@keyframes mmPrim{0%,100%{filter:drop-shadow(0 0 3px rgba(255,205,100,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.8))}
+  50%{filter:brightness(1.12) drop-shadow(0 0 9px rgba(255,205,100,.95)) drop-shadow(0 3px 4px rgba(0,0,0,.8))}}
+#mainmenu .mmbtns button.primary:hover{animation:none}
+@media (prefers-reduced-motion:reduce){#mainmenu .mmbtns button.primary{animation:none;filter:drop-shadow(0 0 6px rgba(255,205,100,.8))}}
+/* бейджи (BETA, «Новичку»…) — над правым краем планки */
+#mainmenu .mmtut em{top:-17px;right:4px;z-index:1;text-shadow:none;filter:none}
+#mainmenu .mmhead{background:radial-gradient(ellipse at center,rgba(0,4,16,.85),rgba(0,4,16,.5) 55%,rgba(0,4,16,0) 75%);padding:2px 20px 6px}
+#mainmenu .mmhead b{color:#ffe08a;font-size:22px}
+#mainmenu .mmhead small{color:#b9d2f2}
+#mainmenu .mmbtns .mmback{align-self:center;width:62%;min-width:130px;min-height:40px;margin-top:6px;font-size:13.5px;color:#cfe2ff;justify-content:center}
+#mainmenu .mmsmall{margin-top:clamp(6px,calc(var(--ah)*.012),10px);gap:6px}
+#mainmenu .mmsmall button{min-height:40px;padding:0 2px;font-size:13px}
+#mainmenu .mmvk{margin-top:clamp(6px,calc(var(--ah)*.012),10px);min-height:42px;padding:0 6px;font-size:13px;color:#dbe8ff}
+#mainmenu .mmvk b{width:22px;height:22px;font-size:11px;text-shadow:none}
+#mainmenu .mmquit{margin-top:clamp(6px,calc(var(--ah)*.012),10px);min-height:38px;padding:0 22px;font-size:13px;color:#cfe2ff}
+/* телефон боком: арка слева как картина, кнопки — колонкой справа */
+@media (orientation:landscape) and (max-height:560px){
+  #mainmenu .mmin{--ah:calc(100vh - 16px);--aw:calc(var(--ah)*.6487);width:calc(var(--aw) + 22px + min(400px,96vw - var(--aw) - 30px));min-height:var(--ah);margin:auto 0;
+    background-position:left center;background-size:auto var(--ah);
+    padding:10px 6px 10px calc(var(--aw) + 22px)}
+  #mainmenu .mmmid{margin:6px 0 0;padding:0}
+  #mainmenu .mmtitle{font-size:30px}
+  #mainmenu .mmbtns button{min-height:50px}
+  #mainmenu .mmbtns b{font-size:16px}
+}
 /* обучение: уроки-слайды */
 .tutor{position:fixed;inset:0;z-index:24;background:var(--bg);overflow:hidden}
 .tutor .mmbg{opacity:.28}
