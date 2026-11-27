@@ -4130,9 +4130,11 @@ document.addEventListener('click',e=>{
 const MUSIC={wake:{src:'sfx/dragon_not_wait.mp3',vol:0.4},intro:{src:'sfx/intro_music.mp3',vol:0.7},dungeon:{src:['sfx/dungeon_back_music1.mp3','sfx/dungeon_back_music2.mp3'],vol:0.35}};
 let musicVol=loadVol('dragon-music-vol','dragon-music'),musicOn=musicVol>0;
 let musicTrack=null,musicWant=null;
+function splashUp(){const sp=document.getElementById('splash');return !!(sp&&!window.SPLASH_DONE);}
 function playMusic(name){
   musicWant=name;
   if(!musicOn)return;
+  if(name==='intro'&&splashUp())return;   // интро-музыка — сразу после заставки студии, не под логотипом
   if(musicTrack&&musicTrack.__name===name&&!musicTrack.paused)return;
   stopMusic(true);
   try{const src=MUSIC[name].src,a=new Audio(Array.isArray(src)?src[Math.floor(Math.random()*src.length)]:src);a.loop=true;aVol(a,'music',MUSIC[name].vol);a.__name=name;musicTrack=a;
@@ -4164,6 +4166,7 @@ async function volumeDlg(){
 }
 function stopMusic(keepWish){if(musicTrack){try{musicTrack.pause();}catch(e){}musicTrack=null;}if(!keepWish)musicWant=null;}
 // браузер не даёт играть музыку до первого касания — запускаем при первом нажатии
+window.addEventListener('splashdone',()=>{if(musicOn&&musicWant==='intro')playMusic('intro');});
 document.addEventListener('pointerdown',()=>{if(musicOn&&musicWant&&(!musicTrack||musicTrack.paused))playMusic(musicWant);},true);
 document.addEventListener('keydown',()=>{if(musicOn&&musicWant&&(!musicTrack||musicTrack.paused))playMusic(musicWant);},true);
 document.addEventListener('visibilitychange',()=>{
@@ -5760,7 +5763,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame();
 new ResizeObserver(()=>{size();}).observe(box);
 size();boot();
 // страховки запуска: заставка не остаётся висеть; если загрузка 3D где-то зависла — через 25 с убрать экран загрузки и показать меню
-setTimeout(()=>{const sp=document.getElementById('splash');if(sp){sp.remove();window.SPLASH_DONE=true;}ensureMenu();},9000);
+setTimeout(()=>{const sp=document.getElementById('splash');if(sp){sp.remove();window.SPLASH_DONE=true;if(musicOn&&musicWant==='intro')playMusic('intro');}ensureMenu();},9000);
 setTimeout(()=>{if(document.getElementById('ld3d')&&window.__3d&&__3d.loader){try{__3d.loader.hide();}catch(e){}setTimeout(ensureMenu,600);}},25000);
 </script>
 <script src="lib/three.min.js"></script>
