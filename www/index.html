@@ -481,11 +481,11 @@ body.cpu-turn .rollcard{cursor:default}
 #mainmenu:not([hidden]){display:flex;flex-direction:column;align-items:center}
 #mainmenu .mmbg{display:none}
 /* арка 824×996 (h = w·1.2087): голова дракона до 28% высоты, проём между столбами (с факелами) — 19…81% ширины */
-#mainmenu .mmin{--tt:0px;--aw:min(640px,calc(100vw*1.1),calc((100vh - 6px)*.8273));--ah:calc(var(--aw)*1.2087);
-  position:relative;flex:none;width:var(--aw);max-width:none;min-height:calc(var(--ah) + var(--tt));margin:auto 0;
+#mainmenu .mmin{--tt:0px;--aw:min(640px,calc(100vw*1.1),calc((100vh - 140px)*.8273));--ah:calc(var(--aw)*1.2087);
+  position:relative;flex:none;width:var(--aw);max-width:none;min-height:calc(var(--ah) + var(--tt));margin:auto 0 max(4px,calc((100vh - var(--ah) - var(--tt))*.18));
   background:url(img/menu-arch.png) center var(--tt)/100% auto no-repeat;
   padding:calc(var(--tt) + var(--ah)*.285) calc(var(--aw)*.195) calc(var(--ah)*.035)}
-@supports (height:100dvh){#mainmenu .mmin{--aw:min(640px,calc(100vw*1.1),calc((100dvh - 6px)*.8273))}}
+@supports (height:100dvh){#mainmenu .mmin{--aw:min(640px,calc(100vw*1.1),calc((100dvh - 140px)*.8273))}}  /* 140px — место над аркой для языков пламени */
 /* телефон вертикально: арка шире экрана (столбы с факелами по краям), название — над головой дракона */
 @media (orientation:portrait) and (max-width:600px){
   #mainmenu .mmin{--tt:104px;--aw:min(calc(100vw*1.24),calc((100vh - var(--tt) - 8px)*.8273));padding-left:calc(var(--aw)*.185);padding-right:calc(var(--aw)*.185)}
@@ -551,6 +551,12 @@ body.cpu-turn .rollcard{cursor:default}
   #mainmenu .mmbtns button{min-height:50px}
   #mainmenu .mmbtns b{font-size:16px}
 }
+/* живое пламя позади арки (menu_fire): канвас на весь экран под .mmin; настройки — объект MMFIRE в скрипте внизу */
+/* название и слоган поверх огня (телефон вертикально): плотная тёмная тень */
+#mainmenu .mmtitle{text-shadow:0 0 2px #000,0 2px 0 #000,0 0 10px rgba(0,0,0,.9),0 0 14px rgba(70,150,255,.85),0 0 30px rgba(40,110,255,.55)}
+#mainmenu .mmslogan{color:#a9d2ff;text-shadow:0 1px 0 #000,0 0 6px #000,0 0 12px #000,0 0 18px rgba(0,0,0,.8)}
+#mainmenu .mmfire{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block;background:#000;image-rendering:auto}
+#mainmenu .mmin{z-index:1}
 /* обучение: уроки-слайды */
 .tutor{position:fixed;inset:0;z-index:24;background:var(--bg);overflow:hidden}
 .tutor .mmbg{opacity:.28}
@@ -706,6 +712,121 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 .dask .dq{flex-basis:100%}
 .dask button{flex:1 1 0}
 .hex.dim{opacity:.4}
+
+/* ======================================================================
+   UI: СИНИЙ КАМЕНЬ (ui_stone). Основная палитра — холодный камень и синее
+   свечение, как у арки меню; золото — только акценты (главная кнопка,
+   монеты, звёзды, награды, важные заголовки). Семантика (HP, редкость,
+   яд/сон/огонь) не трогается. Блок идёт последним и перекрывает старые
+   правила; убрать его целиком = вернуть прежний вид.
+   ====================================================================== */
+:root{
+  --bg:#040814;--bg-hi:#0f1b3a;--panel-hi:#1b2750;--panel:#121b38;--panel-lo:#080e22;
+  --frame:#3f72d6;--frame-in:#26355f;--frame-hi:#a9cdff;--glow:#3fa9ff;--line:#2b4380;
+  --ink:#eef4ff;--muted:#93a6cc;
+  --gold-lo:#2f5cb4;            /* бывшие тёмно-золотые кольца гербов/иконок → синие */
+  --stone-glow:rgba(63,169,255,.55);
+  --gold-glow:rgba(255,206,110,.75);
+  /* ---- каменная рамка окна (img/frame-stone.png, 514×514, срезы 134 107 140 109) ----
+     Толщина рамки = ОДНА переменная --fw (ширина боковой колонны, px);
+     верх/низ и голова дракона считаются от неё пропорционально. */
+  --fw:26px;
+  --fhead:1.3;                  /* размер головы дракона относительно рамки */
+}
+@media (max-width:600px),(max-height:560px){:root{--fw:19px}}
+
+/* ---- окна: каменная рамка 9-slice + голова дракона отдельным слоем ---- */
+.sheet.frame{
+  --fwt:calc(var(--fw)*134/109);--fwb:calc(var(--fw)*140/109);--fwr:calc(var(--fw)*107/109);
+  border-style:solid;border-color:transparent;border-radius:0;
+  /* рисованная толщина --fw*; реальная граница чуть уже, чтобы фон заходил под неровный край камня */
+  border-width:calc(var(--fwt)*.8) calc(var(--fwr)*.82) calc(var(--fwb)*.8) calc(var(--fw)*.82);
+  border-image:url(img/frame-stone.png) 134 107 140 109 / var(--fwt) var(--fwr) var(--fwb) var(--fw) / 0 round;
+  background:linear-gradient(180deg,#0c1430,#070c1d 60%,#050916) padding-box;
+  box-shadow:0 0 40px -14px var(--tone,transparent),0 24px 60px -10px rgba(0,0,0,.8);
+  padding:0;overflow:visible;box-sizing:border-box}
+.sheet.frame::before{display:none}
+.sheet.frame::after{content:"";position:absolute;z-index:3;pointer-events:none;left:50%;right:auto;
+  width:calc(var(--fw)*var(--fhead)*266/109);height:calc(var(--fw)*var(--fhead)*165/109);
+  top:calc(var(--fwt)*-.8 - var(--fw)*var(--fhead)*25/109 - var(--fw)*(var(--fhead) - 1)*.35);transform:translateX(-50%) rotate(0);
+  background:url(img/frame-head.png) center/100% 100% no-repeat;box-shadow:none}
+#sheet{display:flex;flex-direction:column;min-height:0}
+#sheet>.sbody{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;
+  padding:calc(var(--fw)*.45 + 6px) 10px 10px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#csheet.frame{padding:calc(var(--fw)*.45 + 6px) 10px 10px;overflow:visible}
+/* тон «золото» у окон: рамка/свечение синие, золотым остаётся только заголовок */
+.sheet[data-tone="gold"],#csheet{--tone:var(--glow)!important}
+.sheet[data-tone="gold"] .mtitle,#csheet .mtitle{color:var(--gold);text-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(236,198,106,.25)}
+.sheet:not([data-tone]) .mtitle,.sheet[data-tone=""] .mtitle{color:var(--ink)}
+.mimg{border-color:var(--frame-in);box-shadow:0 0 0 2px var(--panel-lo),0 0 0 3px rgba(63,169,255,.35)}
+
+/* ---- кнопки во всех окнах: каменная плита 9-slice как в меню ---- */
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)){
+  border-style:solid;border-color:transparent;border-radius:0;
+  border-width:9px 14px 11px;
+  border-image:url(img/btn-stone.png) 26 42 30 fill / 9px 14px 11px / 0 stretch;
+  background:none;box-shadow:none;padding:2px 8px;
+  color:#e9f2ff;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9);
+  transition:filter .15s}
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):hover:not(:disabled){
+  box-shadow:none;filter:brightness(1.18) drop-shadow(0 0 6px var(--stone-glow))}
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):focus-visible{outline:none;filter:brightness(1.2) drop-shadow(0 0 4px #7fd3ff) drop-shadow(0 0 2px #fff)}
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):disabled{filter:grayscale(.7) brightness(.8)}
+/* маленькие кнопки — тоньше кромка */
+:root :is(.coach .cr,.thead,.dask,.robrow,.csacts,.diehud .dieacts,.chatform,.volrow) button:not(.off),
+:root button:is(.rpskip,.csact,.mback,.mmback,.volmute){
+  border-width:6px 10px 8px;border-image-width:6px 10px 8px;padding:1px 6px}
+/* главная кнопка: тот же камень, золотой текст со свечением */
+:root button.primary:not(:where(#mainmenu button)),
+:root .cnt button.on,:root button.on:not(:where(.pk button,.lobport button,#mainmenu button)),:root button.rpskip.hot{
+  color:#ffdc7c;text-shadow:0 1px 0 #000,0 0 8px var(--gold-glow),0 0 16px rgba(236,198,106,.45);
+  filter:drop-shadow(0 0 5px rgba(236,198,106,.35))}
+:root button.primary:not(:where(#mainmenu button)):hover:not(:disabled){filter:brightness(1.15) drop-shadow(0 0 8px rgba(236,198,106,.55))}
+/* опасные действия (выход, сдаться): красноватый камень */
+/* фильтр поворачивает оттенок и у тени текста, поэтому тень задана синей — после поворота она красная */
+:root button.danger{color:#fff;text-shadow:0 1px 0 #000,0 0 8px rgba(70,130,255,.85);filter:hue-rotate(140deg) saturate(1.6) brightness(.95)}
+:root button.danger:hover:not(:disabled),:root button.danger:focus-visible{filter:hue-rotate(140deg) saturate(1.8) brightness(1.12)}
+:root button.heal{color:var(--good)} :root button.sleep{color:var(--sleep)}
+.coach .cr .off{border:0;border-image:none}
+
+/* ---- круглые кнопки нижней панели и чата: синий камень ---- */
+.round,.chatfab,.chatx{border:1px solid #4a78d6;
+  background:radial-gradient(circle at 38% 30%,#3a4877,#18213f 62%,#0a1027);
+  box-shadow:inset 0 0 0 2px #0a1027,inset 0 1px 0 3px rgba(169,205,255,.12),0 0 10px -3px var(--stone-glow),0 3px 8px rgba(0,0,0,.55)}
+.round:hover:not(:disabled),.chatfab:hover,.chatx:hover{border-color:var(--frame-hi);box-shadow:inset 0 0 0 2px #0a1027,0 0 14px -2px var(--glow)}
+
+/* ---- шестиугольники, кубик, карточки героев ---- */
+.hex::after{background:radial-gradient(circle at 50% 35%,#24305a,var(--panel-lo) 72%)}
+.hex::before{background:linear-gradient(180deg,#b9d6ff,#4a78d6 42%,#1d2b55)}
+.frame::before,.frame::after{box-shadow:0 0 7px var(--glow)}
+
+/* ---- подсказки, советы, чат, плашки: синие рамки, золото только в выделенных словах ---- */
+.coach{border-color:var(--frame);background:linear-gradient(180deg,rgba(27,39,80,.97),rgba(8,14,34,.97));
+  box-shadow:0 0 0 3px rgba(8,14,34,.9),0 0 18px -6px var(--glow),0 10px 30px rgba(0,0,0,.7)}
+.coach .ci,.mtip::before{background:radial-gradient(circle at 40% 35%,#9fd4ff,#3f8be8 70%);color:#06122c}
+.mtip{border-color:var(--frame-in);background:rgba(63,169,255,.07)}
+.chat,.chatpeek{border-color:var(--frame)}
+.chathead,.chatform{border-color:rgba(63,169,255,.25)}
+.cmsg img{border-color:var(--frame)}
+.cmsg.me .cb{background:rgba(63,169,255,.16)}
+.chathead b{color:var(--ink)}
+.dphase,.dask,.rollhint{border-color:var(--frame)}
+.dask{background:rgba(8,14,34,.95);box-shadow:0 0 16px -6px var(--glow),0 10px 24px rgba(0,0,0,.6)}
+.robrow img{box-shadow:0 0 0 2px var(--frame)}
+.camp .cm .no{border-color:var(--frame);color:var(--frame-hi)}
+.thead .tstep,.tkick{color:var(--frame-hi)}
+.tsteps i{border-color:var(--frame);color:var(--frame-hi)}
+.tbar i{background:linear-gradient(90deg,#9c7630,var(--gold))}
+.brief .goal{border-color:var(--frame);background:rgba(63,169,255,.07)}
+.toast{border-color:var(--frame)}
+
+/* ---- загрузчик (стили из three3d.js перекрываются по специфичности) ---- */
+body #ld3d{background:radial-gradient(ellipse at 50% 45%,#121c3c,#03050d 75%);color:#dbe7fb}
+body #ld3d .t{color:#e6f0ff;text-shadow:0 0 14px rgba(63,169,255,.55)}
+body #ld3d .bar{background:rgba(63,169,255,.14);box-shadow:0 0 0 1px #26355f}
+body #ld3d .bar i{background:linear-gradient(90deg,#2f5cb4,#7fc8ff)}
+body #ld3d .s{color:#93a6cc}
+/* ====================== конец блока UI: синий камень ====================== */
 </style>
 <!-- Заставка студии при каждом запуске: белый экран, логотип 514+lab плавно появляется и исчезает, затем белый фон тает и открывается игра.
      Игра, 3D и загрузка ресурсов идут под заставкой параллельно; если загрузка дольше — после заставки виден обычный загрузчик игры.
@@ -797,6 +918,7 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 
 <div class="mainmenu" id="mainmenu" hidden>
   <div class="mmbg"></div>
+  <canvas class="mmfire" aria-hidden="true"></canvas>
   <div class="mmin">
     <img class="mmlogo" src="img/logo.png" alt="">
     <div class="mmkick">Эпичное приключение</div>
@@ -842,14 +964,14 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
   </div>
 </div>
 <div class="modal" id="modal" hidden>
-  <div class="sheet frame" id="sheet">
+  <div class="sheet frame" id="sheet"><div class="sbody">
     <img class="mimg" id="mimg" alt="" hidden>
     <div class="mhead"><div class="micon" id="micon"></div><div><div class="mtitle" id="mtitle"></div><div class="msub" id="msub"></div></div></div>
     <div class="mtext" id="mtext"></div>
     <div class="mtip" id="mtip" hidden></div>
     <div class="mroll" id="mroll" hidden><div class="die" id="die">d20</div><div class="dc" id="dc"></div></div>
     <div class="mbtns" id="mbtns"></div>
-  </div>
+  </div></div>
 </div>
 
 <div class="modal" id="charsheet" hidden role="dialog" aria-modal="true" aria-labelledby="csTitle">
@@ -1987,7 +2109,7 @@ function modal(o){
     if(sync&&MODAL&&MODAL.local)MODAL.close();          // игровое окно вытесняет открытое меню
     if(S)render();
     const m=$('modal'),sheet=$('sheet');
-    sheet.style.setProperty('--tone',o.tone?css('--'+o.tone):css('--line'));
+    sheet.style.setProperty('--tone',o.tone?css('--'+o.tone):css('--line'));sheet.dataset.tone=o.tone||'';
     const im=$('mimg');im.classList.toggle('tall',!!o.imgTall);if(o.img){im.src=o.img;im.alt=o.title||'';im.hidden=false;}else{im.hidden=true;im.removeAttribute('src');}
     $('micon').textContent=o.icon||'';
     if(o.iconImg){$('micon').innerHTML=`<img alt="" src="${o.iconImg}">`;}
@@ -5844,3 +5966,238 @@ setTimeout(()=>{if(document.getElementById('ld3d')&&window.__3d&&__3d.loader){tr
 <script src="lib/three.min.js"></script>
 <script src="assets.js"></script>
 <script src="three3d.js"></script>
+<script>
+/* ===== Главное меню: живое пламя позади арки (menu_fire) =====
+   Отдельный <canvas class="mmfire"> под аркой (z-index ниже .mmin с img/menu-arch.png).
+   WebGL-шейдер: языки огня поднимаются от силуэта арки (маска из альфы menu-arch.png),
+   рвутся шумом fbm, угольки-искры, мягкий пульсирующий отсвет. Низкое внутреннее разрешение,
+   лимит FPS, пауза когда меню скрыто/вкладка скрыта, контекст WebGL освобождается через 4 с после
+   закрытия меню. Нет WebGL → статичный 2D-отсвет. prefers-reduced-motion → медленнее, без искр.
+   ВСЕ НАСТРОЙКИ — в объекте MMFIRE ниже. */
+(function(){
+const MMFIRE={
+  height:.36,      // высота языков над силуэтом (доля высоты арки)
+  intensity:1.0,   // яркость огня (0.6 — спокойнее, 1.3 — ярче)
+  speed:1.0,       // скорость подъёма пламени
+  sway:1.0,        // колыхание по горизонтали
+  sparks:1.0,      // количество/яркость угольков (0 — выкл.)
+  glow:1.0,        // отсвет позади арки
+  side:1.0,        // насколько пламя выходит по бокам силуэта
+  hue:0.0,         // сдвиг цвета: 0 — оранжевый; -0.3 — краснее; 0.3 — желтее
+  titleDim:.75,     // насколько приглушать огонь за названием на телефоне (0..1)
+  scale:.4,        // внутреннее разрешение канваса относительно экрана
+  maxPix:200000,   // потолок пикселей канваса
+  fps:40,          // лимит кадров
+  reduced:{speed:.35,sparks:0,fps:20}  // при prefers-reduced-motion
+};
+window.MMFIRE=MMFIRE;
+try{const q=new URLSearchParams(location.search).get('mmfirescale');if(q)MMFIRE.scale=+q,MMFIRE.maxPix=4e6;}catch(e){}
+const menu=document.getElementById('mainmenu');if(!menu)return;
+const ARCH_W=824,ARCH_H=996,HMAX=.7,LOWY0=.22,LOWY1=.62,LOWK=.45;  // LOWK — сила огня у низа столбов (0..1)
+// домен маски в координатах арки (0..1): поля сбоку и сверху, куда поднимается огонь
+const MX0=-.3,MX1=1.3,MY0=-.5,MY1=1.04,TW=160,TH=Math.round(TW*(MY1-MY0)*ARCH_H/((MX1-MX0)*ARCH_W));
+let cv=null,gl=null,prog=null,tex=null,U={},maskData=null,raf=0,last=0,t0=performance.now(),tAcc=0,running=false,releaseT=0,mode='';
+let hEff=.3,arch=[0,0,1,1],dim=[0,0,0,0],W=0,H=0,sc=1,ftimes=[];
+const reduced=()=>matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function canvasEl(){
+  if(cv&&cv.isConnected)return cv;
+  cv=menu.querySelector('canvas.mmfire');
+  if(!cv){cv=document.createElement('canvas');cv.className='mmfire';cv.setAttribute('aria-hidden','true');menu.insertBefore(cv,menu.firstChild);}
+  return cv;
+}
+// маска: R — силуэт (чуть размыт и расширен), G — широкое размытие для отсвета
+function buildMask(img){
+  const c=document.createElement('canvas');c.width=TW;c.height=TH;const x=c.getContext('2d');
+  const ax=(0-MX0)/(MX1-MX0)*TW,ay=(0-MY0)/(MY1-MY0)*TH,aw=TW/(MX1-MX0),ah=TH/(MY1-MY0);
+  x.drawImage(img,ax,ay,aw,ah);
+  const d=x.getImageData(0,0,TW,TH).data,n=TW*TH,A=new Float32Array(n);
+  for(let i=0;i<n;i++)A[i]=d[i*4+3]/255;
+  const blur=(src,r)=>{let a=src.slice(),b=new Float32Array(n);
+    for(let pass=0;pass<3;pass++){
+      for(let y=0;y<TH;y++){let s=0;for(let x2=-r;x2<=r;x2++)s+=a[y*TW+Math.min(TW-1,Math.max(0,x2))];
+        for(let x2=0;x2<TW;x2++){b[y*TW+x2]=s/(2*r+1);s+=a[y*TW+Math.min(TW-1,x2+r+1)]-a[y*TW+Math.max(0,x2-r)];}}
+      for(let x2=0;x2<TW;x2++){let s=0;for(let y=-r;y<=r;y++)s+=b[Math.min(TH-1,Math.max(0,y))*TW+x2];
+        for(let y=0;y<TH;y++){a[y*TW+x2]=s/(2*r+1);s+=b[Math.min(TH-1,y+r+1)*TW+x2]-b[Math.max(0,y-r)*TW+x2];}}
+    }return a;};
+  const S=blur(A,1),G=blur(A,9),out=new Uint8Array(n*4);
+  // B: «высота над силуэтом» — расстояние вниз по столбцу до ближайшего камня (0..HMAX высоты арки), 1 = у самого камня
+  const HM=Math.round(TH/(MY1-MY0)*HMAX),D=new Float32Array(n);
+  // сила источника зависит от высоты камня в арке: верх (голова, шипы, плечи) горит сильно, низ столбов — слабо, чтобы не было «стен» огня по бокам
+  const wY=v=>{const u=Math.min(1,Math.max(0,(v-LOWY0)/(LOWY1-LOWY0)));return 1-u*u*(3-2*u)*(1-LOWK);};
+  for(let x2=0;x2<TW;x2++){let dist=1e9,w=0;for(let y=TH-1;y>=0;y--){const i=y*TW+x2;if(A[i]>.5){dist=0;w=wY(y/TH*(MY1-MY0)+MY0);}else dist++;D[i]=Math.max(0,1-dist/HM)*w;}}
+  const B=blur(D,1);
+  for(let i=0;i<n;i++){out[i*4]=Math.min(255,Math.round(Math.min(1,S[i]*1.6)*255));out[i*4+1]=Math.round(Math.min(1,G[i]*1.25)*255);out[i*4+2]=Math.round(B[i]*255);out[i*4+3]=255;}
+  return out;
+}
+const VS='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+const FS=`precision mediump float;
+uniform sampler2D uM;uniform vec2 uRes;uniform vec4 uArch;uniform vec4 uDim;uniform float uT,uH,uI,uSw,uSp,uGl,uSide,uHue,uDimK;
+float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(h1(i),h1(i+vec2(1,0)),f.x),mix(h1(i+vec2(0,1)),h1(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*nz(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+vec2 tm(vec2 a){return vec2((a.x-(${MX0.toFixed(3)}))/${(MX1-MX0).toFixed(3)},(a.y-(${MY0.toFixed(3)}))/${(MY1-MY0).toFixed(3)});}
+vec4 mk(vec2 a){vec2 m=tm(a);if(m.x<0.||m.x>1.||m.y<0.||m.y>1.)return vec4(0.);return texture2D(uM,m);}
+vec3 ramp(float f){
+  vec3 c=mix(vec3(0.),vec3(.45,.03,.01),smoothstep(0.,.3,f));
+  c=mix(c,vec3(1.,.32+uHue*.25,.02),smoothstep(.25,.6,f));
+  c=mix(c,vec3(1.,.74+uHue*.15,.24),smoothstep(.62,.92,f));
+  c=mix(c,vec3(1.,.95,.75),smoothstep(.92,1.1,f));return c;}
+void main(){
+  vec2 px=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);
+  vec2 a=(px-uArch.xy)/uArch.zw;
+  vec2 s=vec2(a.x,a.y*1.2087);
+  float t=uT;
+  // крупное колыхание + вытянутые вверх «языки»
+  float n1=fbm(s*vec2(3.,1.6)+vec2(0.,t*.9));
+  float n2=fbm(s*vec2(10.,2.3)+vec2(5.2,t*2.2));
+  float n3=fbm(s*vec2(21.,4.8)+vec2(1.3,t*3.8));
+  vec2 wp=vec2((n1-.5)*.16*uSw,max(0.,n2-.5)*.05);
+  // высота над силуэтом из канала B (гладко, одна выборка), с колыханием по горизонтали
+  float hb=1.-mk(a).b;   // 0 у камня .. 1 на высоте HMAX
+  vec2 q=a+vec2(wp.x*(.2+hb*.9)+(n3-.5)*.03*uSide*hb,wp.y);
+  float acc=clamp(1.-(1.-mk(q).b)*${HMAX.toFixed(2)}/uH,0.,1.);
+  float acc0=clamp(1.-hb*${HMAX.toFixed(2)}/uH,0.,1.);
+  // сбоку от силуэта колыхание «заносит» выборку в камень — ограничиваем, чтобы были лишь языки, а не стена
+  acc=min(acc,acc0+.24*uSide*smoothstep(.45,.75,n2)*(.4+.9*n3));
+  // языки: чем выше над силуэтом (h), тем реже шум «дотягивает» пламя
+  float hh=1.-acc;
+  float n=.6*n2+.55*n3-.08;
+  float v=n-hh*.8;
+  float f=smoothstep(.0,.14,v)*pow(max(0.,1.-hh),1.35)*(.6+.7*n3)*1.3*uI;
+  f*=step(a.y,1.)*smoothstep(1.02,.94,a.y);
+  vec3 col=ramp(clamp(f*.92,0.,.98));
+  // отсвет позади арки (мерцает)
+  float fl=.75+.18*sin(t*6.3)+.12*nz(vec2(t*3.,1.3))+.08*sin(t*17.);
+  float g=mk(a+vec2(0.,.04)).g;
+  col+=vec3(.55,.13,.02)*g*g*uGl*fl*.9;
+  col+=vec3(.2,.04,.0)*smoothstep(.9,0.,length((a-vec2(.5,.25))*vec2(1.,1.4)))*uGl*fl*.35;
+  // угольки
+  float sp=0.;
+  for(int k=0;k<3;k++){
+    float fk=float(k);
+    vec2 gp=s*vec2(11.+fk*5.,7.+fk*3.)+vec2(fk*13.1,t*(1.6+fk*.7));
+    vec2 id=floor(gp),fp=fract(gp);
+    float r=h1(id+fk*17.3);
+    if(r>.8){
+      vec2 c=vec2(.2+.6*h1(id+3.1),.2+.6*h1(id+7.7));
+      c.x+=.18*sin(t*2.+r*40.);
+      float dd=length((fp-c)*vec2(1.,.7));
+      float life=fract(r*91.+t*.3);
+      sp+=smoothstep(.13,0.,dd)*(1.-life)*1.4/(1.+fk*.6);
+    }
+  }
+  float zone=smoothstep(.04,.25,mk(a+vec2(0.,.12)).g)*smoothstep(1.05,.55,a.y)*(1.-mk(a).r*.9);
+  col+=vec3(1.,.55,.15)*sp*zone*${'uSp'};
+  // приглушить огонь за названием
+  vec2 dc=(px-uDim.xy)/max(uDim.zw,vec2(1.));
+  float dm=smoothstep(1.,.2,length(dc*vec2(1.,1.1)));
+  col*=1.-dm*uDimK;
+  gl_FragColor=vec4(col,1.);
+}`;
+function initGL(){
+  const c=canvasEl();
+  try{gl=c.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,premultipliedAlpha:false,preserveDrawingBuffer:false,powerPreference:'low-power'});}catch(e){gl=null;}
+  if(!gl)return false;
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;};
+  try{
+    prog=gl.createProgram();gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);
+    if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
+  }catch(e){console.warn('mmfire shader',e);gl=null;return false;}
+  gl.useProgram(prog);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  ['uM','uRes','uArch','uDim','uT','uH','uI','uSw','uSp','uGl','uSide','uHue','uDimK'].forEach(k=>U[k]=gl.getUniformLocation(prog,k));
+  tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,TW,TH,0,gl.RGBA,gl.UNSIGNED_BYTE,maskData);
+  c.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;},{once:true});
+  mode='gl';return true;
+}
+function release(){
+  stop();
+  if(gl){const ext=gl.getExtension('WEBGL_lose_context');try{ext&&ext.loseContext();}catch(e){}}
+  gl=null;prog=null;tex=null;
+  if(cv){cv.remove();cv=null;}mode='';
+}
+function layout(){
+  const c=canvasEl(),mm=menu.querySelector('.mmin');if(!mm)return;
+  const vw=menu.clientWidth||innerWidth,vh=menu.clientHeight||innerHeight;
+  sc=Math.min(MMFIRE.scale,Math.sqrt(MMFIRE.maxPix/(vw*vh)));
+  W=Math.max(2,Math.round(vw*sc));H=Math.max(2,Math.round(vh*sc));
+  if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
+  const r=mm.getBoundingClientRect(),cs=getComputedStyle(mm),bs=(cs.backgroundSize||'').split(' ');
+  let ax,ay,aw,ah;
+  if(bs[0]==='auto'){ah=parseFloat(bs[1])||r.height;aw=ah*ARCH_W/ARCH_H;ax=r.left;ay=r.top;}
+  else{aw=r.width;ah=aw*ARCH_H/ARCH_W;ax=r.left+(r.width-aw)/2;ay=r.top+(parseFloat(cs.backgroundPositionY)||0);}
+  arch=[ax*sc,ay*sc,aw*sc,ah*sc];
+  // кончики должны успеть раствориться до верхнего края экрана
+  hEff=Math.max(.16,Math.min(MMFIRE.height,Math.max(0,ay)/ah*1.25+.05));
+  const ti=menu.querySelector('.mmtitle'),tr=ti&&ti.getBoundingClientRect();
+  // приглушаем только если название вынесено над аркой (телефон вертикально)
+  if(tr&&tr.width&&tr.bottom<ay+ah*.12){const sl=menu.querySelector('.mmslogan'),sr=sl&&sl.getBoundingClientRect();
+    const bottom=sr&&sr.height?Math.max(tr.bottom,sr.bottom):tr.bottom;
+    dim=[(tr.left+tr.right)/2*sc,(tr.top+bottom)/2*sc,(tr.width*.42+24)*sc,((bottom-tr.top)/2+16)*sc];}
+  else dim=[0,0,0,0];
+  if(mode==='2d')draw2d();
+}
+function draw2d(){
+  const x=cv.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,W,H);
+  const [ax,ay,aw,ah]=arch,g=x.createRadialGradient(ax+aw/2,ay+ah*.2,aw*.05,ax+aw/2,ay+ah*.25,aw*.75);
+  g.addColorStop(0,'rgba(255,150,40,.55)');g.addColorStop(.4,'rgba(200,60,10,.35)');g.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+}
+function render(t){
+  if(!gl)return;const red=reduced(),R=MMFIRE.reduced;
+  gl.viewport(0,0,W,H);
+  gl.uniform1i(U.uM,0);gl.uniform2f(U.uRes,W,H);gl.uniform4f(U.uArch,...arch);gl.uniform4f(U.uDim,...dim);
+  gl.uniform1f(U.uT,t);gl.uniform1f(U.uH,hEff);gl.uniform1f(U.uI,MMFIRE.intensity);gl.uniform1f(U.uSw,MMFIRE.sway);
+  gl.uniform1f(U.uSp,red?R.sparks:MMFIRE.sparks);gl.uniform1f(U.uGl,MMFIRE.glow);gl.uniform1f(U.uSide,MMFIRE.side);gl.uniform1f(U.uHue,MMFIRE.hue);gl.uniform1f(U.uDimK,MMFIRE.titleDim);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+}
+function frame(now){
+  raf=0;if(!running)return;
+  const red=reduced(),fps=red?MMFIRE.reduced.fps:MMFIRE.fps;
+  if(now-last>=1000/fps-2){
+    const dt=Math.min(.1,(now-last)/1000);last=now;
+    tAcc+=dt*MMFIRE.speed*(red?MMFIRE.reduced.speed:1);
+    const a=performance.now();render(tAcc);ftimes.push(performance.now()-a);if(ftimes.length>120)ftimes.shift();
+  }
+  raf=requestAnimationFrame(frame);
+}
+function start(){
+  if(running)return;
+  if(!maskData){loadMask();return;}
+  canvasEl();
+  if(!mode){if(!initGL()){mode='2d';}}
+  layout();
+  if(mode==='2d'){draw2d();return;}
+  running=true;last=performance.now();raf=requestAnimationFrame(frame);
+}
+function stop(){running=false;if(raf)cancelAnimationFrame(raf);raf=0;}
+let loading=false;
+function loadMask(){
+  if(loading)return;loading=true;
+  const img=new Image();img.onload=()=>{try{maskData=buildMask(img);}catch(e){console.warn('mmfire mask',e);mode='2d';maskData=new Uint8Array(4);}loading=false;sync();};
+  img.onerror=()=>{loading=false;mode='2d';maskData=new Uint8Array(4);sync();};
+  img.src='img/menu-arch.png';
+}
+function visible(){return !menu.hidden&&!document.hidden;}
+function sync(){
+  clearTimeout(releaseT);
+  if(visible())start();
+  else{stop();if(menu.hidden)releaseT=setTimeout(()=>{if(menu.hidden)release();},4000);}
+}
+new MutationObserver(sync).observe(menu,{attributes:true,attributeFilter:['hidden']});
+document.addEventListener('visibilitychange',sync);
+let rz=0;const onRz=()=>{if(rz)return;rz=requestAnimationFrame(()=>{rz=0;if(!menu.hidden&&mode){layout();if(mode==='gl'&&!running)render(tAcc);}});};
+addEventListener('resize',onRz);menu.addEventListener('scroll',onRz,{passive:true});
+if(window.ResizeObserver){const mm=menu.querySelector('.mmin');mm&&new ResizeObserver(onRz).observe(mm);}
+// отладка/запись видео: __mmFire.pause(), __mmFire.draw(t), __mmFire.stats()
+window.__mmFire={pause:stop,resume:()=>{sync();},draw:t=>{layout();tAcc=t;render(t);if(gl){const px=new Uint8Array(4);gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);}},
+  stats:()=>{const a=ftimes.slice().sort((x,y)=>x-y);return{mode,W,H,running,n:a.length,med:a[a.length>>1]||0,p95:a[Math.floor(a.length*.95)]||0};},
+  get mode(){return mode;}};
+sync();
+})();
+</script>
