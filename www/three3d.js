@@ -1268,6 +1268,7 @@ function frame(){
 }
 requestAnimationFrame(frame);
 // для автотестов: где на экране метка хода
+window.__heroFig={load:loadFig,get:k=>FIG[k],kind:heroKind};   // fx3: экран выбора героя берёт модели отсюда
 window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
   markerScreen(i){const m=marks[i];if(!m||!m.visible)return null;const v=m.position.clone().project(cam),b=cv.getBoundingClientRect();return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height};},
   look(x,z,o={}){tgt.x=x;tgt.z=z;if(o.az!=null)tAz=az=o.az;if(o.el!=null)tEl=el=o.el;if(o.distMul!=null)distMul=o.distMul;if(o.zoom!=null)zoom=o.zoom;userUntil=performance.now()+1e7;focusUntil=0;focusI=-1;}};
