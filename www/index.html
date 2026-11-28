@@ -577,6 +577,14 @@ body.cpu-turn .rollcard{cursor:default}
 #mainmenu.mmlive .mmin{background-image:url(img/menu-arch-live.png)}
 @media (orientation:portrait) and (max-width:600px){#mainmenu .mmmid{padding-top:16px}}
 @media (orientation:landscape) and (max-height:560px){#mainmenu .mmin{height:var(--ah)}#mainmenu .mmmid{padding-top:14px;margin-top:0}}
+/* классы героев: лист персонажа и кнопка способности */
+.csstats{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
+.cst{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid rgba(100,160,255,.45);border-radius:12px;background:rgba(2,8,26,.6);font-size:12.5px;color:#a9c8f0}
+.cst i{font-style:normal;color:#8fc3ff}.cst b{color:#e8f1ff;margin-left:2px}
+.cst.hi{border-color:var(--gold);color:#ffe7a3;box-shadow:0 0 8px rgba(236,198,106,.35)}.cst.hi b,.cst.hi i{color:var(--gold)}
+.cst.lo{opacity:.75;border-color:rgba(255,110,90,.5);color:#d9a59c}.cst.lo b{color:#ff8a7a}
+.csflav{margin:4px 0 8px;font-size:13.5px;line-height:1.4;color:#b9d2f2}
+.hex.abil.ready{animation:d4pulse 1.4s ease-in-out infinite}
 /* ===== fx3: экран выбора героя (#mainmenu.mmhero) — арка, синее пламя и факелы остаются от меню ===== */
 #mainmenu{--hf:clamp(46px,7.2vh,62px);--hbar:calc(var(--hf) + 42px);--hgold:#ffd56a}   /* --hf — размер лица внизу, --hbar — высота полосы лиц */
 #mainmenu.mmhero{z-index:40}
@@ -617,12 +625,20 @@ body.cpu-turn .rollcard{cursor:default}
 .mmhname small{display:block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8fc3ff;text-shadow:0 1px 0 #000,0 0 8px #000,0 0 14px #000}
 .mmhname b{display:block;margin-top:2px;font-family:var(--display);font-weight:400;font-size:clamp(26px,8vw,36px);line-height:1.05;color:#f4f8ff;
   text-shadow:0 0 2px #000,0 2px 0 #000,0 0 10px rgba(0,0,0,.9),0 0 16px rgba(70,150,255,.85),0 0 30px rgba(40,110,255,.55)}
-.mmhname em{display:block;margin-top:3px;font-style:normal;font-weight:800;font-size:15px;letter-spacing:.08em;color:var(--hgold);text-shadow:0 1px 0 #000,0 0 6px #000,0 0 12px #000,0 0 14px rgba(255,190,70,.5)}
 .mmhchips{position:fixed;left:8px;right:8px;bottom:calc(var(--hbar) + 66px);z-index:3;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
-.mmhchips span{display:flex;align-items:baseline;gap:6px;padding:4px 10px;border:1px solid rgba(100,160,255,.5);border-radius:14px;background:rgba(2,8,26,.8);font-size:12px;color:#a9c8f0;box-shadow:0 2px 8px rgba(0,0,0,.6)}
-.mmhchips b{font-size:14px;color:var(--hgold);letter-spacing:1px}.mmhchips b.hh{color:#ff6b57;text-shadow:0 0 6px rgba(255,90,70,.5)}
+.mmhchips span{display:flex;align-items:baseline;gap:4px;padding:4px 9px;border:1px solid rgba(100,160,255,.5);border-radius:14px;background:rgba(2,8,26,.82);font-size:12.5px;font-weight:700;color:#a9c8f0;box-shadow:0 2px 8px rgba(0,0,0,.6)}
+.mmhchips i{font-style:normal;color:#8fc3ff;font-size:12px}
+.mmhchips b{font-size:14.5px;color:#e8f1ff;margin-left:2px}
+.mmhchips span.hi{border-color:var(--hgold);color:#ffe7a3;box-shadow:0 0 10px rgba(255,200,90,.45),0 2px 8px rgba(0,0,0,.6)}
+.mmhchips span.hi b,.mmhchips span.hi i{color:var(--hgold)}
+.mmhchips span.lo{opacity:.78;border-color:rgba(255,110,90,.55);color:#d9a59c}.mmhchips span.lo b{color:#ff8a7a}
+.mmhabil{position:fixed;left:12px;right:12px;bottom:calc(var(--hbar) + 98px);z-index:3;margin:0 auto;max-width:440px;text-align:center;font-size:12px;line-height:1.3;color:#b9d2f2;
+  padding:4px 10px;border-radius:10px;background:rgba(2,8,26,.72);text-shadow:0 1px 0 #000;box-sizing:border-box}
+.mmhabil[hidden]{display:none}
+.mmhabil small{display:none;margin-top:3px;font-size:11px;color:#8fa9cc}
+.mmhabil b{color:var(--hgold);font-size:13px;margin-right:6px;text-shadow:0 0 8px rgba(255,190,70,.4)}
 .mmhflav{display:none;margin:0;font-size:14px;line-height:1.4;color:#b9d2f2}
-.mmhnote{position:fixed;left:14px;right:14px;bottom:calc(var(--hbar) + 100px);z-index:3;margin:0;text-align:center;font-size:12.5px;color:#ffd9a0;text-shadow:0 1px 0 #000,0 0 8px #000}
+.mmhnote{position:fixed;left:14px;right:14px;bottom:calc(var(--hbar) + 146px);z-index:3;margin:0;text-align:center;font-size:12.5px;color:#ffd9a0;text-shadow:0 1px 0 #000,0 0 8px #000}
 .mmhnote[hidden]{display:none}
 .mmhacts{position:fixed;left:0;right:0;bottom:calc(var(--hbar) + 8px);z-index:3;display:flex;gap:10px;justify-content:center;padding:0 12px}
 #mainmenu .mmhacts button{position:relative;min-width:clamp(120px,36vw,170px);min-height:50px;padding:0 14px;border-style:solid;border-width:10px 16px 12px;border-color:transparent;border-radius:0;
@@ -636,7 +652,7 @@ body.cpu-turn .rollcard{cursor:default}
 @media (prefers-reduced-motion:reduce){#mainmenu .mmhacts .ok{animation:none}.mmhspin{animation-duration:2s}}
 /* планшет/телефон вертикально: название в зоне над аркой, как у меню */
 @media (orientation:portrait){
-  #mainmenu.mmhero .mmin{--tt:104px;--aw:min(640px,calc(100vw*1.24),calc((100vh - var(--tt) - 8px)*.8273))}
+  #mainmenu.mmhero .mmin{--tt:72px;top:-30px;--aw:min(640px,calc(100vw*1.24),calc((100vh - var(--tt) - 8px)*.8273))}
   @supports (height:100dvh){#mainmenu.mmhero .mmin{--aw:min(640px,calc(100vw*1.24),calc((100dvh - var(--tt) - 8px)*.8273))}}
 }
 /* компьютер: слева подсказка, справа каменная карточка героя; лица — полосой внизу */
@@ -647,8 +663,12 @@ body.cpu-turn .rollcard{cursor:default}
   .mmhhead span{font-size:13px;line-height:1.35;color:#9db4d8;text-shadow:0 1px 0 #000,0 0 6px #000}
   .mmhside{display:flex;flex-direction:column;gap:12px;position:absolute;left:calc(100% + 26px);top:calc(var(--ah)*.27);width:min(320px,calc((100vw - var(--aw))/2 - 40px));box-sizing:border-box;z-index:3;
     padding:16px 18px 18px;border:1px solid rgba(100,160,255,.45);border-radius:6px;background:linear-gradient(180deg,rgba(16,28,64,.88),rgba(3,8,22,.94));box-shadow:0 0 24px -6px rgba(60,130,255,.6),0 12px 30px rgba(0,0,0,.7)}
-  .mmhname,.mmhchips,.mmhacts,.mmhnote{position:static;text-align:left;padding:0}
+  .mmhname,.mmhchips,.mmhacts,.mmhnote,.mmhabil{position:static;text-align:left}
+  .mmhname,.mmhchips,.mmhacts,.mmhnote{padding:0}
+  .mmhabil{max-width:none;font-size:13px;padding:8px 10px}.mmhabil b{display:block;margin:0 0 2px}.mmhabil small{display:block}
+  .mmhchips{display:grid;grid-template-columns:repeat(4,auto);gap:5px;justify-content:start}.mmhchips span{padding:4px 7px;font-size:12px}
   .mmhname small{display:none}.mmhname b{font-size:30px}
+  #mainmenu.mmhero .mmin{top:-22px}   /* t99: арка (и модель в ней) чуть выше */
   .mmhchips{justify-content:flex-start}
   .mmhflav{display:block}
   .mmhacts{flex-direction:column;gap:8px;align-items:stretch}
@@ -658,8 +678,10 @@ body.cpu-turn .rollcard{cursor:default}
 /* телефон боком: арка слева, всё остальное колонкой справа */
 @media (orientation:landscape) and (max-height:560px){
   .mmhside{position:absolute;left:calc(var(--aw) + 22px);right:6px;top:6px;bottom:6px;display:flex;flex-direction:column;gap:8px;z-index:3;align-items:stretch;justify-content:flex-start}
-  .mmhname,.mmhchips,.mmhacts,.mmhnote{position:static;padding:0}
-  .mmhname{pointer-events:none}.mmhname small{display:none}.mmhname b{font-size:26px}.mmhname em{font-size:13px}
+  .mmhname,.mmhchips,.mmhacts,.mmhnote,.mmhabil{position:static}
+  .mmhname,.mmhchips,.mmhacts,.mmhnote{padding:0}
+  .mmhabil{text-align:left;max-width:none;font-size:11px;padding:3px 8px}.mmhabil small{display:block;font-size:10.5px}
+  .mmhname{pointer-events:none}.mmhname small{display:none}.mmhname b{font-size:26px}
   .mmhchips span{padding:2px 8px}
   .mmhacts button{min-width:0!important;flex:1}
   #mainmenu .mmhacts button{min-height:42px}
@@ -873,17 +895,32 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 #csheet.frame{padding:calc(var(--fw)*.45 + 6px) 10px 10px;overflow:visible}
 /* ===== fx2: игровой экран в стиле новой рамки (декор не ловит клики, толщины — переменные --gfw/--gpw/--gcw/--ghead) ===== */
 /* поле: каменная рамка с когтями — отдельным слоем поверх поля (поле прокручивается, слой — нет) */
-.boardslot{--hw:calc(clamp(62px,11vw,92px)*var(--ghead));
-  --hb:calc(var(--gfw)*84/113 + var(--hw)*212/468);   /* fx3: нижний край головы дракона от верха поля — под ним стоят баннер фазы и подсказки */
-  --gt:calc(var(--gfw)*1.28);--gr:calc(var(--gfw)*1.02);--gb:calc(var(--gfw)*.92);--gl:var(--gfw)}
-.boardslot::after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  border-style:solid;border-color:transparent;border-width:var(--gt) var(--gr) var(--gb) var(--gl);
-  border-image:url(img/frame-stone.png) 67 60 80 60 / calc(var(--gfw)*222/113) calc(var(--gfw)*200/113) calc(var(--gfw)*265/113) calc(var(--gfw)*200/113) / 0 round}
-/* маленькая голова дракона на верхней кромке поля (под баннерами фазы, над 3D) */
+/* ===== frame3: новая рамка игрового поля (frame3.webp 820×815 + frame3-head.webp 562×280, исходник 1672×941) =====
+   Рамка = border-image 9-slice: углы (когти сверху, обвал внизу) рисуются как есть, прямые стороны — бесшовные зеркальные тайлы с repeat «round».
+   Голова — отдельный слой по центру сверху. Вся геометрия считается от одного масштаба --gs (px на 1 px исходника): меньше --gs — тоньше рамка и меньше голова.
+   Срезы 9-slice (px исходника): верх 260, право 300, низ 235, лево 300. Рамка вылезает за поле: верх −32, лево −6, право −5, низ −11 (в px исходника) — только когти/камень, они не ловят клики. */
+:root{--gs:.2}
+@media (max-width:600px){:root{--gs:.16}}
+@media (max-height:560px){:root{--gs:.14}}
+@property --eg{syntax:"<number>";inherits:false;initial-value:.8}
+.boardslot{--hw:calc(var(--gs)*562px);
+  --hb:calc(var(--gs)*196px*var(--ghead));   /* нижний край головы дракона от верха поля — под ним стоят баннер фазы и подсказки */
+  --gt:calc(var(--gs)*69px);--gr:calc(var(--gs)*84px);--gb:calc(var(--gs)*68px);--gl:calc(var(--gs)*84px)}
+.boardslot::after{content:"";position:absolute;z-index:8;pointer-events:none;
+  left:calc(var(--gs)*-6px);right:calc(var(--gs)*-5px);top:calc(var(--gs)*-32px);bottom:calc(var(--gs)*-11px);
+  border-style:solid;border-color:transparent;
+  border-width:calc(var(--gs)*260px) calc(var(--gs)*300px) calc(var(--gs)*235px) calc(var(--gs)*300px);
+  border-image:url(img/frame3.webp) 260 300 235 300 / calc(var(--gs)*260px) calc(var(--gs)*300px) calc(var(--gs)*235px) calc(var(--gs)*300px) / 0 round}
+/* голова дракона на верхней кромке поля (под баннерами фазы, над 3D); глаза слегка пульсируют */
 .boardslot::before{content:"";position:absolute;z-index:9;pointer-events:none;left:50%;transform:translateX(-50%);
-  width:var(--hw);height:calc(var(--hw)*384/468);
-  top:calc(var(--gfw)*84/113 - var(--hw)*172/468);
-  background:url(img/frame-head.png) center/100% 100% no-repeat;filter:brightness(1.12) drop-shadow(0 3px 4px rgba(0,0,0,.75)) drop-shadow(0 0 6px rgba(63,169,255,.25))}
+  width:var(--hw);height:calc(var(--gs)*280px);top:calc(var(--gs)*-72.5px);
+  background:
+    radial-gradient(circle calc(var(--gs)*34px) at 40.2% 51%,rgba(190,240,255,calc(var(--eg)*.85)) 0,rgba(80,175,255,calc(var(--eg)*.5)) 35%,rgba(40,110,255,0) 100%),
+    radial-gradient(circle calc(var(--gs)*34px) at 59.8% 51%,rgba(190,240,255,calc(var(--eg)*.85)) 0,rgba(80,175,255,calc(var(--eg)*.5)) 35%,rgba(40,110,255,0) 100%),
+    url(img/frame3-head.webp) center/100% 100% no-repeat;
+  opacity:var(--ghead);filter:drop-shadow(0 3px 4px rgba(0,0,0,.7));animation:gEyes 3.8s ease-in-out infinite}
+@keyframes gEyes{0%,100%{--eg:.45}50%{--eg:1}}
+@media (prefers-reduced-motion:reduce){.boardslot::before{animation:none;--eg:.75}}
 .board.frame{border-style:solid;border-color:transparent;border-radius:0;border-width:var(--gt) var(--gr) var(--gb) var(--gl);
   background:var(--wall) padding-box;box-shadow:0 8px 22px -6px rgba(0,0,0,.65)}
 .board.frame::before,.board.frame::after{display:none}
@@ -891,18 +928,82 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 @media (max-width:400px){.diehud{right:calc(var(--gr) + 4px);bottom:calc(var(--gb) + 4px)}}
 .dphase{top:calc(var(--hb) + 10px)}   /* fx3: ниже головы дракона, чтобы не закрывать глаза и челюсть */
 .dask{left:calc(var(--gl) + 6px);bottom:calc(var(--gb) + 8px)}
-/* нижняя панель и кубик: тонкая кладка без когтей */
-.bottom.frame,.movedie.frame,.pill.frame{border-style:solid;border-color:transparent;border-radius:0;
-  border-image:url(img/frame-thin.png) 67 60 80 60 / calc(var(--w)*222/113) calc(var(--w)*200/113) calc(var(--w)*265/113) calc(var(--w)*200/113) / 0 round;
-  border-width:calc(var(--w)*1.2) calc(var(--w)*1.0) calc(var(--w)*.95) calc(var(--w)*1.0);
-  background-clip:padding-box}
-.bottom.frame{--w:var(--gpw);padding:0 max(4px,calc(12px - var(--w))) max(5px,calc(13px - var(--w)));box-shadow:0 8px 22px -6px rgba(0,0,0,.65)}
-.movedie.frame{--w:var(--gpw)}
-.bottom.frame::before,.bottom.frame::after,.movedie.frame::before,.movedie.frame::after,.pill.frame::before,.pill.frame::after{display:none}
+/* ===== plate: подложка карточек героев и нижней панели (img/plate.webp 1640×448, срез 152) =====
+   Угловые камни не искажаются, стороны и центр (трещиноватый камень) масштабируются — исходник шире любой панели, поэтому только сжатие, без швов.
+   Толщина каймы: --pcw карточки, --ppw нижняя панель. На телефоне кайма тоньше и внутренние поля меньше, чтобы имена не обрезались сильнее. */
+:root{--pcw:7px;--ppw:8px}
+@media (max-width:600px),(max-height:560px){:root{--pcw:6px;--ppw:6px}}
+.bottom.frame,.pill.frame{border-style:solid;border-color:transparent;border-radius:0;
+  border-image:url(img/plate.webp) 152 fill / var(--w) / 0 stretch;
+  border-width:var(--w);
+  background:none;background-clip:padding-box;
+  box-shadow:0 6px 16px -6px rgba(0,0,0,.7)}
+.bottom.frame{--w:var(--ppw);padding:0 8px;box-shadow:0 8px 22px -6px rgba(0,0,0,.65)}
+.bottom.frame::before,.bottom.frame::after,.pill.frame::before,.pill.frame::after{display:none}
 .bottom.frame .ribbon{margin-top:0}
-/* карточки героев: тонкий камень; активный герой — цветное кольцо внутри и свечение снаружи */
-.pill.frame{--w:var(--gcw);box-shadow:inset 0 0 0 1px rgba(110,160,255,.18),0 6px 16px -6px rgba(0,0,0,.65);padding:max(2px,calc(6px - var(--w)*.6)) max(4px,calc(10px - var(--w))) max(2px,calc(6px - var(--w)*.6)) max(4px,calc(8px - var(--w)))}
-.pill.frame.active{box-shadow:inset 0 0 0 1px var(--pc),inset 0 0 12px -4px var(--pc),0 0 14px -2px var(--pc),0 6px 16px -6px rgba(0,0,0,.65)}
+/* карточки героев; активный — цветное кольцо внутри и свечение снаружи, как раньше */
+.pill.frame{--w:var(--pcw);padding:2px 5px 2px 4px}
+.pill.frame .pname,.pill.frame .pl2{text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.pill.frame.active{box-shadow:inset 0 0 0 1.5px var(--pc),inset 0 0 14px -3px var(--pc),0 0 16px -1px var(--pc),0 6px 16px -6px rgba(0,0,0,.65)}
+@media (max-width:699px){.top.n3 .pill.frame,.top.n4 .pill.frame{padding:2px 3px 2px 2px}
+  .top.n3 .pl1,.top.n4 .pl1{gap:4px}.top.n3 .pname,.top.n4 .pname{letter-spacing:.02em}}
+/* кубик: прежняя тонкая кладка */
+/* ===== bottom: нижняя панель — только 4 круглые кнопки по центру; красный 3D-кубик без подложки ===== */
+:root{--bb:56px}
+@media (max-width:600px){:root{--bb:52px}}
+@media (max-height:560px){:root{--bb:48px}}
+.bottom.frame{align-items:center;justify-content:center}
+.bottom .tools{display:flex;justify-content:center;align-items:center;gap:clamp(12px,5vw,28px);flex:none;padding:0}
+.bbtn{position:relative;flex:none;width:var(--bb);height:var(--bb);min-width:0;min-height:0;padding:0;margin:0;border:0;border-radius:50%;
+  background:center/contain no-repeat;box-shadow:none;cursor:pointer;color:inherit;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.65));transition:transform .12s,filter .2s,opacity .2s;-webkit-tap-highlight-color:transparent}
+#bPotion{background-image:url(img/btn-potion.webp)}
+#bScroll{background-image:url(img/btn-bag.webp)}
+#bZoom{background-image:url(img/btn-zoom.webp)}
+#bMenu{background-image:url(img/btn-menu.webp)}
+.bbtn:hover:not(:disabled){transform:scale(1.06);filter:drop-shadow(0 3px 4px rgba(0,0,0,.65)) brightness(1.12)}
+.bbtn:active:not(:disabled){transform:scale(.94)}
+.bbtn:focus-visible{outline:2px solid #7fd3ff;outline-offset:3px}
+.bbtn:disabled{cursor:default;box-shadow:none;background-color:transparent}
+#bPotion:disabled{opacity:.72}
+#bPotion.nopot,#bPotion.nopot:disabled{filter:grayscale(1) brightness(.8) drop-shadow(0 3px 4px rgba(0,0,0,.65));opacity:.85;transform:none}
+.bbtn .n{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;border-radius:10px;background:var(--gold);color:#241a06;font:800 12px/20px var(--body);padding:0 5px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none}
+.bbtn .n:empty{display:none}
+.bbtn.big{filter:drop-shadow(0 3px 4px rgba(0,0,0,.65)) drop-shadow(0 0 6px rgba(111,190,255,.7))}
+/* новое в рюкзаке: сине-золотое свечение + точка; после просмотра инвентаря гаснет */
+#bScroll.newitem{animation:invNew 1.6s ease-in-out infinite}
+#bScroll.newitem::after,.bbtn.hasdot::after{content:"";position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff3c2,var(--gold) 55%,#b98a32);border:2px solid #0a1733;box-shadow:0 0 8px 2px rgba(255,214,110,.85)}
+.bbtn.hasdot::after{background:radial-gradient(circle at 35% 30%,#ffb0a0,var(--fire) 60%,#8c2a1c);box-shadow:0 0 8px 2px rgba(234,90,68,.8)}
+@keyframes invNew{
+  0%,100%{filter:drop-shadow(0 3px 4px rgba(0,0,0,.65)) drop-shadow(0 0 5px rgba(90,170,255,.85)) drop-shadow(0 0 9px rgba(236,198,106,.45))}
+  50%{filter:drop-shadow(0 3px 4px rgba(0,0,0,.65)) drop-shadow(0 0 10px rgba(120,200,255,1)) drop-shadow(0 0 20px rgba(255,214,110,.95)) brightness(1.18)}}
+@media (prefers-reduced-motion:reduce){#bScroll.newitem{animation:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.65)) drop-shadow(0 0 9px rgba(120,200,255,1)) drop-shadow(0 0 16px rgba(255,214,110,.9)) brightness(1.12)}}
+body.cpu-turn .bottom .bbtn:not(#bZoom):not(#bScroll){filter:grayscale(1) brightness(.7);cursor:default}
+body.cpu-turn .bottom #bScroll.newitem{filter:none}
+/* кубик: ни плашки, ни рамки — только красный 3D-кубик */
+.movedie,.movedie:hover:not(.ready):not(:disabled),.movedie.movedie:hover:not(:disabled):not(.xx){background:none;border:0;border-radius:50%;box-shadow:none;width:80px;height:80px;min-width:80px;min-height:80px}
+.movedie{position:relative;display:grid;place-items:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.movedie #mdCv{position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none}
+.movedie.has3d #mdCv{display:block}
+.movedie.has3d .d4{display:none}
+.movedie.dready #mdCv{animation:dieGlow 1.5s ease-in-out infinite}
+@keyframes dieGlow{0%,100%{filter:drop-shadow(0 0 3px rgba(255,70,60,.55))}50%{filter:drop-shadow(0 0 12px rgba(255,90,70,1)) brightness(1.1)}}
+.movedie.done #mdCv{animation:rpPop .35s ease-out}
+.movedie:disabled #mdCv{opacity:1}
+@media (prefers-reduced-motion:reduce){.movedie.dready #mdCv{animation:none;filter:drop-shadow(0 0 8px rgba(255,80,60,.9))}.movedie.done #mdCv{animation:none}}
+@media (max-width:400px){.movedie,.movedie:hover:not(.ready):not(:disabled),.movedie.movedie:hover:not(:disabled):not(.xx){width:72px;height:72px;min-width:72px;min-height:72px}}
+/* запасной красный кубик без WebGL */
+.movedie:not(.has3d) .d4{width:60px;height:56px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.movedie:not(.has3d) .d4::before{background:linear-gradient(180deg,#ffb0a0,#d8222b 50%,#6e0a10)}
+.movedie:not(.has3d) .d4::after{background:linear-gradient(180deg,#ff6a5a,#c8141d 60%,#8f0e15)}
+.movedie:not(.has3d).ready .d4{animation:d4pulseR 1.2s ease-in-out infinite}
+@keyframes d4pulseR{0%,100%{filter:drop-shadow(0 0 3px rgba(255,70,60,.5))}50%{filter:drop-shadow(0 0 11px rgba(255,90,70,1))}}
+/* карточки героев: сердца — в нижней строке справа, имя получает всю ширину */
+.pill .pl2 .hp{margin-left:auto;flex:none;font-size:13px}
+.pill .pname{flex:1 1 auto}
+.pill .pl2 .st{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
 /* тон «золото» у окон: рамка/свечение синие, золотым остаётся только заголовок */
 .sheet[data-tone="gold"],#csheet{--tone:var(--glow)!important}
 .sheet[data-tone="gold"] .mtitle,#csheet .mtitle{color:var(--gold);text-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(236,198,106,.25)}
@@ -910,17 +1011,17 @@ body:has(#modal:not([hidden])) .coach,body:has(#tutor:not([hidden])) .coach{disp
 .mimg{border-color:var(--frame-in);box-shadow:0 0 0 2px var(--panel-lo),0 0 0 3px rgba(63,169,255,.35)}
 
 /* ---- кнопки во всех окнах: каменная плита 9-slice как в меню ---- */
-:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)){
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.bbtn,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)){
   border-style:solid;border-color:transparent;border-radius:0;
   border-width:9px 14px 11px;
   border-image:url(img/btn-stone.png) 26 42 30 fill / 9px 14px 11px / 0 stretch;
   background:none;box-shadow:none;padding:2px 8px;
   color:#e9f2ff;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.9);
   transition:filter .15s}
-:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):hover:not(:disabled){
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.bbtn,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):hover:not(:disabled){
   box-shadow:none;filter:brightness(1.18) drop-shadow(0 0 6px var(--stone-glow))}
-:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):focus-visible{outline:none;filter:brightness(1.2) drop-shadow(0 0 4px #7fd3ff) drop-shadow(0 0 2px #fff)}
-:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):disabled{filter:grayscale(.7) brightness(.8)}
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.bbtn,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):focus-visible{outline:none;filter:brightness(1.2) drop-shadow(0 0 4px #7fd3ff) drop-shadow(0 0 2px #fff)}
+:root button:not(:where(.hex,.round,.pt,.cm,.movedie,.rollcard,.off,.chatx,.chatfab,.bbtn,.mmpriv,.pk button,.lobport button,.hedge button,#mainmenu button)):disabled{filter:grayscale(.7) brightness(.8)}
 /* маленькие кнопки — тоньше кромка */
 :root :is(.coach .cr,.thead,.dask,.robrow,.csacts,.diehud .dieacts,.chatform,.volrow) button:not(.off),
 :root button:is(.rpskip,.csact,.mback,.mmback,.volmute){
@@ -1032,35 +1133,16 @@ body #ld3d .s{color:#93a6cc}
       <button type="button" class="rpskip rphunt" id="rpGhost" hidden>≋ Сквозь стены</button>
       <button type="button" class="rpskip" id="rpSkip" hidden>Пропустить ход</button>
     </div>
-    <button type="button" class="movedie frame" id="movedie" aria-label="Кубик движения d4"><span class="d4" id="mdDie"><b id="mdVal">?</b><small>d4</small></span></button>
+    <button type="button" class="movedie" id="movedie" aria-label="Кубик движения d4"><canvas id="mdCv" aria-hidden="true"></canvas><span class="d4" id="mdDie"><b id="mdVal">?</b><small>d4</small></span></button>
   </div>
   </div>
   <div class="hedge" id="hedge"></div>
   <div class="bottom frame">
-    <div class="ribbon" id="who"><span class="whoname" id="whoName"></span><span class="whohint" id="whoHint"></span></div>
-    <div class="msg" id="msg" hidden></div>
-    <div class="bar">
-      <div class="hexes" aria-label="Снаряжение героя">
-        <button class="hex g" id="bPotion" title="Выпить зелье здоровья" aria-label="Выпить зелье здоровья"><span>✚</span><b class="n" id="nPotion"></b></button>
-        <div class="hex s" id="hBomb" title="Сонная бомба"><span>✹</span><b class="n"></b></div>
-        <div class="hex y" id="hSword" title="Старый меч: +2 в бою"><span>†</span><b class="n"></b></div>
-        <div class="hex g" id="hLuck" title="Амулет удачи: +3 к проверкам"><span>☘</span><b class="n"></b></div>
-        <div class="hex g" id="hHaste" title="Зелье скорости: +1 шаг к броску"><span>»</span><b class="n"></b></div>
-        <div class="hex y" id="hRope" title="Верёвка: переход через пропасть без проверки"><span>➰</span><b class="n"></b></div>
-        <div class="hex y" id="hShield" title="Щит: один раз примет удар в бою" hidden><span>⛨</span><b class="n"></b></div>
-        <div class="hex y" id="hPick" title="Кирка: один раз пробьёт стену из тупика" hidden><span>⚒</span><b class="n"></b></div>
-        <div class="hex s" id="hSilver" title="Серебряный клинок: +5 против нежити" hidden><span>†</span><b class="n"></b></div>
-        <div class="hex y" id="hKey" title="Медный ключ: откроет потайную дверь" hidden><span>⚷</span><b class="n"></b></div>
-        <div class="hex s" id="hCloak" title="Плащ-невидимка: 3 хода охотники тебя не видят" hidden><span>❖</span><b class="n"></b></div>
-        <div class="hex s" id="hGhost" title="Зелье призрачного шага: ход сквозь стены" hidden><span>≋</span><b class="n"></b></div>
-        <div class="hex f" id="hMantle" title="Огнестойкая мантия: спасёт от пламени дракона в логове" hidden><span>♨</span><b class="n"></b></div>
-      </div>
-      <div class="tools">
-        <button class="round scrollbtn invbtn" id="bScroll" title="Инвентарь" aria-label="Инвентарь"><span class="invico" aria-hidden="true">🎒</span><b class="n" id="nScroll"></b></button>
-        <button class="round chatbtn" id="bChat" title="Чат" aria-label="Чат" hidden><span aria-hidden="true">💬</span><b class="n" id="nChat"></b></button>
-        <button class="round" id="bZoom" title="Масштаб" aria-label="Масштаб">⊕</button>
-        <button class="round" id="bMenu" title="Меню" aria-label="Меню">☰</button>
-      </div>
+    <div class="tools" role="toolbar" aria-label="Панель героя">
+      <button type="button" class="bbtn" id="bPotion" title="Выпить зелье здоровья" aria-label="Выпить зелье здоровья"><b class="n" id="nPotion"></b></button>
+      <button type="button" class="bbtn" id="bScroll" title="Инвентарь" aria-label="Инвентарь"></button>
+      <button type="button" class="bbtn" id="bZoom" title="Масштаб" aria-label="Масштаб"></button>
+      <button type="button" class="bbtn" id="bMenu" title="Меню" aria-label="Меню"></button>
     </div>
   </div>
 </div>
@@ -1333,14 +1415,14 @@ const MONSTERS=[
   {n:'Гоблин-воришка',img:'img/mon-goblin.jpg',dc:11,dmg:1,steal:.3,loot:[15,30],how:'стащил золото',d:'Он смотрит не на тебя, а на твой мешок.'},
   {n:'Скелет-страж',img:'img/mon-skeleton.jpg',dc:12,dmg:1,undead:1,loot:[20,35],d:'Кости гремят, ржавый меч поднимается.'},
   {n:'Гигантский паук',img:'img/mon-spider.jpg',dc:12,dmg:1,skip:1,loot:[15,30],how:'опутал паутиной',d:'С потолка спускается что-то многоногое.'},
-  {n:'Кобольд-шаман',img:'img/mon-shaman.jpg',dc:12,dmg:1,skip:1,loot:[20,35],how:'наслал оцепенение',d:'Бормочет заклинание и трясёт черепом на палке.'},
+  {n:'Кобольд-шаман',img:'img/mon-shaman.jpg',st:'int',dc:12,dmg:1,skip:1,loot:[20,35],how:'наслал оцепенение',d:'Бормочет заклинание и трясёт черепом на палке.'},
   {n:'Призрак',img:'img/mon-ghost.jpg',dc:13,dmg:1,noSword:1,undead:1,loot:[25,40],d:'Холод пробирает до костей. Сталь его не берёт.'},
-  {n:'Мимик',img:'img/mon-mimic.jpg',dc:13,dmg:1,loot:[50,70],d:'Сундук открыл крышку. Внутри — зубы.'},
+  {n:'Мимик',img:'img/mon-mimic.jpg',st:'int',dc:13,dmg:1,loot:[50,70],d:'Сундук открыл крышку. Внутри — зубы.'},
   {n:'Огненный бес',img:'img/mon-imp.jpg',dc:13,dmg:1,steal:.15,loot:[20,35],how:'подпалил мешок',d:'Хихикает и швыряется искрами.'},
   {n:'Вампир',img:'img/mon-vampire.jpg',dc:14,dmg:1,undead:1,steal:.2,loot:[35,55],how:'выпил силы и забрал плату',d:'Бледный господин вежливо улыбается.'},
   {n:'Пещерный тролль',img:'img/mon-troll.jpg',dc:14,dmg:2,loot:[30,50],d:'Огромный, медленный и очень злой.'},
   {n:'Зомби-латник',img:'img/mon-zombie.jpg',dc:13,dmg:1,undead:1,rot:2,loot:[30,50],how:'вцепился гнилыми зубами',d:'Мертвец в ржавых латах прёт напролом, не чувствуя ударов. Его укус несёт трупный яд.'},
-  {n:'Болотная ведьма',img:'img/mon-witch.jpg',dc:13,dmg:1,hex:1,brew:1,loot:[20,40],how:'полоснула когтями',d:'Сгорбленная карга с клюкой хихикает и шарит взглядом по твоей сумке. Проиграешь — она утащит что-нибудь из вещей; победишь — заберёшь зелье из её котла.'},
+  {n:'Болотная ведьма',img:'img/mon-witch.jpg',st:'int',dc:13,dmg:1,hex:1,brew:1,loot:[20,40],how:'полоснула когтями',d:'Сгорбленная карга с клюкой хихикает и шарит взглядом по твоей сумке. Проиграешь — она утащит что-нибудь из вещей; победишь — заберёшь зелье из её котла.'},
   {n:'Минотавр',img:'img/mon-minotaur.jpg',dc:15,dmg:2,loot:[40,60],d:'Рёв, топот и рога наперевес.'},
   // 14 — Огненный вождь: проигравший получает «ожог» (3 хода: −3 к d20 в бою, +1 к d4)
   {n:'Огненный вождь',img:'img/mon-firechief.jpg',dc:16,dmg:1,burn:3,loot:[45,70],how:'ткнул в тебя пылающим факелом',win:'Факел вождя шипит и гаснет, а маска-череп с треском раскалывается надвое.',d:'Из дыма выступает рогатый вождь в маске из черепа. Перья на его плечах тлеют, на поясе гремят костяные трофеи, а факел в руке ревёт, как живой. Он не кричит — он поджигает. Проиграешь — огонь перекинется на тебя.'},
@@ -1396,7 +1478,7 @@ const SEATS=[
 ];
 const SEATS_FOR={1:[0],2:[0,2],3:[0,1,2],4:[0,1,2,3],cpu:[0,2]};
 const CPU_NAME='Компьютер';
-const PORTRAITS=[1,2,3,4,5,6,7,8].map(i=>`img/hero-${i}.png`);
+const PORTRAITS=[1,2,3,4,5,6,7,8].map(i=>`img/hero-${i}.webp`);   // t100: новые аватары героев (круг с прозрачностью, WebP 256)
 const isWoman=p=>p&&p.portrait!=null&&p.portrait<4;   // портреты 1–4 — героини, 5–8 — герои
 const PORTRAIT_IMG=PORTRAITS.map(src=>{const im=new Image();im.onload=()=>{if(typeof boardDirty!=='undefined')boardDirty=true;};im.src=src;return im;});
 const DEF_PORTRAIT=[0,4,2,5];   // по умолчанию у каждого места свой портрет
@@ -1404,6 +1486,48 @@ const DEF_PORTRAIT=[0,4,2,5];   // по умолчанию у каждого м�
 const CPU_MALE=['Ульф','Борг','Торвин'],CPU_FEMALE=['Ирма','Сигрид','Эйра'];
 const CPU_NAMES=[...CPU_MALE,...CPU_FEMALE];
 const isFemale=k=>k>=0&&k<=3;   // портреты 1–4 — героини, 5–8 — герои
+/* ---------- классы героев: 4 характеристики (модификаторы к d20) и одна способность ----------
+   Класс задаётся номером портрета (p.portrait есть в состоянии игрока и одинаков у всех телефонов), при старте пишется и в p.cls.
+   Способность: p.abD — где она потрачена: в «Спуске» номер этажа (раз за этаж), в остальных режимах 'g' (раз за партию).
+   Все характеристики в сумме дают +2: схема +2 / +1 / 0 / −1. */
+const STATS={str:{n:'Сила',s:'Сил',i:'⚔'},dex:{n:'Ловкость',s:'Лов',i:'➶'},int:{n:'Разум',s:'Раз',i:'✎'},spi:{n:'Дух',s:'Дух',i:'✦'}};
+const STAT_KEYS=['str','dex','int','spi'];
+// kind: prompt — предлагается в окне броска; active — кнопка (ряд вещей, лист героя); passive — действует сама
+const HERO_CLASSES=[
+  {id:'guard',cls:'Страж',st:{str:1,dex:0,int:-1,spi:2},ab:'aegis',an:'Плащ-щит',ai:'⛨',kind:'prompt',
+    ad:'Отменяет урон одного проигранного боя (в «Спуске» — и соседа рядом)'},
+  {id:'archer',cls:'Лучница',st:{str:0,dex:2,int:1,spi:-1},ab:'surestep',an:'Верный шаг',ai:'➶',kind:'prompt',
+    ad:'Перебросить проваленную проверку Ловкости: ловушка, пропасть, обвал'},
+  {id:'mage',cls:'Чародейка',st:{str:-1,dex:0,int:2,spi:1},ab:'quickread',an:'Быстрое чтение',ai:'§',kind:'passive',
+    ad:'Лишний свиток на старте и второй свиток за один ход'},
+  {id:'seer',cls:'Ведунья',st:{str:0,dex:-1,int:1,spi:2},ab:'frost',an:'Иней',ai:'❄',kind:'prompt',
+    ad:'Автоуспех одной проверки Духа: нежить, призраки, охотники'},
+  {id:'alch',cls:'Алхимик',st:{str:-1,dex:1,int:2,spi:0},ab:'brew',an:'Котелок',ai:'⚗',kind:'active',
+    ad:'Сварить одно зелье здоровья ✚'},
+  {id:'ranger',cls:'Следопыт',st:{str:1,dex:2,int:0,spi:-1},ab:'scout',an:'Тропа следопыта',ai:'◎',kind:'active',
+    ad:'Открыть плиты 5×5 вокруг себя, как обрывок карты',adD:'Лишний бросок d4 на шаги в свой ход',adP:'Открыть плиты 5×5 вокруг; в «Спуске» — лишний бросок d4'},
+  {id:'warrior',cls:'Воин',st:{str:2,dex:1,int:-1,spi:0},ab:'second',an:'Второй удар',ai:'⚔',kind:'prompt',
+    ad:'Перебросить проваленную проверку Силы: бой или встреча'},
+  {id:'orc',cls:'Берсерк',st:{str:2,dex:-1,int:0,spi:1},ab:'rage',an:'Ярость',ai:'✊',kind:'prompt',
+    ad:'+3 к одной проверке Силы — объявить до броска'}];
+window.HERO_CLASSES=HERO_CLASSES;window.HERO_STATS=STATS;
+const clsOf=p=>p&&p.portrait!=null?HERO_CLASSES[p.portrait]||null:null;
+const statV=(p,k)=>{const c=clsOf(p);return c&&k?c.st[k]||0:0;};
+// ЕДИНЫЙ помощник: модификатор характеристики к проверке и подпись для окна броска («+2 Сила»)
+function statB(p,k){const v=statV(p,k);return{b:v,t:v?`${v>0?'+':'−'}${Math.abs(v)} ${STATS[k].n}`:''};}
+// какая характеристика у боя с монстром: нежить и потустороннее — Дух, хитрые (m.st) — Разум, остальные — Сила
+const monStat=m=>m&&m.st?m.st:m&&(m.undead||m.voidTp)?'spi':'str';
+const abilDesc=c=>c.ab==='scout'&&COOP()?c.adD:c.ad;
+const abilOk=(p,id)=>{const c=clsOf(p);if(!c||(id&&c.ab!==id)||!S)return false;return coopOn()?p.abD!==S.depth:p.abD==null;};
+function abilUse(p){p.abD=coopOn()?S.depth:'g';}
+const abilFreq=()=>COOP()?'раз за этаж':'раз за партию';
+// страж с «Плащом-щитом» для проигранного боя: сам герой или (в «Спуске») соратник на соседней клетке; настоящий щит и так примет удар
+function aegisGuard(p){
+  if(!p||p.shield)return null;
+  if(abilOk(p,'aegis'))return p;
+  if(coopOn())return S.players.find(q=>q!==p&&alive(q)&&abilOk(q,'aegis')&&Math.max(Math.abs(q.r-p.r),Math.abs(q.c-p.c))<=1)||null;
+  return null;
+}
 // имя компьютера под его портрет, без повторов в партии
 function cpuNames(ports){const used=new Set();return ports.map(k=>{const list=isFemale(k)?CPU_FEMALE:CPU_MALE;const n=list.find(x=>!used.has(x))||list[0];used.add(n);return n;});}
 // Правила партии: свободное исследование — без спешки; пробуждение дракона — гонка со временем
@@ -1675,8 +1799,8 @@ const TUT=[
   {k:'Находки',t:'Золото, зелья, предметы',
     v:`<div class="tvisc tvis"><div class="tcards">${[['gold','Золото'],['chest','Сундук'],['potion','Зелье ♥'],['scroll','Свиток']].map(([k,t])=>`<figure><img src="img/item-${k}.jpg" alt=""><b>${t}</b></figure>`).join('')}</div>
       <div class="thexes"><div class="hex g"><span>✚</span></div><div class="hex s"><span>✹</span></div><div class="hex y"><span>†</span></div><div class="hex g"><span>☘</span></div><div class="hex g"><span>»</span></div><div class="hex y"><span>➰</span></div></div></div>`,
-    p:`<p>Под неизведанными плитками прячутся золото, сундуки, зелья и редкие вещи. Найденные предметы загораются в <b>шестиугольниках</b> внизу экрана: † меч +2 в бою, ☘ амулет +3 к проверкам, » зелье скорости, ➰ верёвка, ✹ сонная бомба.</p>
-      <p>Редкое снаряжение: ⛨ щит примет один удар, ⚒ кирка пробьёт стену из тупика, серебряный клинок даст +5 против нежити. Зелёная кнопка <b>✚</b> — выпить зелье здоровья, <b>§</b> — сумка свитков.</p>`},
+    p:`<p>Под неизведанными плитками прячутся золото, сундуки, зелья и редкие вещи. Найденные предметы лежат в рюкзаке <b>🎒</b> внизу — он светится, когда там появилось что-то новое. Там же: † меч +2 в бою, ☘ амулет +3 к проверкам, » зелье скорости, ➰ верёвка, ✹ сонная бомба.</p>
+      <p>Редкое снаряжение: ⛨ щит примет один удар, ⚒ кирка пробьёт стену из тупика, серебряный клинок даст +5 против нежити. Кнопка с <b>зельем</b> внизу — выпить зелье здоровья, <b>🎒</b> — рюкзак и свитки, лупа — масштаб поля.</p>`},
   {k:'Опасности',t:'Монстры и ловушки',
     v:`<div class="tvisc tvis"><div class="tduo"><img src="img/mon-troll.jpg" alt=""><img src="img/trap-spikes.jpg" alt=""></div>
       <div class="tcheck"><div class="die idle" id="tD20" role="button" aria-label="Бросить d20">d20</div><div class="dc" id="tDC">Нужно <b>12</b> или больше<br>Бонус +2 (старый меч)</div></div></div>`,
@@ -1791,18 +1915,18 @@ const LESSONS=[
     check:()=>S.kills>0?{win:true}:null,
     stars:[{t:'Победи монстра',prog:()=>'ищи монстра в новых плитках'}],
     hints:[['l4look','Где-то бродит <b>гигантская крыса</b>. Бой — бросок d20 против её сложности, старый меч † прибавит +2.',(p,ph)=>ph==='roll','roll'],
-      ['l4hurt','Крыса ранила героя: −1 ♥. Сердца — на карточке вверху. Зелёная кнопка <b>✚</b> внизу вылечит. Ищи крысу снова!',p=>p.hp<maxHP(p)]],
+      ['l4hurt','Крыса ранила героя: −1 ♥. Сердца — на карточке вверху. Кнопка с зельем внизу вылечит. Ищи крысу снова!',p=>p.hp<maxHP(p)]],
     done:'Первая победа! Чем ближе к логову, тем сильнее монстры. Сердца кончатся — герой выбывает вместе с золотом.'},
   {id:'L5',lesson:5,t:'Зелья и вещи',img:'img/item-potion.jpg',goal:'Вылечись зельем и найди 2 вещи',learn:'Зелья, предметы и инвентарь',
     story:'Ты ранен после прошлой вылазки, но в сумке есть зелье здоровья. А в коридорах разбросаны полезные вещи.',
-    steps:['Нажми зелёную кнопку <b>✚</b> — зелье вернёт 1 ♥.','Найди 2 вещи: меч, амулет, зелья, свитки, карту…','Вещи — в шестиугольниках внизу, всё снаряжение — в инвентаре 🎒.'],
+    steps:['Нажми кнопку с зельем внизу — оно вернёт 1 ♥.','Найди 2 вещи: меч, амулет, зелья, свитки, карту…','Вещи — в рюкзаке 🎒 внизу: он светится, когда появилось что-то новое.'],
     evP:.55,ev:[['potion',1.6],['haste',1.2],['amulet',1.2],['sword',1.2],['scroll',1.4],['map',.8],['gold',1]],
     setup:p=>{p.hp=Math.max(1,maxHP(p)-1);p.potions=1;},
     check:()=>S.drank&&lesItems()>=2?{win:true}:null,
     stars:[{t:'Вылечись зельем и найди 2 вещи',prog:()=>`${S.drank?'зелье ✓':'выпей зелье ✚'} · вещей ${Math.min(2,lesItems())} из 2`}],
     chip:()=>` · ${S.drank?'✚ ✓':'✚ —'} · вещи ${Math.min(2,lesItems())}/2`,
-    hints:[['l5potion','Герой ранен. Нажми зелёную кнопку <b>✚</b> внизу — зелье вернёт 1 ♥. Пить можно в свой ход, до броска или во время шагов.',p=>!S.drank&&p.potions>0],
-      ['l5inv','Найденные вещи загораются в <b>шестиугольниках</b> внизу. Всё снаряжение — в инвентаре: нажми 🎒.',()=>lesItems()>=1]],
+    hints:[['l5potion','Герой ранен. Нажми кнопку с зельем внизу — оно вернёт 1 ♥. Пить можно в свой ход, до броска или во время шагов.',p=>!S.drank&&p.potions>0],
+      ['l5inv','Найденные вещи — в рюкзаке: он светится, когда есть что-то новое. Нажми 🎒.',()=>lesItems()>=1]],
     done:'Ты знаешь, как лечиться и где лежат вещи. Свитки из сумки используют до броска или во время шагов.'},
   {id:'L6',lesson:6,t:'Логово дракона',img:'img/lair.jpg',goal:'Побывай в логове и выберись к краю',learn:'Логово, добыча и путь назад',
     story:'Пора к главной цели. В центре подземелья спит дракон на горе золота. Доберись до логова, возьми добычу и вернись к краю карты.',
@@ -1849,7 +1973,7 @@ const LES_HL={
   L4:{l4look:{cells:lesOpt(o=>!cell(o.r,o.c).rev),until:()=>(S.evN||{}).monster>0},
       l4hurt:{sel:['#bPotion'],until:()=>S.drank>0||P().hp>=maxHP(P())}},
   L5:{l5potion:{sel:['#bPotion'],until:()=>S.drank>0},
-      l5inv:{sel:['#bScroll','.hexes .hex:not(.empty):not([hidden])'],until:()=>!$('charsheet').hidden}},
+      l5inv:{sel:['#bScroll'],until:()=>!$('charsheet').hidden}},
   L6:{l6go:{cells:lesBest(z=>dist(z.r,z.c)),until:()=>S.players[0].mode!=='out'},
       l6back:{cells:lesBest(z=>edgeDist(z.r,z.c)),until:()=>S.players[0].mode==='home'}},
   L7:{l7start:{sel:['#movedie','#wake'],until:nextTurnOf(0)}},
@@ -2088,8 +2212,8 @@ const TIPS={
   move:'Клетки в <b>золотой рамке</b> — куда можно шагнуть, нажми на одну. Стрелки на плитке — её выходы, ↩ — назад. Новые плитки скрывают находки, монстров и ловушки.',
   jump:'Впереди <b>бездонная пропасть</b>. Нажми на клетку со знаком ⤴, чтобы прыгнуть к логову: d20, нужно 15+ (амулет даёт +3). Сорвёшься — бездна унесёт к краю подземелья.',
   hp:'Сердца героя ♥ — на его карточке вверху. Кончатся — герой выбывает вместе с золотом.',
-  potion:'У тебя есть зелье, а сердце потеряно. Нажми зелёную кнопку <b>✚</b> внизу, чтобы выпить зелье и вылечиться.',
-  items:'Найденные предметы светятся в <b>шестиугольниках</b> внизу: † меч +2 в бою, ☘ амулет +3 к проверкам, » +1 шаг, ➰ верёвка через пропасть, ✹ сонная бомба для логова.',
+  potion:'У тебя есть зелье, а сердце потеряно. Нажми кнопку с зельем внизу, чтобы выпить зелье и вылечиться.',
+  items:'Найденные предметы лежат в рюкзаке <b>🎒</b> внизу (он светится, когда есть новое): † меч +2 в бою, ☘ амулет +3 к проверкам, » +1 шаг, ➰ верёвка через пропасть, ✹ сонная бомба для логова.',
   scroll:'Кнопка <b>§</b> — сумка свитков. Один свиток за ход — до броска или во время шагов: одни помогают тебе, другие мешают соперникам.',
   back:'Добыча в мешке! Теперь дойди до <b>любой клетки на краю</b> подземелья. Путь к логову рассыпался — ищи новую дорогу.',
   rival:'Рядом соперник с золотом. Встань на его клетку — схватка <b>d20 против d20</b>: победитель забирает четверть чужого мешка.',
@@ -2178,6 +2302,7 @@ function startGame(names,map,opt={}){
   S.round=0;S.fire=0;S.awake=false;S.bombsUsed=0;S.homeN=0;S.calm=0;S.gong=0;S.rage=0;
   S.vsCpu=!S.online&&S.players.some(q=>q.cpu);boardFull=true;
   S.players.forEach(q=>q.scrolls.push(randomScroll()));   // каждый начинает с одним случайным свитком
+  S.players.forEach(q=>{const c=clsOf(q);q.cls=c?c.id:null;q.abD=null;if(c&&c.ab==='quickread')q.scrolls.push(randomScroll());});   // классы: чародейка берёт лишний свиток
   if(COOP())coopStart();
   else S.players.forEach(p=>{reveal(p.r,p.c);{const x=cell(p.r,p.c),inD=p.r===0?'D':p.r===N-1?'U':p.c===0?'R':'L';if(!x.arrows.includes(inD))x.arrows=['U','R','D','L'].filter(k=>k===inD||x.arrows.includes(k));}cell(p.r,p.c).visited=true;p.trail.push([p.r,p.c]);});
   S.players.forEach(p=>revealAhead(p.r,p.c,'out'));
@@ -2224,7 +2349,6 @@ function introCamera(){
     const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
     const set=(k,x,y)=>{st.style.transform=`translate(${x}px,${y}px) scale(${k})`;};
     introOn=true;bx.style.overflow='hidden';st.style.transformOrigin='0 0';st.style.willChange='transform';
-    $('who').innerHTML='<span class="whoname" id="whoName">Экспедиция начинается</span><span class="whohint" id="whoHint"></span>';$('who').style.setProperty('--pc',css('--gold'));
     // в «Спуске» логова нет — подсказка о его цели: найти лестницу вниз
     toast(COOP()?'Найдите лестницу вниз — встал на неё один, спускается весь отряд.':'Логово дракона — в центре подземелья. Набери золота и вернись живым!',3200);
     const t0=performance.now();let ended=false;
@@ -2313,20 +2437,61 @@ function modal(o){
     };
     const roll=$('mroll');
     if(o.roll){
-      const {dc,bonus,bonusText,outcome,forced}=o.roll;
+      let {dc,bonus,bonusText,outcome,forced}=o.roll;bonus=bonus||0;
+      // характеристика героя (o.roll.st) прибавляется здесь — одним местом для всех проверок d20; подпись видна в окне («+2 Сила»)
+      const pl=o.roll.pl||owner,sk=o.roll.st,sb=sk&&pl?statB(pl,sk):{b:0,t:''},cl=pl?clsOf(pl):null;
+      if(sb.b){bonus+=sb.b;bonusText=bonusT(bonusText,sb.t);}
+      let cpuWant='roll',rerolled=false;o.cpuPick=()=>cpuWant;   // выбор компьютера в окне броска
+      const chance=b=>Math.max(0,Math.min(1,(21-(dc-b))/20));
+      const bLine=(b,t)=>b?`<br>${b>0?'Бонус +':'Штраф −'}${Math.abs(b)} (${t})`:'';
       roll.hidden=false;$('die').textContent='d20';$('die').classList.add('idle');
-      $('dc').innerHTML=forced?`Нужно <b>${dc}</b> или больше<br><span class="f">Заговор на неудачу: выпадет 1</span>`:`Нужно <b>${dc}</b> или больше${bonus?`<br>${bonus>0?'Бонус +':'Штраф −'}${Math.abs(bonus)} (${bonusText})`:''}`;
-      setBtns([{label:'Бросить d20',cls:'primary',onClick:el=>{
-        if(el.__rolled)return;el.__rolled=true;el.disabled=true;me.anim=true;sfx('dice');
-        const r=forced||1+rnd(20),tot=forced?forced:Math.max(1,r+bonus),die=$('die');
+      $('dc').innerHTML=forced?`Нужно <b>${dc}</b> или больше<br><span class="f">Заговор на неудачу: выпадет 1</span>`:`Нужно <b>${dc}</b> или больше${bLine(bonus,bonusText)}`;
+      const finish=(r,win)=>{   // итог: последствия считает вызывающий код (один раз)
+        let t=outcome(r,win);
+        if(pl&&pl.aegisHit){t=String(t).replace(/щит принял удар и раскололся/g,'плащ-щит принял удар').replace(/(в|на) щит — (щит|он) раскололся/g,'$1 плащ-щит');pl.aegisHit=false;}
+        if(pl)pl.aegisNow=0;
+        $('mtext').textContent=t;render();cpuWant=null;
+        setBtns([{label:'Дальше',cls:'primary',value:r}]);
+      };
+      const afterFail=r=>{
+        const g=o.roll.guard?aegisGuard(pl):null;
+        if(!g){finish(r,false);return;}
+        cpuWant='aeg';
+        setBtns([{label:`${g===pl?'':g.short+': '}Плащ-щит — отменить урон`,cls:'primary',value:'aeg',onClick:()=>{abilUse(g);pl.aegisNow=S.players.indexOf(g)+1;finish(r,false);}},
+          {label:'Принять удар',value:'no',onClick:()=>finish(r,false)}]);
+      };
+      const throwDie=(b,t,cb)=>{
+        me.anim=true;sfx('dice');$('mbtns').querySelectorAll('button').forEach(x=>x.disabled=true);
+        const r=forced||1+rnd(20),tot=forced?forced:Math.max(1,r+b),die=$('die');
         die.classList.remove('spin','idle');void die.offsetWidth;die.classList.add('spin');die.textContent=r;
         setTimeout(()=>{
           if(tot<dc)sfx('fail');
-          $('dc').innerHTML=`${bonus&&!forced?`${r} ${bonus>0?'+':'−'} ${Math.abs(bonus)}${bonusText?` (${bonusText})`:''} = `:''}<b>${tot}</b> против ${dc}<br>${tot>=dc?'<span class="g">Успех</span>':'<span class="f">Провал</span>'}`;
-          $('mtext').textContent=outcome(r,tot>=dc);render();
-          setBtns([{label:'Дальше',cls:'primary',value:r}]);
+          $('dc').innerHTML=`${b&&!forced?`${r} ${b>0?'+':'−'} ${Math.abs(b)}${t?` (${t})`:''} = `:''}<b>${tot}</b> против ${dc}<br>${tot>=dc?'<span class="g">Успех</span>':'<span class="f">Провал</span>'}`;
+          cb(r,tot,b,t);
         },550);
-      }}]);
+      };
+      const afterThrow=(r,tot,b,t)=>{
+        if(tot>=dc){finish(r,true);return;}
+        const rr=!forced&&!rerolled&&cl&&abilOk(pl)&&((cl.ab==='surestep'&&sk==='dex')||(cl.ab==='second'&&sk==='str'));
+        if(!rr){afterFail(r);return;}
+        cpuWant='rr';
+        setBtns([{label:`${cl.an}: перебросить`,cls:'primary',value:'rr',onClick:()=>{rerolled=true;abilUse(pl);addLog(`${pl.name}: «${cl.an}» — переброс.`);throwDie(b,t,afterThrow);}},
+          {label:'Принять провал',value:'no',onClick:()=>afterFail(r)}]);
+      };
+      const pre=[{label:'Бросить d20',cls:'primary',value:'roll',onClick:el=>{if(el.__rolled)return;el.__rolled=true;throwDie(bonus,bonusText,afterThrow);}}];
+      if(!forced&&cl&&abilOk(pl)){
+        if(cl.ab==='rage'&&sk==='str'){
+          pre.push({label:'Ярость: +3 и бросить',value:'rage',onClick:el=>{if(el.__rolled)return;el.__rolled=true;abilUse(pl);addLog(`${pl.name}: «Ярость» — +3 к броску.`);
+            throwDie(bonus+3,bonusT(bonusText,'Ярость +3'),afterThrow);}});
+          if(chance(bonus)<.5)cpuWant='rage';}
+        if(cl.ab==='frost'&&sk==='spi'){
+          pre.push({label:'Иней: автоуспех',value:'frost',onClick:el=>{if(el.__rolled)return;el.__rolled=true;abilUse(pl);addLog(`${pl.name}: «Иней» — проверка Духа пройдена без броска.`);
+            sfx('success');const die=$('die');die.classList.remove('spin','idle');die.textContent='❄';
+            $('dc').innerHTML=`Иней: проверка Духа пройдена<br><span class="g">Успех</span>`;
+            finish(Math.max(1,Math.min(20,dc-bonus)),true);}});   // наименьший успешный бросок — без лишнего урона в «Спуске»
+          if(chance(bonus)<.55)cpuWant='frost';}
+      }
+      setBtns(pre);
     }else{roll.hidden=true;setBtns(o.buttons||[{label:'Дальше',cls:'primary',value:true}]);}
     m.hidden=false;
     if(o.onOpen)o.onOpen(done,me);
@@ -2350,7 +2515,7 @@ function act(a,d={}){
 }
 const PHASE_OK={roll:()=>S.phase==='roll',skip:()=>S.phase==='roll',hide:()=>S.phase==='roll',cloak:()=>S.phase==='roll',ghost:()=>S.phase==='roll',move:()=>S.phase==='move',exit:()=>S.phase==='exit',
   potion:()=>['roll','move','exit'].includes(S.phase),haste:()=>S.phase==='roll',bag:()=>['roll','move'].includes(S.phase),claim:()=>true,
-  dact:()=>S.phase==='move'&&coopOn(),dend:()=>S.phase==='move'&&coopOn()};
+  dact:()=>S.phase==='move'&&coopOn(),dend:()=>S.phase==='move'&&coopOn(),abil:()=>abilOk(P())&&!abilPhase(P())};
 function doAct(a,d){
   switch(a){
     case'roll':return rollD4();
@@ -2366,6 +2531,7 @@ function doAct(a,d){
     case'claim':return claimVictory(P());
     case'dact':return descAction(d.k,d);
     case'dend':return descEndTurn();
+    case'abil':return useAbility();
     case'tp':if(S.phase==='tp'&&S.tp&&S.tp.spots.some(([r,c])=>r===d.r&&c===d.c))S.tp.res([d.r,d.c]);return;
   }
 }
@@ -2378,7 +2544,8 @@ const NET_SERVER=(()=>{let u='';try{u=new URLSearchParams(location.search).get('
     (/\.relaxdev\.ru$/.test(location.hostname)?'wss://'+location.host:'wss://dragla2.relaxdev.ru');   // второй сервер: список открытых комнат (игра 0.7+)
   if(!/\/ws$/.test(u))u=u.replace(/\/+$/,'')+'/ws';return u;})();
 // версия правил: в одной комнате могут играть только телефоны с одинаковой версией игры
-const NET_PROTO=21;   // 21: вопрос о выходе — один раз на попадание на край (после «Остаться» не повторяется в этом ходу)
+const NET_PROTO=22;   // 22: классы героев — характеристики к проверкам d20 и способности (старые клиенты в одной комнате разошлись бы в бросках)
+// было: const NET_PROTO=21;   // 21: вопрос о выходе — один раз на попадание на край (после «Остаться» не повторяется в этом ходу)
 // было: const NET_PROTO=20;   // 20: чат в сетевой партии (сообщения a:'chat' идут мимо очереди ходов)
 // было: const NET_PROTO=19;   // 19: «Спуск» — огр-босс 1-го этажа (6 боссов), огр и минотавр в рядовых только с 3-го этажа
 // было: const NET_PROTO=18;   // 18: «Спуск» — ловушки срабатывают 1 раз, обезвредить можно 4 вида, монстры обходят вещи, появление только в залах без героев
@@ -2548,12 +2715,11 @@ function chatSync(){
   if(key&&key!==CHAT.key){CHAT.key=key;CHAT.list=[];CHAT.unread=0;CHAT.rate={};}
   if(!mode&&CHAT.open)chatClose();
   const u=CHAT.unread?String(Math.min(CHAT.unread,99)):'';
-  const bc=$('bChat'),fb=$('chatFab');
-  if(bc){const on=mode==='game';if(bc.hidden===on)bc.hidden=!on;if($('nChat').textContent!==u)$('nChat').textContent=u;}
+  const bc=$('bMenu'),fb=$('chatFab');
+  if(bc)bc.classList.toggle('hasdot',mode==='game'&&CHAT.unread>0&&!CHAT.open);   // в игре чат — в меню; новое сообщение — красная точка на кнопке меню
   if(fb){const on=mode==='lobby';if(fb.hidden===on)fb.hidden=!on;if($('nChatFab').textContent!==u)$('nChatFab').textContent=u;}
   if(!mode)$('chatPeek').hidden=true;
 }
-$('bChat').onclick=e=>{e.stopPropagation();CHAT.open?chatClose():chatOpen();};
 $('chatFab').onclick=e=>{e.stopPropagation();CHAT.open?chatClose():chatOpen();};
 $('chatPeek').onclick=()=>chatOpen();
 $('chatX').onclick=()=>chatClose();
@@ -2971,11 +3137,12 @@ async function rollD4(){
   if(pop)pop.hidden=true;
   pd.classList.add('rolling');if(btn){btn.classList.add('rolling');btn.classList.remove('ready','done');}
   $('rollcard').classList.remove('ready');$('rpSkip').hidden=true;$('rpHide').hidden=true;$('rpCloak').hidden=true;$('rpGhost').hidden=true;
-  sfx('dice');
+  sfx('dice');if(window.DIE3D&&DIE3D.ok)DIE3D.spin();
   for(let i=0;i<8;i++){const f=1+Math.floor(Math.random()*4);val.textContent=f;const rv=$('rpVal');if(rv&&rv!==val)rv.textContent=f;await wait(55+i*14);}
   const v=1+rnd(4);
   pd.classList.remove('rolling');if(btn)btn.classList.remove('rolling');
   val.textContent=v;const rv=$('rpVal');if(rv&&rv!==val)rv.textContent=v;
+  if(window.DIE3D&&DIE3D.ok)DIE3D.land(v);
   const dm=d4Mods(p);if(dm.haste)p.haste--;if(dm.rot)p.rot--;
   const tot=Math.max(1,v+dm.total);
   if(btn)btn.classList.add('done');
@@ -3043,7 +3210,7 @@ async function crossChasm(p,dir){
   const fail=dir==='in'?'бездна унесёт тебя к краю подземелья, на случайную плитку у внешнего контура, пройденный путь рассыплется, и ты пропустишь 1 ход':'останешься в логове и пропустишь 1 ход';
   await modal({icon:'⌇',tone:'sleep',title:'Бездонная пропасть',sub:dir==='in'?'Прыжок к логову':'Прыжок из логова',
     text:`Между тобой и ${dir==='in'?'логовом':'выходом'} — чёрная бездна. Нужно прыгнуть.\n\nПровал: ${fail}.\nС верёвкой переход без проверки.`,
-    roll:{dc:CHASM_DC,bonus:b,bonusText:[p.luck>0?'амулет':'',penLabel(p)].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+    roll:{st:'dex',pl:p,dc:CHASM_DC,bonus:b,bonusText:[p.luck>0?'амулет':'',penLabel(p)].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
       if(p.luck>0)p.luck--;
       ok=win;let t;
       if(win){sfx('success');t='Прыжок! Ты на той стороне.';}
@@ -3455,7 +3622,7 @@ async function descAction(k,d={}){
         const tr=TRAPS[t.room?roomAt(p.r,p.c).trap:x.trap],b=(p.luck>0?3:0)+curseB(p),dc=Math.max(5,tr.dc-2);
         await modal({icon:'⚠',tone:'fire',img:tr.img,title:`Обезвредить: ${tr.n}`,sub:`Действие · ${p.name}`,
           text:`Осторожно разобрать механизм. Обезвредить легче, чем увернуться: сложность ${dc}.\n\nПровал — ловушка срабатывает на тебя: ${[tr.dmg?`−${tr.dmg} ♥`:'',tr.steal?`сгорит ${tr.steal*100}% золота`:'',tr.skip?'пропуск хода':''].filter(Boolean).join(', ')}.`,
-          roll:{dc,bonus:b,bonusText:[p.luck>0?'амулет':'',curseB(p)?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+          roll:{st:'dex',pl:p,dc,bonus:b,bonusText:[p.luck>0?'амулет':'',curseB(p)?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
             if(p.luck>0)p.luck--;let s2;
             if(t.room){const rm=roomAt(p.r,p.c);rm.trapDone=true;if(win)rm.disarmed=true;}else{x.ev=null;x.trap=null;}   // так или иначе ловушка больше не опасна
             boardDirty=true;boardFull=true;
@@ -3579,7 +3746,6 @@ function paintAP(){
   const ph=$('dphase'),chip=$('apchip'),sk=$('rpSkip');
   const on=coopOn()&&!S.over&&S.phase!=='intro'&&$('mainmenu').hidden;
   const p=P();
-  {const two=on&&p&&p.sword&&p.silver;$('hSword').classList.toggle('dim',!!two&&wpnOf(p)!=='sword');$('hSilver').classList.toggle('dim',!!two&&wpnOf(p)!=='silver');}
   if(!on){if(!ph.hidden)ph.hidden=true;dphKey='';chip.hidden=true;$('dask').hidden=true;if(sk.textContent!=='Пропустить ход'){sk.textContent='Пропустить ход';sk.classList.remove('hot');}return;}
   const k=S.dph||'hero';
   if(dphKey!==k){dphKey=k;ph.className='dphase '+k;ph.innerHTML=`${DPH[k]} <i>${['hero','mon','env'].map(x=>x===k?'●':'○').join('')}</i>`;ph.hidden=false;void ph.offsetWidth;ph.classList.add('pop');try{if(coachCur)coachPlace();}catch(e){}}
@@ -3595,19 +3761,26 @@ function paintAP(){
 /* ---------- встреча героев на одной клетке: d20 против d20, победитель забирает 25% мешка ---------- */
 const pairKey=(a,b)=>{const i=S.players.indexOf(a),j=S.players.indexOf(b);return i<j?i+'-'+j:j+'-'+i;};
 function rivalsHere(p){if(COOP())return [];S.met=S.met||{};return S.players.filter(q=>q!==p&&alive(q)&&q.r===p.r&&q.c===p.c&&!S.met[pairKey(p,q)]);}
-const duelRoll=p=>{if(p.jinxTurn)return{r:1,t:1,pen:0};const r=1+rnd(20),pen=curseB(p);return{r,pen,t:Math.max(1,r+pen)};};
+const duelRoll=(p,st='str')=>{if(p.jinxTurn)return{r:1,t:1,pen:0,lab:''};const r=1+rnd(20),sb=statB(p,st),pen=curseB(p)+sb.b;return{r,pen,t:Math.max(1,r+pen),lab:bonusT(sb.t,curseB(p)?penLabel(p):'')};};
 async function duel(a,b){
   S.met=S.met||{};S.met[pairKey(a,b)]=true;
   sfx('monster');
   const dieH=(q,v,win,dg)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
     <div style="width:46px;height:46px;border-radius:50%;overflow:hidden;border:2px solid ${css(q.color)}">${q.portrait!=null?`<img alt="" src="${PORTRAITS[q.portrait]}" style="width:100%;height:100%;object-fit:cover">`:''}</div>
     <b style="font-size:14px">${esc(q.short)}</b><span style="font-size:13px;color:var(--muted)">${q.gold} зол.${dg?` <b class="${dg>0?'g':'f'}">${dg>0?'+':'−'}${Math.abs(dg)}</b>`:''}</span>
-    ${v?`<div class="die spin">${v.r}</div><span style="font-size:13px">${v.pen?`${v.r} ${v.pen>0?'+':'−'} ${Math.abs(v.pen)} = <b>${v.t}</b>`:''}</span>${win==null?'':`<span class="${win?'g':'f'}" style="font-weight:800">${win?'Победа':'Поражение'}</span>`}`:`<div class="die idle">d20</div>`}</div>`;
+    ${v?`<div class="die spin">${v.r}</div><span style="font-size:13px;text-align:center">${v.pen?`${v.r} ${v.pen>0?'+':'−'} ${Math.abs(v.pen)} = <b>${v.t}</b>`:''}${v.lab?`<br><small style="color:var(--muted)">${esc(v.lab)}</small>`:''}</span>${win==null?'':`<span class="${win?'g':'f'}" style="font-weight:800">${win?'Победа':'Поражение'}</span>`}`:`<div class="die idle">d20</div>`}</div>`;
   await modal({icon:'⚔',tone:'gold',img:'img/duel.jpg',title:'Встреча в подземелье',sub:`${a.short} и ${b.short}`,
     html:`<p style="margin:0 0 10px">Два героя столкнулись в тесном проходе. Добыча соперника — твоя цель! Бросок d20 против d20: победитель забирает 25% мешка проигравшего. Такая встреча бывает раз за игру.</p><div style="display:flex;gap:10px;align-items:flex-start">${dieH(a)}<div style="align-self:center;font:22px var(--display);color:var(--gold)">vs</div>${dieH(b)}</div>`,
     buttons:[{label:'Бросить кости',cls:'primary'}]});
   sfx('dice');let ra,rb,guard=0;do{ra=duelRoll(a);rb=duelRoll(b);}while(ra.t===rb.t&&++guard<20);
   if(ra.t===rb.t){ra.t++;}
+  {const l0=ra.t>rb.t?b:a;   // «Второй удар» воина: проигравший может перебросить свой d20 (решает он сам)
+   if(abilOk(l0,'second')&&!l0.jinxTurn){const lr=l0===a?ra:rb,wr=l0===a?rb:ra;
+    const v=await modal({owner:l0,icon:'⚔',tone:'gold',img:'img/duel.jpg',title:'Второй удар?',sub:`${l0.short} проигрывает встречу`,
+      text:`${l0.name}: ${lr.t} против ${wr.t}. Воин может перебросить свой d20 (${abilFreq()}).`,
+      buttons:[{label:'Второй удар: перебросить',cls:'primary',value:'rr'},{label:'Принять',value:'no'}],cpuPick:()=>'rr'});
+    if(v==='rr'){abilUse(l0);let n,g2=0;do{n=duelRoll(l0);}while(n.t===wr.t&&++g2<20);if(n.t===wr.t)n.t--;
+      if(l0===a)ra=n;else rb=n;addLog(`${l0.name}: «Второй удар» — переброс во встрече: ${n.t}.`);}}}
   const w=ra.t>rb.t?a:b,l=w===a?b:a,loot=Math.floor(l.gold*0.25);
   w.gold+=loot;l.gold-=loot;
   if(!warded(l)){l.stun+=1;l.wound=1;}
@@ -3663,7 +3836,7 @@ async function quake(p){
   sfx('trap');buzz([120,60,160]);quakeShake(1);
   cell(p.r,p.c).scar=q.k;boardDirty=true;
   await modal({icon:q.icon,tone:'fire',img:q.img,title:q.n,sub:'Подземелье дрожит',text:`${q.d}\n\nПри провале: ${q.pen}.`,
-    roll:{dc:q.dc,bonus:lb+cb,bonusText:[lb?'амулет':'',cb?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+    roll:{st:'dex',pl:p,dc:q.dc,bonus:lb+cb,bonusText:[lb?'амулет':'',cb?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
       if(p.luck>0)p.luck--;
       let t;
       if(win){sfx('success');t=q.k==='lava'?'Ты отпрыгнул от раскалённой струи!':q.k==='hole'?'Прыжок — и ты на твёрдом камне!':'Ловко увернулся от камней!';}
@@ -3825,7 +3998,7 @@ async function resolve(ev,p){
       const pen=[m.dmg?`−${m.dmg} ♥`:'',m.steal?`потеря ${m.steal*100}% золота`:'',m.skip?'пропуск хода':'',m.rot?`трупный яд — ${m.rot} хода на 1 шаг меньше`:'',m.hex?'ведьма утащит предмет из сумки':'',m.burn?`ожог на ${m.burn} хода (−3 к d20 в бою, +1 к d4)`:'',m.voidTp?`телепорт на случайную клетку в радиусе ${m.voidTp}`:''].filter(Boolean).join(', ');
       await modal({icon:'☠',tone:'fire',img:m.img,title:m.n,sub:'Монстр · бой',
         text:`${m.d}${m.noSword&&p.sword&&!wb.b?' Меч здесь бесполезен.':''}${m.undead&&p.silver?' Серебро жжёт нежить!':''}\n\nПри поражении: ${pen}.${p.shield?' Щит примет удар.':''}${hpLine}`,
-        roll:{dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+        roll:{st:monStat(m),pl:p,guard:!!m.dmg,dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{
           if(p.luck>0)p.luck--;
           let t;
           if(win&&coop){const dmg=r===20?mx.hp:Math.max(1,1+Math.floor(Math.max(0,r+b-dc)/3)-(m.armor||0));mx.hp=Math.max(0,mx.hp-dmg);
@@ -3851,7 +4024,7 @@ async function resolve(ev,p){
       const tr=S.trapFix!=null?TRAPS[S.trapFix]:S.lesTrap!=null?TRAPS[S.lesTrap]:TRAPS[rnd(TRAPS.length)],b=luckB()+cuB;sfx('trap');
       const pen=[tr.dmg?`−${tr.dmg} ♥`:'',tr.steal?`сгорит ${tr.steal*100}% золота`:'',tr.skip?(tr.skip>1?`пропуск ${tr.skip} ходов`:'пропуск хода'):''].filter(Boolean).join(', ');
       await modal({icon:'⚠',tone:'fire',img:tr.img,title:tr.n,sub:S.trapFix!=null?`Ловушка · проверка: ${p.name}`:'Ловушка · ловкость',text:`${tr.d}\n\nПри провале: ${pen}.`,
-        roll:{dc:tr.dc,bonus:b,bonusText:[luckB()?'амулет':'',cuB?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+        roll:{st:'dex',pl:p,dc:tr.dc,bonus:b,bonusText:[luckB()?'амулет':'',cuB?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
           if(p.luck>0)p.luck--;
           if(win)sfx('success');
           const t=win?'Ловко увернулся!':`Не повезло: ${harm(p,tr)}.`;
@@ -3874,7 +4047,7 @@ async function secretDoor(p){
   else if(v==='pick'){
     const lb=p.luck>0?3:0,cb=curseB(p);
     await modal({icon:'⌂',tone:'gold',img:'img/secret_door.jpg',title:'Вскрыть замок',sub:'Потайная дверь',text:'Ржавый механизм упрямится. Нужны ловкие пальцы и немного везения.',
-      roll:{dc:19,bonus:lb+cb,bonusText:[lb?'амулет':'',cb?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
+      roll:{st:'int',pl:p,dc:19,bonus:lb+cb,bonusText:[lb?'амулет':'',cb?penLabel(p):''].filter(Boolean).join(', '),forced:p.jinxTurn?1:0,outcome:(r,win)=>{
         if(p.luck>0)p.luck--;open=win;
         if(win)sfx('door');
         const t=win?'Щёлк! Замок поддался.':'Замок не поддался — дверь так и осталась закрытой.';
@@ -3922,12 +4095,12 @@ async function ratDice(p){
   const st=+v;
   const face=(src,name,val,win)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
     <div style="width:46px;height:46px;border-radius:50%;overflow:hidden;border:2px solid var(--gold)"><img alt="" src="${src}" style="width:100%;height:100%;object-fit:cover"></div>
-    <b style="font-size:14px">${esc(name)}</b>${val?`<div class="die spin">${val.r}</div><span style="font-size:13px">${val.pen?`${val.r} ${val.pen>0?'+':'−'} ${Math.abs(val.pen)} = <b>${val.t}</b>`:''}</span><span class="${win?'g':'f'}" style="font-weight:800">${win?'Больше':'Меньше'}</span>`:'<div class="die idle">d20</div>'}</div>`;
+    <b style="font-size:14px">${esc(name)}</b>${val?`<div class="die spin">${val.r}</div><span style="font-size:13px;text-align:center">${val.pen?`${val.r} ${val.pen>0?'+':'−'} ${Math.abs(val.pen)} = <b>${val.t}</b>`:''}${val.lab?`<br><small style="color:var(--muted)">${esc(val.lab)}</small>`:''}</span><span class="${win?'g':'f'}" style="font-weight:800">${win?'Больше':'Меньше'}</span>`:'<div class="die idle">d20</div>'}</div>`;
   const pimg=p.portrait!=null?PORTRAITS[p.portrait]:'img/title.jpg';
   await modal({icon:'⚄',tone:'gold',img:'img/ratman.jpg',title:`Ставка: ${st} золотых`,sub:'Игра в кости',
     html:`<div style="display:flex;gap:10px;align-items:flex-start">${face(pimg,p.short)}<div style="align-self:center;font:22px var(--display);color:var(--gold)">vs</div>${face('img/ratman.jpg','Крысюк')}</div>`,
     buttons:[{label:'Бросить кости',cls:'primary'}]});
-  let a,b,guard=0;do{a=duelRoll(p);b=1+rnd(20);}while(a.t===b&&++guard<20);
+  let a,b,guard=0;do{a=duelRoll(p,'int');b=1+rnd(20);}while(a.t===b&&++guard<20);
   if(a.t===b)a.t++;
   const win=a.t>b,run=win&&RNG()<RAT_RUN;
   let t;
@@ -3950,7 +4123,9 @@ function weaponB(p,m={}){
 // модификаторы броска d4 (скорость, ожог, трупный яд) — те же, что в rollD4 и в листе персонажа
 function d4Mods(p){const haste=p&&p.haste>0?1:0,burn=p&&p.burnTurn?1:0,rot=p&&p.rot>0?1:0;return{haste,burn,rot,total:haste+burn-rot};}
 // щит один раз принимает удар проигранного боя и раскалывается
-function shieldSave(p){if(!p.shield)return false;p.shield=false;sfx('shield');buzz(90);addLog(`${p.name}: щит принял удар и раскололся.`);return true;}
+function shieldSave(p){
+  if(p.aegisNow){const g=S.players[p.aegisNow-1]||p;p.aegisNow=0;p.aegisHit=true;sfx('shield');buzz(90);addLog(`${g.name}: «Плащ-щит» принял удар${g!==p?` за ${p.name}`:''}.`);return true;}
+  if(!p.shield)return false;p.shield=false;sfx('shield');buzz(90);addLog(`${p.name}: щит принял удар и раскололся.`);return true;}
 const bonusT=(...a)=>a.filter(Boolean).join(', ');
 // что может утащить кобольд: [поле героя, название в винительном падеже]
 // кобольд-вор с добычей удирает: в начале каждого хода обворованного героя делает 1 шаг прочь от него.
@@ -3993,13 +4168,14 @@ function koboldSpot(p){
   const sp=['U','R','D','L'].map(d=>[p.r+D[d][0],p.c+D[d][1]]).filter(([r,c])=>walkable(r,c)&&!cell(r,c).stash);
   return sp.length?sp[rnd(sp.length)]:null;
 }
-const rollOpts=(p,dc,b,bt,outcome)=>({dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{if(p.luck>0)p.luck--;return outcome(r,win);}});
+// pp — герой или [герой, характеристика, можно ли закрыть «Плащом-щитом»]
+const rollOpts=(pp,dc,b,bt,outcome)=>{const [p,st,guard]=Array.isArray(pp)?pp:[pp];return{st,pl:p,guard:!!guard,dc,bonus:b,bonusText:bt,forced:p.jinxTurn?1:0,outcome:(r,win)=>{if(p.luck>0)p.luck--;return outcome(r,win);}};};
 async function koboldFight(p){
   sfx('monster');
   const wb=weaponB(p),lb=p.luck>0?3:0,cb=curseB(p);let stolen=null;
   await modal({icon:'☠',tone:'fire',img:'img/mon-kobold.jpg',title:'Кобольд-вор',sub:'Монстр · бой',
     text:'Зелёный пройдоха волочёт мешок больше себя и уже приглядывается к твоему снаряжению.\n\nПри поражении он не ранит, а утащит предмет и удерёт на соседнюю клетку. Догонишь — вернёшь.',
-    roll:rollOpts(p,12,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+    roll:rollOpts([p,'int'],12,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;
       if(win){sfx('kill');const g=between([15,30]);p.gold+=g;t=`Кобольд повержен! В его мешке ${g} золотых.`+trophy(p,3);}
       else{stolen=koboldSteal(p);t=`Кобольд выхватил ${stolen.text} и удрал!`;}
@@ -4014,7 +4190,7 @@ async function koboldChase(p,x,st){
   const wb=weaponB(p),lb=p.luck>0?3:0,cb=curseB(p);
   await modal({icon:'☠',tone:'gold',img:'img/mon-kobold.jpg',title:'Кобольд загнан в угол',sub:'Погоня',
     text:`Вот он, воришка! Прижимает к себе ${st.text}${st.from&&st.from!==p.name?` — добычу, отнятую у героя ${st.from}`:''}.\n\n${st.quest?'Победа — забираешь всё себе. Провал — кобольд вывернется и отскочит на соседнюю клетку.':'Победа — забираешь всё себе. Провал — кобольд юркнёт в щель навсегда.'}`,
-    roll:rollOpts(p,10,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+    roll:rollOpts([p,'dex'],10,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;x.stash=null;boardFull=true;
       if(st.quest){
         if(win)S.kCaught=true;
@@ -4037,7 +4213,7 @@ async function cultistFight(p){
   const pen=aw?'−1 ♥ — проклятие культиста':S.rules==='wake'?'он ударит в гонг, и дракон проснётся на 2 раунда раньше':'он ударит в гонг, и риск в логове вырастет на 5% для всех';
   await modal({icon:'☠',tone:'fire',img:'img/mon-cultist.jpg',title:'Культист дракона',sub:'Монстр · бой',
     text:`Фанатик в лохмотьях с драконьей меткой поднимает светящийся посох. Он хочет, чтобы хозяин проснулся.\n\nПри поражении: ${pen}.`,
-    roll:rollOpts(p,13,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+    roll:rollOpts([p,'int',aw],13,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;
       if(win){sfx('kill');const g=between([40,60]);p.gold+=g;t=`Культист повержен! В его сумке ${g} золотых.`+trophy(p,4);
         if(RNG()<0.3){const id=randomScroll();p.scrolls=p.scrolls||[];p.scrolls.push(id);t+=` И свиток «${SCROLLS[id].n}».`;}}
@@ -4058,7 +4234,7 @@ async function whelpMeet(p){
   const fight=v==='fight',wb=fight?weaponB(p):{b:0,t:''},lb=p.luck>0?3:0,cb=curseB(p);let won=false;
   await modal({icon:'🐉',tone:'fire',img:'img/mon-whelp.jpg',title:fight?'Бой с дракончиком':'Прогнать дракончика',sub:'Детёныш дракона',
     text:fight?'Дракончик мал, но зубаст.':'Топнуть, крикнуть, замахнуться — авось убежит.',
-    roll:rollOpts(p,fight?12:10,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+    roll:rollOpts([p,fight?'str':'dex',true],fight?12:10,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;won=win;
       if(win&&fight){sfx('kill');p.gold+=60;t='Дракончик повержен: +60 золотых. Но из глубины подземелья уже доносится страшный рёв…'+trophy(p,6);}
       else if(win)t='Дракончик фыркнул и убежал.';
@@ -4136,7 +4312,7 @@ async function stashAt(p){
     const wb=weaponB(p,{undead:1}),lb=p.luck>0?3:0,cb=curseB(p);
     await modal({icon:'☠',iconImg:port,iconCls:'zombie',tone:'fire',img:'img/dead_hero_on_map.jpg',title:`Зомби ${st.name}`,sub:'Проклятие дракона',
       text:`${st.zombie?`Зомби ${st.name} всё ещё сторожит свой мешок.`:`Ты тянешься к мешку — и мёртвые пальцы хватают тебя за руку. Проклятие дракона подняло павшего: перед тобой зомби ${st.name}!`}\n\nПобеда — весь мешок твой: ${st.gold} золотых. Поражение — −1 ♥, а зомби останется на клетке.${p.shield?' Щит примет удар.':''}`,
-      roll:rollOpts(p,14,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+      roll:rollOpts([p,'spi',true],14,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
         let t;
         if(win){sfx('coins');p.gold+=st.gold;x.stash=null;boardFull=true;t=`Зомби рассыпался прахом. Мешок твой: +${st.gold} золотых.`;}
         else{st.zombie=true;boardFull=true;t=shieldSave(p)?'Зомби обрушил удар на щит — щит раскололся, но ты цел. Зомби остался сторожить мешок.':`Зомби отбросил тебя: ${harm(p,{dmg:1})}. Мешок он не отдаст.`;}
@@ -4259,7 +4435,7 @@ async function hunterFight(p,h,caught){
   const wb=weaponB(p),lb=p.luck>0?3:0,cb=curseB(p);
   await modal({icon:'☠',tone:'fire',img:hd.img,title:caught?`${hd.n} ${hd.fem?'настигла':'настиг'} тебя!`:hd.n,sub:'Охотник · бой',
     text:`${caught?'Охотник выследил тебя в темноте.':'Ты столкнулся с охотником лицом к лицу.'} Отбейся — и он уйдёт во тьму на ${HUNT_AWAY} ${plural(HUNT_AWAY,'раунд','раунда','раундов')}.\n\nПри поражении: −1 ♥ и потеря ${Math.round(hd.steal*100)}% золота.${p.shield?' Щит примет удар.':''}`,
-    roll:rollOpts(p,hd.dc,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
+    roll:rollOpts([p,'spi',true],hd.dc,wb.b+lb+cb,bonusT(wb.t,lb?'амулет':'',cb?penLabel(p):''),(r,win)=>{
       let t;
       if(win){sfx('kill');h.away=HUNT_AWAY;t=`Ты отбился! ${hd.n} уползает во тьму — вернётся через ${HUNT_AWAY} ${plural(HUNT_AWAY,'раунд','раунда','раундов')}.`;}
       else{h.away=2;t=shieldSave(p)?`${hd.n} бьёт — щит принял удар и раскололся. Охотник отступает во тьму.`:`${hd.n}: ${harm(p,{dmg:1,steal:hd.steal})}. Насытившись, охотник уходит во тьму на 2 раунда.`;}
@@ -4410,8 +4586,11 @@ async function cpuTurn(){
   const wait=ms=>new Promise(r=>setTimeout(r,ms*cpuPace()));
   await wait(1000);
   if(!mine())return;
+  if(abilOk(me,'brew')&&!me.potions&&me.hp<maxHP(me)&&!abilPhase(me)){toast(`${me.name}: «Котелок» — варит зелье.`,1800);await useAbility();await wait(700);if(!mine())return;}
   if(me.potions&&me.hp===1&&['roll','move'].includes(S.phase)){toast(`${me.name} пьёт зелье здоровья.`,1800);await drink();if(me.mode==='dead'){nextTurn();return;}render();await wait(900);if(!mine())return;}
   if(S.phase==='roll'){$('rollpop').hidden=true;await cpuScroll(me);if(!mine())return;if(me.mode==='dead'||me.mode==='home'){nextTurn();return;}
+    if(me.scrollTurn===S.turnNo&&abilOk(me,'quickread')&&(me.scrolls||[]).length){await cpuScroll(me);if(!mine())return;if(me.mode==='dead'||me.mode==='home'){nextTurn();return;}}
+    if(!coopOn()&&abilOk(me,'scout')&&me.mode==='out'&&S.turnNo>=S.players.length*2&&!abilPhase(me)){await useAbility();await wait(600);if(!mine())return;}
     if(await cpuHunt(me,wait)||!mine())return;
     if(me.ghostP>0&&!me.ghost&&(me.mode==='out'||me.mode==='back')){const o=options(me);
       if(!o.length||o.every(x=>x.back||x.lost)){toast(`${me.name} пьёт зелье призрачного шага.`,1800);useGhost();$('rollpop').hidden=true;await wait(900);if(!mine())return;}}
@@ -4419,6 +4598,7 @@ async function cpuTurn(){
     showRollPop(me);await wait(700);await rollD4();await wait(700);}
   while(mine()&&S.phase==='move'&&!busy){
     if(coopOn()&&me.ap&&me.ap.act>0){const k=cpuDescPick(me);if(k){await descAction(k.k,k);await wait(700);continue;}}
+    if(coopOn()&&me.moves<=0&&abilOk(me,'scout')&&!abilPhase(me)){await useAbility();await wait(600);if(!mine())break;continue;}   // следопыт: лишний d4, когда шаги кончились
     const o=cpuChoose(me);if(!o)break;
     await move(o);
     if(!mine()||S.phase!=='move')break;
@@ -4427,6 +4607,7 @@ async function cpuTurn(){
   if(mine()&&coopOn()&&S.phase==='move'&&!busy)descEndTurn();   // «Спуск»: шагов не осталось — компьютер завершает ход
 }
 function cpuLair(p){
+  if(abilOk(p,'brew')&&!p.potions&&p.hp<maxHP(p))return'brew';
   if(S.awake)return p.potions&&p.hp<maxHP(p)&&p.hp<=1?'potion':'leave';
   const r=risk(p);
   if(p.potions&&p.hp<maxHP(p)&&p.hp<=1)return'potion';
@@ -4613,7 +4794,7 @@ function greedLoot(q){
   return l;
 }
 const scrollTargets=(c,id)=>S.players.filter(q=>q!==c&&alive(q)).map(q=>({q,why:warded(q)?'его хранит камень судьбы':SCROLLS[id].ok?SCROLLS[id].ok(c,q):''}));
-const canReadScroll=p=>!!(p&&alive(p)&&p.scrolls&&p.scrolls.length&&p.scrollTurn!==S.turnNo&&['roll','move','lair'].includes(S.phase)&&!busy&&!rolling);
+const canReadScroll=p=>!!(p&&alive(p)&&p.scrolls&&p.scrolls.length&&(p.scrollTurn!==S.turnNo||abilOk(p,'quickread'))&&['roll','move','lair'].includes(S.phase)&&!busy&&!rolling);
 function scrollBagHtml(p){
   const cnt={};p.scrolls.forEach(id=>cnt[id]=(cnt[id]||0)+1);
   return Object.keys(cnt).map(id=>`<b>${SCROLLS[id].n}</b>${cnt[id]>1?` ×${cnt[id]}`:''} — ${SCROLLS[id].d}`).join('<br><br>');
@@ -4622,7 +4803,7 @@ function scrollBagHtml(p){
 async function openScrollBag(){
   const p=P();
   if(!p.scrolls||!p.scrolls.length){await modal({icon:'§',tone:'gold',title:'Сумка свитков',sub:p.name,text:'Сумка пуста. Свитки попадаются в подземелье.'});return false;}
-  if(p.scrollTurn===S.turnNo){await modal({icon:'§',tone:'gold',title:'Сумка свитков',sub:p.name,html:`<p style="margin:0 0 10px">В этот ход ты уже читал свиток. Следующий — в свой следующий ход.</p><div class="scrolls">${scrollBagHtml(p)}</div>`});return false;}
+  if(p.scrollTurn===S.turnNo&&!abilOk(p,'quickread')){await modal({icon:'§',tone:'gold',title:'Сумка свитков',sub:p.name,html:`<p style="margin:0 0 10px">В этот ход ты уже читал свиток. Следующий — в свой следующий ход.</p><div class="scrolls">${scrollBagHtml(p)}</div>`});return false;}
   const ids=[...new Set(p.scrolls)];
   const v=await modal({icon:'§',tone:'gold',title:'Сумка свитков',sub:`${p.name} · ${p.scrolls.length} шт.`,
     html:`<p style="margin:0 0 6px;color:var(--muted)">Один свиток за ход. После прочтения он исчезает.</p>`,
@@ -4643,7 +4824,7 @@ async function castScroll(p,id,pickTarget,pickLoot){
       buttons:[...okM.map(([r,c,x],i)=>({label:`${MONSTERS[x.mon].n} (${x.hp??monHp(x.mon)} ♥)`,value:i,cls:'tgt'})),{label:'Отмена',value:-1}]});
     if(v===-1||v==null)return false;
     const [mr,mc,mx]=okM[v],m=MONSTERS[mx.mon];
-    p.scrolls.splice(p.scrolls.indexOf(id),1);p.scrollTurn=S.turnNo;sfx(sc.snd||'useScroll');
+    p.scrolls.splice(p.scrolls.indexOf(id),1);if(p.scrollTurn===S.turnNo){abilUse(p);addLog(`${p.name}: «Быстрое чтение» — второй свиток за ход.`);}p.scrollTurn=S.turnNo;sfx(sc.snd||'useScroll');
     if(mx.hpMax==null){mx.hpMax=monHp(mx.mon);mx.hp=mx.hpMax;}
     mx.hp--;const healed=p.hp<MAXHP;if(healed)p.hp++;mx.awake=true;let t=`${m.n} теряет сердце: ${mx.hp} из ${mx.hpMax}.${healed?` ${p.name} получает +1 ♥.`:` У ${p.name} и так полное здоровье.`}`;
     if(mx.hp<=0){const g=between(m.loot);p.gold+=g;Object.assign(mx,{ev:null,mon:null,hp:null,hpMax:null,awake:false,visited:true});sfx('kill');t=`${m.n} падает замертво — сердце вырвано. ${healed?`${p.name} получает +1 ♥. `:''}Добыча: +${g} золотых.`;}
@@ -4665,7 +4846,7 @@ async function castScroll(p,id,pickTarget,pickLoot){
       target=S.players[v];
     }
   }
-  p.scrolls.splice(p.scrolls.indexOf(id),1);p.scrollTurn=S.turnNo;
+  p.scrolls.splice(p.scrolls.indexOf(id),1);if(p.scrollTurn===S.turnNo){abilUse(p);addLog(`${p.name}: «Быстрое чтение» — второй свиток за ход.`);}p.scrollTurn=S.turnNo;
   addLog(sc.artifact?`${p.name} использует «${sc.n}».`:`${p.name} читает «${sc.n}»${target?` на ${target.name}`:''}.`);
   sfx(sc.snd||'useScroll');
   await applyScroll(p,id,target,pickLoot);
@@ -4846,6 +5027,7 @@ async function lairTurn(){
     if(!aw&&p.bombs&&!calmN())b.push({label:`Сонная бомба (${p.bombs}) · ${bp} ${plural(bp,'поиск','поиска','поисков')} без риска`,cls:'sleep',value:'bomb'});
     if(p.potions&&p.hp<maxHP(p))b.push({label:`Выпить зелье ✚ (${p.potions})`,cls:'heal',value:'potion'});
     if(!p.cpu&&canReadScroll(p))b.push({label:`§ Сумка свитков (${p.scrolls.length})`,value:'scroll'});
+    if(abilOk(p,'brew'))b.push({label:'⚗ Котелок: сварить зелье',value:'brew'});
     b.push({label:`Уйти с ${p.gold} золотыми`,cls:'primary',value:'leave'});
     const state=calmN()?`Дракон в глубоком сне ещё ${calmN()} ${plural(calmN(),'поиск','поиска','поисков')} — для всех, кто в логове.`:p.searches?`Поисков: ${p.searches}. Дракон беспокойно ворочается.`:'Дракон спит, посапывая дымом.';
     startHeart(aw?90:r);
@@ -4856,6 +5038,7 @@ async function lairTurn(){
       text:aw?`В мешке ${p.gold} золотых. Дракон проснулся, логово в огне — искать сокровища больше нельзя. Каждый ход в пламени стоит 1 ♥. Беги!`:`В мешке ${p.gold} золотых. ${state}${r?`\n\nСердце колотится всё сильнее: риск разбудить дракона — ${r}%.`:''}${stage}${crowd}`,buttons:b,cpuPick:()=>cpuLair(p)});
     stopHeart();
     if(v==='potion'){await drink();if(p.mode==='dead'){nextTurn();return;}continue;}
+    if(v==='brew'&&abilOk(p,'brew')){abilUse(p);p.potions=(p.potions||0)+1;sfx('potion');addLog(`${p.name}: «Котелок» — сварено зелье здоровья.`);render();continue;}
     if(v==='scroll'){await openScrollBag();if(p.mode==='dead'){nextTurn();return;}continue;}
     if(v==='bomb'){sfx('sleep');const n=bombPower();p.bombs--;S.calm=n;S.bombsUsed=(S.bombsUsed||0)+1;sleepFx=Date.now();
       const mates=S.players.filter(q=>q.mode==='room'&&alive(q));mates.forEach(q=>{q.searches=0;});
@@ -4971,7 +5154,7 @@ function size(){
   W=zoom?Math.max(fit,Math.round(zc*N*(zoom===2?1.5:1))):fit;
   // плотность пикселей: не больше 2 и не больше ~2000 px по стороне — иначе на телефоне холст огромный
   const dpr=introOn?Math.max(1,Math.min(6,2600/W)):Math.max(1,Math.min(window.devicePixelRatio||1,2,(zoom===2?1900:1500)/W));   // при облёте поле рисуется крупнее — приближение остаётся чётким
-  const zb=$('bZoom'),big=zoom===2||(zoom&&fit>=Math.round(zc*N*1.5));zb.textContent=big?'⊖':'⊕';zb.title=zb.ariaLabel=big?'Показать всё поле':'Крупнее';
+  const zb=$('bZoom'),big=zoom===2||(zoom&&fit>=Math.round(zc*N*1.5));zb.classList.toggle('big',!!big);zb.title=zb.ariaLabel=big?'Показать всё поле':'Крупнее';
   $('bZoom').disabled=false;
   // размер не поменялся (всплыло окно, спряталась полоска сна дракона) — холсты не пересоздаём: это самая дорогая операция
   const key=W+'|'+dpr+'|'+N;if(key===size.key){darkSig='';boardDirty=true;boardFull=true;fxRects=[[0,0,W,W]];return;}size.key=key;
@@ -5665,14 +5848,40 @@ function showSheetOverlay(){
 function openCharSheet(i){
   if(charSheetBlocked())return;
   const p=S.players[i];if(!p)return;
-  CS_MODE='sheet';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();
+  CS_MODE='sheet';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();if(invHero()===p)invSeen(i);
+}
+// ---- «новое в рюкзаке»: флаг только на этом клиенте (в сеть и в сохранение не попадает), у каждого игрока за столом свой ----
+const INVNEW={S:null,seen:{},flag:{}};
+function invSig(p){const o={potions:p.potions||0,bombs:p.bombs||0,sword:p.sword?1:0,silver:p.silver?1:0,shield:p.shield?1:0,luck:p.luck||0,hasteP:p.hasteP||0,
+  rope:p.rope?1:0,pick:p.pick?1:0,key:p.key||0,cloak:p.cloak||0,ghostP:p.ghostP||0,mantle:p.mantle?1:0};
+  (p.scrolls||[]).forEach(id=>{o['s_'+id]=(o['s_'+id]||0)+1;});return o;}
+function invWatch(){
+  if(!S||!S.players)return;
+  if(INVNEW.S!==S){INVNEW.S=S;INVNEW.seen={};INVNEW.flag={};}
+  S.players.forEach((q,i)=>{
+    if(!q||q.cpu||!isLocal(q))return;
+    const cur=invSig(q),old=INVNEW.seen[i];INVNEW.seen[i]=cur;
+    if(!old)return;   // первый снимок — стартовые вещи «новыми» не считаются
+    for(const k in cur){if(cur[k]>(old[k]||0)){INVNEW.flag[i]=true;break;}}
+  });
+}
+function invSeen(i){if(i>=0&&INVNEW.flag[i]){INVNEW.flag[i]=false;const b=$('bScroll');if(b)b.classList.remove('newitem');}}
+// короткая подсказка в начале хода (таблички «Ходит …» внизу больше нет)
+let TURNK='',TURNS=null;
+function turnToast(){
+  if(!S||S.over||S.mission||S.phase!=='roll'||(S.dph&&S.dph!=='hero'))return;
+  if(TURNS!==S){TURNS=S;TURNK='';}
+  const k=S.turnNo+':'+S.cur;if(k===TURNK)return;TURNK=k;
+  const q=P();if(!q||!alive(q)||q.cpu||!isLocal(q)||introOn)return;
+  if(S.players.filter(x=>isLocal(x)&&!x.cpu).length>1)return;   // за одним устройством уже есть окно «Ход: …»
+  toast('Твой ход',1300);
 }
 function openInventory(){
   if(charSheetBlocked())return;
   const p=invHero();if(!p)return;
   const i=S.players.indexOf(p);
   if(CS_MODE==='inv'&&CS_IDX===i&&$('charsheet')&&!$('charsheet').hidden){closeCharSheet();return;}
-  CS_MODE='inv';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();
+  CS_MODE='inv';CS_IDX=i;lookAt(i);paintCharSheet();showSheetOverlay();invSeen(i);
 }
 function whyScroll(p,id){
   if(!S||S.over||!alive(p))return 'сейчас нельзя';
@@ -5684,7 +5893,7 @@ function whyScroll(p,id){
     if(S.phase==='tp')return 'сейчас выбери клетку';
     return 'сейчас нельзя';
   }
-  if(p.scrollTurn===S.turnNo)return 'уже читал в этот ход';
+  if(p.scrollTurn===S.turnNo&&!abilOk(p,'quickread'))return 'уже читал в этот ход';
   const sc=SCROLLS[id];if(!sc)return 'сейчас нельзя';
   if(sc.t==='self'&&sc.self){const w=sc.self(p);if(w)return w;}
   if(coopOn()&&id==='necro'){
@@ -5739,6 +5948,7 @@ function invDo(kind,id){
   else if(kind==='scroll'&&id)act('bag',{id});
   else if(kind==='wpn')act('dact',{k:'wpn'});
   else if(kind==='give')invGiveDo(p,id);
+  else if(kind==='abil')act('abil');
 }
 function csRow(ico,cls,name,desc,cnt,act){
   const mid=cnt==null||cnt===''?'':`<span class="cscnt">×${cnt}</span>`;
@@ -5766,6 +5976,7 @@ function d20FightLine(p){
   const notes=[];
   if(p.silver)notes.push('Серебряный клинок: +5 против нежити (вместо меча).');
   if(p.luck>0)notes.push('Амулет также даёт +3 к прыжку через пропасть и к ловушкам (тратится на проверку).');
+  if(clsOf(p))notes.push('Характеристика прибавляется по виду проверки: Сила — бой и встреча, Ловкость — ловушки, обвалы и пропасть, Разум — хитрые монстры, замок и кости, Дух — нежить и охотники.');
   return {line,notes};
 }
 function d4BonusLine(p){
@@ -5780,12 +5991,13 @@ function paintCharSheet(){
   const crest=$('csCrest');
   crest.style.setProperty('--pc',css(p.color));
   crest.innerHTML=p.portrait!=null?`<img alt="" src="${PORTRAITS[p.portrait]}">`:esc((p.name||'?').slice(0,1).toUpperCase());
-  $('csTitle').textContent=p.name+(p.cpu?' · ИИ':'');
+  {const c=clsOf(p);$('csTitle').textContent=p.name+(c?' · '+c.cls:'')+(p.cpu?' · ИИ':'');}
   const st={out:COOP()?'ищет лестницу вниз':'идёт к логову',room:'в логове дракона',back:'возвращается с добычей',home:'выбрался из подземелья',dead:COOP()?'без сил — его можно поднять':'погиб'}[p.mode]||'';
   const inv=CS_MODE==='inv';
   $('csSub').textContent=inv?'Инвентарь':'Лист персонажа'+(st?' · '+st:'');   // в инвентаре — без «куда идёт герой»
   const hp=Math.max(0,p.hp),cap=maxHP(p);
-  const hearts=`<span class="hp">${'♥'.repeat(hp)}${'♡'.repeat(Math.max(0,cap-hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона">♥</span>`:''}</span> <span>${hp} из ${cap}</span>`;
+  const hearts=`</div>
+    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${S&&S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span><span class="hp">${'♥'.repeat(hp)}${'♡'.repeat(Math.max(0,cap-hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона">♥</span>`:''}</span> <span>${hp} из ${cap}</span>`;
   const tro=S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔ трофеи <b>${p.tro||0}</b></span>`:'';
   const bag=p.mode==='dead'&&!COOP()?'<span>мешок потерян</span>':`<span class="coin" title="Золото в мешке"><b>${p.gold}</b></span>`;
   $('csStats').innerHTML=`${hearts}${bag}${tro}`;
@@ -5842,7 +6054,13 @@ function paintCharSheet(){
   const bonus=`<div class="csbonus">${esc(d20.line)}<div style="margin-top:6px">${esc(d4)}</div>${d20.notes.map(t=>`<div class="note">${esc(t)}</div>`).join('')}${extra}</div>`;
   const body=[csSec('Статусы',fx),csSec('Снаряжение',gear),csSec('Расходники',cons),csSec('Свитки',scs),csSec('Артефакты',arts)].join('');
   const empty=!fx.length&&!gear.length&&!cons.length&&!scs.length&&!arts.length;
-  $('csbody').innerHTML=(empty?`<p class="csempty">Сумка пуста — пока ничего нет.</p>`:'')+body+bonus;
+  let clsH='';
+  {const c=clsOf(p);if(c){const ok=abilOk(p),acts=c.kind==='active'&&inv?{kind:'abil',label:'Применить',why:ok?whyAbil(p):''}:null;
+    const when=c.kind==='prompt'?' · кнопка появится в окне проверки':c.kind==='passive'?' · действует сама':'';
+    const flav=(window.HEROSEL&&HEROSEL.info[p.portrait]||{}).txt||'';
+    clsH=`<section class="cssec csclass"><h3>Класс: ${esc(c.cls)}</h3>${flav?`<p class="csflav">${esc(flav)}</p>`:''}<div class="csstats">${STAT_KEYS.map(k=>{const v=c.st[k];return`<span class="cst${v>=2?' hi':v<0?' lo':''}" title="${STATS[k].n}"><i>${STATS[k].i}</i>${STATS[k].s}<b>${signed(v)}</b></span>`;}).join('')}</div>`+
+      csRow(c.ai,ok?'y':'f',`${c.an} · ${ok?'готова':coopOn()?'потрачена на этом этаже':'использована'}`,`${abilDesc(c)} (${abilFreq()})${when}`,null,ok?acts:null)+`</section>`;}}
+  $('csbody').innerHTML=clsH+(empty?`<p class="csempty">Сумка пуста — пока ничего нет.</p>`:'')+body+bonus;
 }
 
 function buildPills(){
@@ -5868,8 +6086,8 @@ function pill(i){
   const st={out:COOP()?'ищет лестницу':'к логову',room:'в логове',back:'назад к краю',home:'спасён',dead:COOP()?'без сил':'погиб'}[p.mode];
   // значки статусов и предметов убраны: они есть в листе персонажа и инвентаре
   const html=`<div class="crest">${p.portrait!=null?`<img alt="" src="${PORTRAITS[p.portrait]}">`:esc((p.name||'?').slice(0,1).toUpperCase())}</div>
-    <div class="pl1"><span class="pname">${esc(p.short)}</span>${p.cpu?'<span class="ai">ИИ</span>':''}<span class="hp">${'♥'.repeat(Math.max(0,p.hp))}${'♡'.repeat(Math.max(0,maxHP(p)-p.hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона: ещё ${p.lock} ${plural(p.lock,'ход','хода','ходов')}">♥</span>`:''}</span></div>
-    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${S&&S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span></div>`;
+    <div class="pl1"><span class="pname">${esc(p.short)}</span>${p.cpu?'<span class="ai">ИИ</span>':''}</div>
+    <div class="pl2"><span class="coin"><b>${p.gold}</b></span>${S&&S.rules==='trophy'?`<span class="tro" title="Трофеи охотника">⚔<b>${p.tro||0}</b></span>`:''}<span class="st">${st}</span><span class="hp">${'♥'.repeat(Math.max(0,p.hp))}${'♡'.repeat(Math.max(0,maxHP(p)-p.hp))}${p.lock>0?`<span class="hplock" title="Сердце в залоге у демона: ещё ${p.lock} ${plural(p.lock,'ход','хода','ходов')}">♥</span>`:''}</span></div>`;
   if(el.__h!==html){el.__h=html;el.innerHTML=html;}   // плашка не пересобирается, если ничего не поменялось (портрет не мигает, нет лишней вёрстки)
 }
 function renderWake(){
@@ -5950,20 +6168,13 @@ function paintMovedie(p){
     else if(S.roll)val.textContent=S.roll;
     else val.textContent='?';
   }
+  if(window.DIE3D&&DIE3D.ok&&!rolling)DIE3D.show(val.textContent,ready?'ready':'idle');
   btn.setAttribute('aria-label',ready?'Бросить кубик d4':(S.phase==='move'?`Осталось шагов: ${p.moves}`:'Кубик движения d4'));
 }
 function paintWho(){
-  const who=$('who');if(!who||!S)return;
-  let nameEl=$('whoName'),hintEl=$('whoHint');
-  if(!nameEl||!hintEl){
-    who.innerHTML='<span class="whoname" id="whoName"></span><span class="whohint" id="whoHint"></span>';
-    nameEl=$('whoName');hintEl=$('whoHint');
-  }
-  const p=P();
-  const title=S.over?'Экспедиция окончена':S.phase==='intro'?'Экспедиция начинается':coopOn()&&S.dph==='mon'?'Ходят монстры':coopOn()&&S.dph==='env'?'Подземелье оживает':'Ходит '+(p?p.name:'');
-  nameEl.textContent=title;if(hintEl)hintEl.textContent='';
-  who.style.setProperty('--pc',S.over||S.phase==='intro'?css('--gold'):css(p?p.color:'--gold'));
-  paintMovedie(p);
+  // табличка «Ходит …» убрана: ход показывает подсвеченная карточка героя вверху и короткая подсказка в начале хода (см. turnToast)
+  if(!S)return;
+  paintMovedie(P());
 }
 function render(){
   hedgeSoon();
@@ -5973,28 +6184,15 @@ function render(){
   S.players.forEach((p,i)=>pill(i));
   const p=P();
   paintWho();paintAP();
-  const msgEl=$('msg');if(msgEl)msgEl.textContent=S.msg||'';
   const bp=$('bPotion');
-  const hexSet=(el,n)=>{el.classList.toggle('empty',!n);const b=el.querySelector('.n');b.textContent=n>1||el===bp?n||'':'';b.hidden=!n;};
-  hexSet(bp,p.potions);
-  // в ряду только то, что герой несёт сейчас; зелье здоровья — всегда (это кнопка)
-  [['hBomb',p.bombs],['hSword',p.sword?1:0],['hSilver',p.silver?1:0],['hShield',p.shield?1:0],['hLuck',p.luck],['hHaste',(p.hasteP||0)||(p.haste>0?1:0)],['hRope',p.rope?1:0],
-   ['hPick',p.pick?1:0],['hKey',p.key],['hCloak',p.cloak],['hGhost',p.ghostP],['hMantle',p.mantle?1:0]].forEach(([id,v])=>{const el=$(id);el.hidden=!(v>0);if(v>0)hexSet(el,v);});
-  {const hx=document.querySelector('.hexes');
-   const vis=[...hx.children].filter(x=>!x.hidden);
-   // ячейки подгоняются под ширину ряда: сначала сжимаются, а если вещей очень много — переносятся во 2-й и 3-й ряд
-   [...hx.children].forEach(x=>{x.style.removeProperty('--hs');x.style.removeProperty('font-size');});hx.classList.remove('many','rows');
-   const W=hx.clientWidth,base=vis[0].getBoundingClientRect().width,g=3,n=vis.length;
-   if(n*base+(n-1)*g>W+0.5){let size=base,rows=1;
-     for(rows=1;rows<=3;rows++){const per=Math.ceil(n/rows);size=Math.min(base,Math.floor((W-g*(per-1))/per));if(size>=Math.min(28,base)||rows===3)break;}
-     hx.classList.add('many');hx.classList.toggle('rows',rows>1);
-     vis.forEach(x=>{x.style.setProperty('--hs',Math.max(18,size)+'px');x.style.fontSize=Math.max(10,Math.round(size*0.45))+'px';});}}
+  $('nPotion').textContent=p.potions>0?p.potions:'';
+  bp.classList.toggle('nopot',!(p.potions>0));   // нет зелий — кнопка чёрно-белая; появилось — цвет возвращается
   $('bMenu').disabled=!S.online&&isCpuTurn();
   if(CS_IDX!=null&&$('charsheet')&&!$('charsheet').hidden)paintCharSheet();
   coachCheck();
   document.body.classList.toggle('cpu-turn',lockedTurn());
-  {const h=invHero()||p;const n=(h.scrolls||[]).length+(h.potions||0)+(h.cloak||0)+(h.ghostP||0)+(h.hasteP||0);
-   const bs=$('bScroll');$('nScroll').textContent=n||'';bs.disabled=!h||!!introOn;bs.classList.toggle('has',n>0);}
+  invWatch();turnToast();
+  {const h=invHero()||p,bs=$('bScroll');bs.disabled=!h||!!introOn;bs.classList.toggle('newitem',!!(h&&INVNEW.flag[S.players.indexOf(h)]));}
   bp.disabled=busy||rolling||!isLocal(p)||!alive(p)||!p.potions||p.hp>=maxHP(p)||!['roll','move','exit'].includes(S.phase);
 }
 $('bPotion').onclick=()=>act('potion');
@@ -6008,12 +6206,50 @@ $('csbody').addEventListener('click',e=>{
   const b=e.target.closest&&e.target.closest('.csact');if(!b||b.disabled)return;
   invDo(b.dataset.kind,b.dataset.id);
 });
+// активная способность класса (Котелок, Тропа следопыта): когда её можно применить
+function abilPhase(p){
+  const c=clsOf(p);if(!c||c.kind!=='active'||!alive(p))return 'сейчас нельзя';
+  if(c.ab==='brew')return ['roll','move','exit'].includes(S.phase)?'':'сейчас нельзя';
+  if(c.ab==='scout'){
+    if(coopOn())return S.phase==='move'&&p.ap&&(S.dph||'hero')==='hero'?'':'после броска d4';
+    if(p.mode==='room')return 'в логове не нужно';
+    return ['roll','move'].includes(S.phase)?'':'сейчас нельзя';}
+  return 'сейчас нельзя';
+}
+function whyAbil(p){
+  const c=clsOf(p);if(!c||c.kind!=='active')return 'сейчас нельзя';
+  if(!S||S.over||!alive(p)||!isLocal(p)||P()!==p||lockedTurn())return 'не твой ход';
+  if(busy||rolling)return 'подожди';
+  if(!abilOk(p))return coopOn()?'уже на этом этаже':'уже использована';
+  return abilPhase(p);
+}
+async function useAbility(){
+  const p=P(),c=clsOf(p);if(busy||!c||c.kind!=='active'||!abilOk(p)||abilPhase(p))return;
+  const pop=$('rollpop'),wasRoll=S.phase==='roll';if(pop)pop.hidden=true;
+  if(typeof closeCharSheet==='function')closeCharSheet();
+  busy=true;try{
+    abilUse(p);const sub=`${c.cls} · ${p.name}`;
+    if(c.ab==='brew'){p.potions=(p.potions||0)+1;sfx('potion');addLog(`${p.name}: «${c.an}» — сварено зелье здоровья.`);render();
+      await modal({icon:'⚗',tone:'good',img:'img/item-potion.jpg',title:c.an,sub,text:'Пара склянок, щепоть грибной пыли — и в сумке новое зелье здоровья ✚. Выпить его можно кнопкой с зельем внизу.'});}
+    else if(c.ab==='scout'&&!coopOn()){
+      for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++)if(walkable(p.r+dr,p.c+dc))reveal(p.r+dr,p.c+dc,p.mode);
+      boardFull=true;sfx('map');addLog(`${p.name}: «${c.an}» — открыты плиты вокруг.`);render();
+      await modal({icon:'◎',tone:'good',img:'img/item-map.jpg',title:c.an,sub,text:'Следопыт читает следы и сквозняки: плиты на 2 клетки вокруг открыты на поле, как по обрывку карты.'});}
+    else if(c.ab==='scout'){
+      const v=1+rnd(4);p.moves+=v;sfx('dice');addLog(`${p.name}: «${c.an}» — лишний бросок d4: ${v}.`);render();
+      await modal({icon:'◎',tone:'good',title:c.an,sub,text:`Лишний бросок d4: ${v}. Ещё ${v} ${plural(v,'шаг','шага','шагов')} в этот ход.`});}
+  }finally{busy=false;}
+  if(S.over)return;
+  if(S.phase==='roll'&&wasRoll)showRollPop(p);
+  if(S.phase==='move')S.msg=hereMsg(p);
+  render();
+}
 async function useScrollBag(d={}){
   const p=P();if(!alive(p)||!['roll','move'].includes(S.phase))return;
   const pop=$('rollpop'),wasRoll=S.phase==='roll';if(pop)pop.hidden=true;
   if(typeof closeCharSheet==='function')closeCharSheet();
   busy=true;try{
-    if(d.id){if(!(p.scrolls||[]).includes(d.id)||p.scrollTurn===S.turnNo)return;await castScroll(p,d.id);}
+    if(d.id){if(!(p.scrolls||[]).includes(d.id)||(p.scrollTurn===S.turnNo&&!abilOk(p,'quickread')))return;await castScroll(p,d.id);}
     else await openScrollBag();
   }finally{busy=false;}
   if(p.mode==='dead'||p.mode==='home'){nextTurn();return;}
@@ -6053,7 +6289,7 @@ const RULES=`<ul>
 <li>Свиток «Гармония духа» снимает с тебя заговор, проклятие, рану и оцепенение и даёт +1 ко всем броскам d20 на 2 хода. Свиток «Телепортация» переносит на выбранную клетку в радиусе 3 клеток (не в логово). Камень судьбы — редкий артефакт в сумке свитков: 3 хода на тебя нельзя наложить негативный эффект.</li>
 <li>Встреча: если герой встал на клетку с соперником, они бросают d20 против d20 — победитель забирает 25% мешка проигравшего, а проигравший пропускает ход и затем ещё 1 ход получает −3 ко всем проверкам (итог броска не ниже 1). Каждая пара героев встречается так раз за игру. Знак ⚔ на карточке — соперник, чья добыча может стать твоей.</li>
 <li>В логове бьётся сердце: чем выше риск разбудить дракона, тем громче и чаще стук, сильнее дрожит экран и вибрирует телефон.</li>
-<li>Свитки лежат в сумке свитков (кнопка §). Каждый начинает с одним случайным свитком, ещё их находят в подземелье. В свой ход можно прочитать один свиток — до броска, во время шагов или в логове; после прочтения он исчезает. Сглаз и Призыв зверя наносят урон без броска, Заговор на неудачу делает все проверки цели равными 1 на 2 её хода, Клеймо изгнанника работает только на героя, идущего к логову.</li>
+<li>Свитки лежат в сумке свитков (рюкзак 🎒 внизу). Каждый начинает с одним случайным свитком, ещё их находят в подземелье. В свой ход можно прочитать один свиток — до броска, во время шагов или в логове; после прочтения он исчезает. Сглаз и Призыв зверя наносят урон без броска, Заговор на неудачу делает все проверки цели равными 1 на 2 её хода, Клеймо изгнанника работает только на героя, идущего к логову.</li>
 <li>Если все остальные герои погибли, последний сразу побеждает: можно забрать победу или доиграть, чтобы собрать больше. Но погибнешь — победа сгорит.</li><li><b>«Спуск».</b> Раунд идёт в три фазы. 1) <b>Фаза искателей</b>: каждый по очереди тратит очки действий (ОД). 2) <b>Фаза монстров</b>: твари, заметившие отряд, идут к ближайшему герою и нападают. 3) <b>Фаза злодеяния</b>: срабатывает замеченная, но не обезвреженная ловушка зала; в открытом зале, где нет героев, может появиться новый монстр. Телепорт в «Спуске» переносит только в уже открытые залы.</li><li>Лестницу вниз стережёт босс: 1-й этаж — Огр-вышибала (раненого героя отшвыривает назад), 2-й — Король крыс, 3-й — Костяной лорд, 4-й — Королева пауков, 5-й — Повелитель огня, 6-й — Вожак минотавров; дальше круг повторяется, и боссы сильнее. Пещерный тролль (огр) и минотавр бродят как обычные монстры только с 3-го этажа.</li><li><b>Ловушки «Спуска»</b> срабатывают не больше одного раза. Обезвредить (действие, d20) можно только <b>сетку под потолком, шипы из стены, отравленные дротики и ядовитый газ</b>: успех — ловушка не сработает, провал — она срабатывает на того, кто её разбирал. Такую ловушку зала герой замечает, войдя в зал; если до фазы злодеяния её никто не обезвредил, она срабатывает на весь отряд. Остальные ловушки обезвредить нельзя: ловушка зала срабатывает, как только в зал входит первый герой (проверку проходит весь отряд), скрытая ловушка на клетке — когда на неё наступают. Скрытую ловушку рядом иногда удаётся заметить заранее и обойти.</li><li>ОД = скорость + 2. Скорость — бросок d4 в начале хода: столько клеток можно пройти. Ещё 1 <b>атака</b> (бой с монстром) и 1 <b>действие</b>: открыть дверь в неоткрытый зал, обезвредить ловушку, поднять соратника без сил, сменить оружие или передать вещь соратнику рядом (в инвентаре), купить у грибного торговца. В уже открытый зал (и в только что открытый) проходишь за обычные шаги. Когда герой подходит к двери, ловушке, торговцу или павшему соратнику, всплывает вопрос «Да / Нет». Когда делать больше нечего, ход переходит сам; иначе нажми «Завершить ход».</li><li>В «Спуске» и в игре по сети у каждого свой герой: занятый портрет выбрать нельзя.</li></ul>`;
 const PRIVACY=`<div class="scrolls" style="font-size:14px">
 <p style="margin:0 0 8px">Редакция от 25 октября 2026 года.</p>
@@ -6075,10 +6311,12 @@ $('bMenu').onclick=async()=>{
   if(S.soloOffered&&alive(P())&&isLocal(P())&&!busy&&S.players.filter(alive).length===1)items.push({label:`Забрать победу — ${P().gold} золотых`,cls:'heal',value:'claim'});
   if(!S.online)items.push({label:'Начать заново',value:'restart'});
   items.push({label:`Звук: музыка ${musicVol?musicVol+'%':'выкл'} · звуки ${sfxVol?sfxVol+'%':'выкл'}`,value:'vol'});
+  if(chatMode()==='game')items.push({label:'Чат'+(CHAT.unread?` · новых: ${CHAT.unread}`:''),value:'chat'});
   items.push({label:tipsOn?'Подсказки: включены':'Подсказки: выключены',value:'tips'});
   items.push({label:'Выйти из партии',cls:'danger',value:'quit'});
   const v=await modal({local:true,icon:'☰',tone:'gold',title:'Меню',sub:S.online&&NET.room?`Логово дракона · комната ${NET.room.code}`:'Логово дракона',text:'',buttons:items});
   if(v==='claim'){act('claim');return;}
+  if(v==='chat'){setTimeout(chatOpen,0);return;}
   if(v==='vol'){await volumeDlg();setTimeout(()=>$('bMenu').click(),0);return;}
   if(v==='tips'){tipsOn=!tipsOn;if(tipsOn)tipsSeen=new Set();else coachHide();saveTips();toast(tipsOn?'Подсказки включены — они снова появятся в нужный момент.':'Подсказки выключены.',2600);setTimeout(()=>$('bMenu').click(),0);return;}
   if(v==='restart'){const ok=await modal({local:true,icon:'↻',tone:'fire',title:'Начать заново?',text:'Партия начнётся сначала с теми же настройками: те же герои, режим и размер карты. Текущий прогресс будет потерян.',buttons:[{label:'Отмена',value:false},{label:'Начать заново',cls:'danger',value:true}]});if(ok)restartGame();}
@@ -6127,8 +6365,9 @@ setTimeout(()=>{const sp=document.getElementById('splash');if(sp){sp.remove();wi
 setTimeout(()=>{if(document.getElementById('ld3d')&&window.__3d&&__3d.loader){try{__3d.loader.hide();}catch(e){}setTimeout(ensureMenu,600);}},25000);
 </script>
 <script src="lib/three.min.js"></script>
-<script src="assets.js"></script>
-<script src="three3d.js"></script>
+<script src="assets.js?v=models1"></script>
+<script src="three3d.js?v=models1"></script>
+<script src="die3d.js?v=bottom1"></script>
 <script>
 /* ===== fx3: отдельный экран выбора героя =====
    Фон — тот же экран главного меню: арка (img/menu-arch-live.png), синее пламя и факелы — их рисует код MMFIRE
@@ -6145,15 +6384,15 @@ const HEROSEL={
   drag:.011,       // чувствительность вращения пальцем/мышью
   pixelRatio:2,    // максимум пикселей на CSS-пиксель
   maxPix:650000,   // потолок пикселей холста модели
-  info:[           // героев нарисовано 8 (по номеру портрета); по правилам игры все они одинаковые по силе — это лишь облик и «роль»
-    {name:'Алый плащ',short:'Плащ',cls:'Страж',txt:'Алый плащ развевается даже там, где нет сквозняка. В логово идёт первой.'},
-    {name:'Золотой локон',short:'Локон',cls:'Лучница',txt:'Зелёный плащ и факел наготове: любит находить раньше, чем её заметят.'},
-    {name:'Пурпурная чародейка',short:'Пурпур',cls:'Чародейка',txt:'Пурпур и серебро. Читает свитки быстрее, чем дракон просыпается. Почти.'},
-    {name:'Снежная ведунья',short:'Ведунья',cls:'Заклинательница',txt:'Бирюзовый плащ, белые волосы и трофеи, будто это обычный вторник.'},
-    {name:'Седой алхимик',short:'Алхимик',cls:'Алхимик',txt:'Пузырьки в каждом кармане. Что именно взорвётся — выяснится на месте.'},
-    {name:'Синий капюшон',short:'Синий',cls:'Следопыт',txt:'Тёмный плащ и тихий шаг: дракон узнает о нём последним.'},
-    {name:'Рыжий бородач',short:'Бородач',cls:'Воин',txt:'Борода, факел и упрямство. Дверь заперта? Значит, плохо толкали.'},
-    {name:'Орк-ветеран',short:'Орк',cls:'Силач',txt:'Шрамов больше, чем историй. Но историй всё равно много.'}]
+  info:[           // героев нарисовано 8 (по номеру портрета); класс, характеристики и способность — из HERO_CLASSES (index.html)
+    {name:'Страж',cls:'Страж',txt:'Коричневый капюшон, алый плащ за плечами. Плащ-щит один раз погасит удар, что должен был сразить.'},
+    {name:'Лучница',cls:'Лучница',txt:'Зелёный капюшон и лук за спиной. Где другие срываются в пропасть, она находит верный шаг.'},
+    {name:'Чародейка',cls:'Чародейка',txt:'Пурпурный плащ, светлые волосы. Свитки читает быстрее, чем дракон успевает моргнуть. Почти.'},
+    {name:'Ведунья',cls:'Ведунья',txt:'Беловолосая эльфийка. Её иней гасит то, чему не должно быть хода: нежить, призраков, охотников.'},
+    {name:'Алхимик',cls:'Алхимик',txt:'Седина и пурпурный плащ, в карманах позвякивает. Котелок всегда под рукой: одно зелье можно сварить на месте.'},
+    {name:'Следопыт',cls:'Следопыт',txt:'Борода в тени тёмного плаща, шаг почти не слышен. Тропа следопыта откроет путь там, где карта молчит.'},
+    {name:'Воин',cls:'Воин',txt:'Гном в рогатом капюшоне, топор наготове. Если первый удар не взял — будет второй.'},
+    {name:'Берсерк',cls:'Берсерк',txt:'Шрамов больше, чем историй. Ярость добавляет силы, когда её и так не занимать.'}]
 };
 window.HEROSEL=HEROSEL;
 const $=id=>document.getElementById(id);
@@ -6165,7 +6404,7 @@ window.pickHero=function(o){
   if(busy)return busy.p;
   o=o||{};
   const menu=$('mainmenu'),mm=menu&&menu.querySelector('.mmin');
-  const P=window.PORTRAITS||[1,2,3,4,5,6,7,8].map(i=>`img/hero-${i}.png`);
+  const P=window.PORTRAITS||[1,2,3,4,5,6,7,8].map(i=>`img/hero-${i}.webp`);
   if(!menu||!mm)return Promise.resolve(null);
   let cur=Math.max(0,Math.min(P.length-1,o.current|0)),alive=true,lastFocus=document.activeElement;
   const seatName=o.seat!=null&&window.SEATS&&SEATS[o.seat]?SEATS[o.seat].side:'';
@@ -6175,12 +6414,13 @@ window.pickHero=function(o){
   root.innerHTML=`<div class="mmhhead"><small>Выбор героя</small><b>${seatName?'Место: '+seatName:'Твой герой'}</b><span>Листай лица внизу, а модель можно крутить пальцем</span></div>
     <div class="mmhstage"><canvas aria-hidden="true"></canvas><img class="mmhfb" alt="" hidden><i class="mmhspin" aria-hidden="true"></i></div>
     <div class="mmhside">
-      <div class="mmhname"><small>Выбор героя${seatName?' · '+seatName:''}</small><b class="mmhn"></b><em class="mmhc"></em></div>
-      <div class="mmhchips"><span><b class="hh">${'♥'.repeat(hp)}</b>здоровье</span><span><b>d4</b>шаг за ход</span><span><b>✚ 1</b>зелье</span></div>
+      <div class="mmhname"><small>Выбор героя${seatName?' · '+seatName:''}</small><b class="mmhn"></b></div>
+      <div class="mmhchips" aria-label="Характеристики"></div>
+      <div class="mmhabil"><b></b><span></span><small></small></div>
       <p class="mmhflav"></p><p class="mmhnote" hidden></p>
       <div class="mmhacts"><button type="button" class="ok" data-a="ok">${o.confirm||'Выбрать'}</button><button type="button" class="bk" data-a="back">← Назад</button></div>
     </div>
-    <div class="mmhfaces" role="listbox" aria-label="Герои">${P.map((src,k)=>`<button type="button" role="option" data-k="${k}" aria-label="${(HEROSEL.info[k]||{}).name||'Герой '+(k+1)}"><span class="mmhf"><img alt="" src="${src}"></span><small>${(HEROSEL.info[k]||{}).short||''}</small><u aria-hidden="true">🔒</u></button>`).join('')}</div>`;
+    <div class="mmhfaces" role="listbox" aria-label="Герои">${P.map((src,k)=>`<button type="button" role="option" data-k="${k}" aria-label="${(HEROSEL.info[k]||{}).cls||'Герой '+(k+1)}"><span class="mmhf"><img alt="" src="${src}"></span><small>${(HEROSEL.info[k]||{}).cls||''}</small><u aria-hidden="true">🔒</u></button>`).join('')}</div>`;
   mm.appendChild(root);
   const stage=root.querySelector('.mmhstage'),cv=stage.querySelector('canvas'),fb=stage.querySelector('.mmhfb'),spin=stage.querySelector('.mmhspin'),
     faces=root.querySelector('.mmhfaces'),chips=root.querySelector('.mmhchips'),okb=root.querySelector('[data-a=ok]');
@@ -6256,7 +6496,7 @@ window.pickHero=function(o){
     const top=ay+ah*.265,left=ax+aw*.2,w=aw*.6;
     let bottom;
     if(desk)bottom=ay+ah*.79;else if(land)bottom=ay+ah*.85;
-    else{const cr=chips.getBoundingClientRect();bottom=cr.top>0?cr.top-2:ay+ah*.74;}
+    else{const ae=root.querySelector('.mmhabil'),cr=(ae&&!ae.hidden?ae:chips).getBoundingClientRect();bottom=cr.top>0?cr.top-2:ay+ah*.74;}
     const h=Math.max(120,bottom-top);
     stage.style.cssText=`left:${left.toFixed(1)}px;top:${top.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px`;
     if(R){
@@ -6307,7 +6547,13 @@ window.pickHero=function(o){
     faces.querySelectorAll('button').forEach(b=>{const k=+b.dataset.k,t=tk.has(k)&&k!==o.current;
       b.classList.toggle('on',k===cur);b.classList.toggle('taken',t);b.classList.toggle('lock',t&&!o.swap);b.setAttribute('aria-selected',k===cur);b.tabIndex=k===cur?0:-1;
       b.title=t?(o.swap?'Занят другим местом — вы поменяетесь':'Этот герой уже занят'):'';});
-    root.querySelector('.mmhn').textContent=info.name;root.querySelector('.mmhc').textContent=info.cls;root.querySelector('.mmhflav').textContent=info.txt;
+    const hc=(window.HERO_CLASSES||[])[cur],HS=window.HERO_STATS||{};
+    root.querySelector('.mmhn').textContent=hc?hc.cls:(info.cls||info.name);   // в заголовке — только класс (без прозвища)
+    // характеристики (модификаторы к d20): +2 — золотом, −1 — приглушённо; общие для всех ♥/d4/зелье — мелкой строкой
+    chips.innerHTML=hc?['str','dex','int','spi'].map(k=>{const v=hc.st[k]||0,S2=HS[k]||{s:k,i:'',n:k};return`<span class="${v>=2?'hi':v<0?'lo':''}" title="${S2.n}: ${v>0?'+':''}${v} к проверкам"><i>${S2.i}</i>${S2.s}<b>${v>0?'+':v<0?'−':''}${Math.abs(v)}</b></span>`;}).join(''):'';
+    const ab=root.querySelector('.mmhabil');ab.hidden=!hc;
+    if(hc){ab.querySelector('b').textContent=`${hc.ai} ${hc.an}`;ab.querySelector('span').textContent=`${hc.adP||hc.ad}.`;ab.querySelector('small').textContent=`У всех героев: ${'♥'.repeat(hp)} · шаг d4 · ✚1 зелье`;}
+    layout();root.querySelector('.mmhflav').textContent=info.txt;
     const nt=root.querySelector('.mmhnote'),isT=tk.has(cur)&&cur!==o.current;
     if(isT&&o.swap){nt.hidden=false;const who=o.takenBy?o.takenBy(cur):'';nt.textContent=who?`Сейчас этот герой у места «${who}» — вы поменяетесь местами.`:'Этот герой уже у другого места — вы поменяетесь местами.';}
     else if(isT){nt.hidden=false;nt.textContent='Этого героя уже выбрал другой игрок.';}

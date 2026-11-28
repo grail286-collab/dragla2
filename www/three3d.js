@@ -789,14 +789,15 @@ function syncFire(){
 }
 
 // --- 3D-фигурки героев (glTF). Пока загружаются — стоит обычный портрет
-const FIG={male:{url:'models/hero_man',torch:[.378,.31,.052],mesh:null,wait:[]},
-           orc:{url:'models/hero_orc',torch:[.33,.42,.17],mesh:null,wait:[]},
-           sedoi:{url:'models/hero_sedoi',torch:[.208,.29,.275],mesh:null,wait:[]},
-           siniy:{url:'models/hero_siniy',torch:[.289,.42,.193],mesh:null,wait:[]},
-           female2:{url:'models/hero_w3',torch:[.306,.42,.153],mesh:null,wait:[]},
-           female3:{url:'models/hero_w2',torch:[-.24,.33,.032],mesh:null,wait:[]},
-           female:{url:'models/hero_woman',torch:[.161,.32,.275],mesh:null,wait:[]},
-           female4:{url:'models/hero_w4',torch:[.19,.41,.13],mesh:null,wait:[]},   // портрет 4 — светловолосая героиня в бирюзовом плаще
+const FIG={
+           archer:{url:'models/hero_archer',torch:[0.284,0.415,0.109],mesh:null,wait:[]},
+           sorcerer:{url:'models/hero_sorcerer',torch:[0.295,0.407,0.143],mesh:null,wait:[]},
+           snow_vedmak:{url:'models/hero_snow_vedmak',torch:[0.205,0.422,0.152],mesh:null,wait:[]},
+           guardian:{url:'models/hero_guardian',torch:[0.33,0.39,0.149],mesh:null,wait:[]},
+           alchemist:{url:'models/hero_alchemist',torch:[0.299,0.358,0.191],mesh:null,wait:[]},
+           pathfinder:{url:'models/hero_pathfinder',torch:[-0.103,0.42,0.261],mesh:null,wait:[]},
+           gnome_warrior:{url:'models/hero_gnome_warrior',torch:[-0.34,0.411,0.135],mesh:null,wait:[]},
+           orc_veteran:{url:'models/hero_orc_veteran',torch:[-0.343,0.305,0.135],mesh:null,wait:[]},
            dragon:{url:'models/sleepy_dragon',mesh:null,wait:[]},
            wake:{url:'models/wakeup_dragon',mesh:null,wait:[]},
            arch_whole:{key:'arch_whole',url:'models/arch_whole',mesh:null,wait:[]},arch_half:{key:'arch_half',url:'models/arch_half',mesh:null,wait:[]},arch_low:{key:'arch_low',url:'models/arch_low',mesh:null,wait:[]},
@@ -824,7 +825,8 @@ function loadFig(key){const f=FIG[key];if(!f)return Promise.resolve();if(f.p)ret
   const t=TL.load(f.url+'.jpg',done,undefined,done);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.flipY=false;   // готова, когда пришла и текстура
   })).catch(e=>{console.warn('3D-фигурка не загрузилась',f.url,e);});
   return f.p;}
-const heroKind=p=>{const i=p.portrait??0;return i===7?'orc':i===4?'sedoi':i===5?'siniy':i===1?'female2':i===2?'female3':i===3?'female4':isFemale(i)?'female':'male';};   // 5 — седой, 6 — в синем капюшоне, 8 — орк
+const HERO_FIG=['guardian','archer','sorcerer','snow_vedmak','alchemist','pathfinder','gnome_warrior','orc_veteran'];   // фигурки по портрету = по классу: Страж, Лучница, Чародейка, Ведунья, Алхимик, Следопыт, Воин, Берсерк
+const heroKind=p=>HERO_FIG[(p.portrait??0)%8];
 // после старта партии — фоном, по одной: павший, проснувшийся дракон, охотники (только в режиме охоты), кобольд
 function bgLoad(){const q=['dead','wake',...(S&&S.rules==='hunt'?['hound','eye','reaper']:[]),'kobold'];
   const next=()=>{const k=q.shift();if(!k)return;loadFig(k).then(()=>setTimeout(next,300));};setTimeout(next,1500);}
@@ -1143,6 +1145,8 @@ function place(){
 }
 addEventListener('resize',()=>{rectKey='';});
 
+// курс на логово (центр поля): только в режимах, где оно есть. Визуал, в состояние игры не пишется.
+function faceLairYaw(x,z){if(!S||S.rules==='descent')return null;const dx=-x,dz=-z;return Math.hypot(dx,dz)<.2?null:Math.atan2(dx,dz);}
 // --- кадр
 const clock=new THREE.Clock();let lastPlace=0,lastCells=0,fpsAcc=0,fpsN=0,perfLevel=0;
 let lastRender=0,prevRendered=false,camPrev=new THREE.Vector3(),camMovedAt=0;
@@ -1174,8 +1178,10 @@ function frame(){
     const down=p.mode==='dead'&&S.rules==='descent'&&p.r!=null;   // «Спуск»: герой без сил лежит на поле, пока его не поднимут
     const vis=(p.mode!=='dead'||down)&&p.mode!=='home';T.g.visible=vis;if(!vis)return;
     let x,z;if(p.mode==='room'){[x,z]=roomSpot(i);}else{[x,z]=cellXZ(p.r,p.c);}
-    if(T.x===null||Math.hypot(x-T.x,z-T.z)>3){T.x=x;T.z=z;}
-    {const dx=x-T.x,dz=z-T.z;if(Math.hypot(dx,dz)>.03)T.hdT=Math.atan2(dx,dz);   // смотрит туда, куда идёт
+    if(T.x===null||Math.hypot(x-T.x,z-T.z)>3){T.x=x;T.z=z;
+      // старт / телепорт: в режимах с логовом смотрит на его центр (в «Спуске» логова нет — как раньше)
+      if(T.hd==null){const yw=faceLairYaw(x,z);if(yw!=null)T.hd=T.hdT=yw;}}
+    {const dx=x-T.x,dz=z-T.z;if(Math.hypot(dx,dz)>.03)T.hdT=Math.atan2(dx,dz);   // дальше смотрит туда, куда идёт
      if(T.hd==null)T.hd=T.hdT??0;if(T.hdT!=null){let d=T.hdT-T.hd;d=Math.atan2(Math.sin(d),Math.cos(d));T.hd+=d*Math.min(1,dt*10);}}
     const k=reduce?1:Math.min(1,dt*9);if(Math.abs(x-T.x)+Math.abs(z-T.z)>.002)shadowDirty=true;T.x+=(x-T.x)*k;T.z+=(z-T.z)*k;
     if(T.lt.castShadow!==(p===cur))shadowDirty=true;
@@ -1269,9 +1275,9 @@ function frame(){
 requestAnimationFrame(frame);
 // для автотестов: где на экране метка хода
 window.__heroFig={load:loadFig,get:k=>FIG[k],kind:heroKind};   // fx3: экран выбора героя берёт модели отсюда
-window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
+window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,tokens:()=>tokens,edgeOpen,info:()=>({arches:B?B.arches.size:-1,calls:R.info.render.calls,tri:R.info.render.triangles,rect:cv.style.cssText,cam:cam.position.toArray().map(v=>+v.toFixed(2))}),
   markerScreen(i){const m=marks[i];if(!m||!m.visible)return null;const v=m.position.clone().project(cam),b=cv.getBoundingClientRect();return {x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height};},
-  look(x,z,o={}){tgt.x=x;tgt.z=z;if(o.az!=null)tAz=az=o.az;if(o.el!=null)tEl=el=o.el;if(o.distMul!=null)distMul=o.distMul;if(o.zoom!=null)zoom=o.zoom;userUntil=performance.now()+1e7;focusUntil=0;focusI=-1;}};
+  look(x,z,o={}){tgt.x=x;tgt.z=z;if(o.az!=null)tAz=az=o.az;if(o.el!=null)tEl=el=o.el;if(o.distMul!=null)distMul=o.distMul;if(o.zoom!=null)zoom=o.zoom;if(o.peek){focusXZ=[x,z];focusI=-2;focusUntil=performance.now()+(o.ms||1e7);userUntil=0;}else{userUntil=performance.now()+1e7;focusUntil=0;focusI=-1;}}};
 
 // --- при запуске всё грузится в память: картинки, звуки и 3D-модели; пока идёт загрузка — вращается d20
 (function preloadAll(){
@@ -1282,7 +1288,7 @@ window.__3d={R,cam,cv,loader,B:()=>B,FIG:()=>FIG,edgeOpen,info:()=>({arches:B?B.
   const tick=()=>{loader.step(++done);const s2=document.querySelector('#ld3d .s');if(s2)s2.textContent=`Загружаем подземелье… ${Math.round(done/total*100)}%`;};
   window.__IMGS=[];
   const one=async u=>{try{
-      if(/\.(jpe?g|png)$/i.test(u)&&!u.startsWith('models/')){const im=new Image();im.src=u;window.__IMGS.push(im);await (im.decode?im.decode():new Promise(r=>{im.onload=im.onerror=r;})).catch(()=>{});}
+      if(/\.(jpe?g|png|webp)$/i.test(u)&&!u.startsWith('models/')){const im=new Image();im.src=u;window.__IMGS.push(im);await (im.decode?im.decode():new Promise(r=>{im.onload=im.onerror=r;})).catch(()=>{});}
       else{const r=await fetch(u);await r.arrayBuffer();}
     }catch(e){}tick();};
   const q=list.slice();
